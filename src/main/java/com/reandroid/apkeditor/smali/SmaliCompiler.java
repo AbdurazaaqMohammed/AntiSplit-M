@@ -18,7 +18,7 @@ package com.reandroid.apkeditor.smali;
 import com.reandroid.apk.APKLogger;
 import com.reandroid.apk.ApkModuleEncoder;
 import com.reandroid.apk.DexEncoder;
-import com.reandroid.apkeditor.APKEditor;
+import com.reandroid.utils.io.FileUtil;
 import com.reandroid.apkeditor.compile.BuildOptions;
 import com.reandroid.archive.FileInputSource;
 import com.reandroid.archive.InputSource;
@@ -79,18 +79,15 @@ public class SmaliCompiler implements DexEncoder {
         }
     }
     private InputSource build(String progress, File classesDir, File dexCacheFile) throws IOException {
-        if(APKEditor.isExperimental()) {
-            return buildExperimental(progress, classesDir, dexCacheFile);
+        if(BuildOptions.DEX_LIB_INTERNAL.equals(buildOptions.dexLib)) {
+            return buildWithInternalLib(progress, classesDir, dexCacheFile);
         }
-        return buildJesusFreke(progress, classesDir, dexCacheFile);
+        return buildWithJesusFreke(progress, classesDir, dexCacheFile);
     }
-    private InputSource buildJesusFreke(String progress, File classesDir, File dexCacheFile) throws IOException {
-        logMessage(progress + "Smali: " + dexCacheFile.getName());
+    private InputSource buildWithJesusFreke(String progress, File classesDir, File dexCacheFile) throws IOException {
+        logMessage(progress + "Smali<JF>: " + dexCacheFile.getName());
         SmaliOptions smaliOptions = new SmaliOptions();
-        File dir = dexCacheFile.getParentFile();
-        if(dir != null && !dir.exists()){
-            dir.mkdirs();
-        }
+        FileUtil.ensureParentDirectory(dexCacheFile);
         smaliOptions.outputDexFile = dexCacheFile.getAbsolutePath();
         File marker = new File(classesDir, DexMarker.FILE_NAME);
         if(marker.isFile()){
@@ -108,8 +105,8 @@ public class SmaliCompiler implements DexEncoder {
         }
         return new FileInputSource(dexCacheFile, dexCacheFile.getName());
     }
-    private InputSource buildExperimental(String progress, File classesDir, File dexCacheFile) throws IOException {
-        logMessage(progress + "Smali: " + dexCacheFile.getName());
+    private InputSource buildWithInternalLib(String progress, File classesDir, File dexCacheFile) throws IOException {
+        logMessage(progress + "Smali<INTERNAL>: " + dexCacheFile.getName());
         DexFile dexFile = DexFile.createDefault();
         int version = 0;
         if (this.minSdkVersion != null) {

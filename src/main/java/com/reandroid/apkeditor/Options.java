@@ -160,4 +160,7 @@ public class Options {
     public static final String TYPE_RAW = "raw";
     public static final String TYPE_XML = "xml";
     public static final String TYPE_TEXT = "text";
+
+    public static final String DEX_LIB_INTERNAL = "internal";
+    public static final String DEX_LIB_JF = "jf";
 }

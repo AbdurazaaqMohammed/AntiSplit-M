@@ -59,26 +59,26 @@ public class SmaliDecompiler implements DexDecoder {
     @Override
     public void decodeDex(DexFileInputSource inputSource, File mainDir) throws IOException {
         logMessage("Baksmali: " + inputSource.getAlias());
-        if(APKEditor.isExperimental()) {
-            disassembleDexFileExperimental(inputSource, mainDir);
+        if(DecompileOptions.DEX_LIB_INTERNAL.equals(decompileOptions.dexLib)) {
+            disassembleWithInternalDexLib(inputSource, mainDir);
         }else {
-            disassembleJesusFreke(inputSource, mainDir);
+            disassembleWithJesusFrekeLib(inputSource, mainDir);
         }
         writeDexCache(inputSource, mainDir);
     }
     @Override
     public void decodeDex(ApkModule apkModule, File mainDirectory) throws IOException {
-        if(!APKEditor.isExperimental()) {
+        if(!DecompileOptions.DEX_LIB_INTERNAL.equals(decompileOptions.dexLib)) {
             DexDecoder.super.decodeDex(apkModule, mainDirectory);
             return;
         }
         DexDirectory directory = (DexDirectory) apkModule.getTag(DexDirectory.class);
         if(directory == null) {
-            if(!canLoadFullDex(apkModule)) {
+            if (apkModule.listDexFiles().size() > decompileOptions.loadDex) {
                 DexDecoder.super.decodeDex(apkModule, mainDirectory);
                 return;
             }
-            logMessage("Loading full dex ...");
+            logMessage("Loading full dex files: " + apkModule.listDexFiles().size());
             Predicate<SectionType<?>> filter;
             if (decompileOptions.noDexDebug) {
                 filter = sectionType -> sectionType != SectionType.DEBUG_INFO;
@@ -88,7 +88,6 @@ public class SmaliDecompiler implements DexDecoder {
             directory = DexDirectory.fromZip(apkModule.getZipEntryMap(), filter);
         }
 
-        logMessage("Dumping smali ...");
         File smali = toSmaliRoot(mainDirectory);
         SmaliWriterSetting setting = new SmaliWriterSetting();
         if (tableBlock != null) {
@@ -108,22 +107,8 @@ public class SmaliDecompiler implements DexDecoder {
             writeDexCache(inputSource, mainDirectory);
         }
     }
-    private boolean canLoadFullDex(ApkModule apkModule) {
-        int CLASSES_LIMIT = 4;
-        if (decompileOptions.noDexDebug) {
-            CLASSES_LIMIT += 3;
-        }
-        int size = apkModule.listDexFiles().size();
-        logMessage("Total dex files: " + size);
-        if(size > CLASSES_LIMIT) {
-            logMessage("Huge classes your memory might not handle it, decoding separately without advanced features." +
-                    " You can disable this restrictions by increasing \"CLASSES_LIMIT\" variable here on source code");
-            return false;
-        }
-        return true;
-    }
 
-    private void disassembleJesusFreke(DexFileInputSource inputSource, File mainDir) throws IOException {
+    private void disassembleWithJesusFrekeLib(DexFileInputSource inputSource, File mainDir) throws IOException {
         File dir = toOutDir(inputSource, mainDir);
         BaksmaliOptions options = new BaksmaliOptions();
         options.localsDirective = true;
@@ -135,7 +120,7 @@ public class SmaliDecompiler implements DexDecoder {
         DexBackedDexFile dexFile = getInputDexFile(inputSource, options);
         Baksmali.disassembleDexFile(dexFile, dir, 1, options);
     }
-    private void disassembleDexFileExperimental(DexFileInputSource inputSource, File mainDir) throws IOException {
+    private void disassembleWithInternalDexLib(DexFileInputSource inputSource, File mainDir) throws IOException {
         Predicate<SectionType<?>> filter;
         if (decompileOptions.noDexDebug) {
             filter = sectionType -> sectionType != SectionType.DEBUG_INFO;

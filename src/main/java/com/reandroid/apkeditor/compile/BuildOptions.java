@@ -57,6 +57,15 @@ public class BuildOptions extends OptionsWithFramework {
     @OptionArg(name = "-no-cache", description = "build_no_cache", flag = true)
     public boolean noCache;
 
+    @ChoiceArg(name = "-dex-lib",
+            values = {
+                    DEX_LIB_INTERNAL,
+                    DEX_LIB_JF
+            },
+            description = "dex_lib"
+    )
+    public String dexLib = DEX_LIB_JF;
+
     @OptionArg(name = "-sig", description = "signatures_path")
     public File signaturesDirectory;
 

@@ -33,6 +33,10 @@ import java.io.File;
                 "decode_example_3",
                 "decode_example_4",
                 "decode_example_5"
+        },
+        notes = {
+                "decode_note_1",
+                "decode_note_2"
         })
 public class DecompileOptions extends OptionsWithFramework {
 
@@ -68,6 +72,17 @@ public class DecompileOptions extends OptionsWithFramework {
     @OptionArg(name = "-dex-markers", flag = true, description = "dump_dex_markers")
     public boolean dexMarkers;
 
+    @OptionArg(name = "-load-dex", description = "decode_load_dex")
+    public int loadDex = 3;
+
+    @ChoiceArg(name = "-dex-lib",
+            values = {
+                    DEX_LIB_INTERNAL,
+                    DEX_LIB_JF
+            },
+            description = "dex_lib"
+    )
+    public String dexLib = DEX_LIB_JF;
     @OptionArg(name = "-sig", description = "signatures_path")
     public File signaturesDirectory;
 
