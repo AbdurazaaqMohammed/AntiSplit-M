@@ -63,7 +63,6 @@ public class Refactor extends CommandExecutor<RefactorOptions> {
             logMessage("Clearing META-INF ...");
             clearMeta(module);
         }
-        Util.addApkEditorInfo(module, getClass().getSimpleName());
         String message = module.refreshTable();
         if(message != null){
             logMessage(message);

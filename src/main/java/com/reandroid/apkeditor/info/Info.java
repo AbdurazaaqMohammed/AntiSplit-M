@@ -63,7 +63,6 @@ public class Info extends CommandExecutor<InfoOptions> {
             return;
         }
         apkModule.setAPKLogger(this);
-        apkModule.setLoadDefaultFramework(options.verbose);
         File out = options.outputFile;
         if(out != null){
             logMessage("Writing ...");
@@ -396,8 +395,6 @@ public class Info extends CommandExecutor<InfoOptions> {
         for (String path : options.xmlTree) {
             logMessage("Writing: " + path);
             ResXmlDocument document = apkModule.loadResXmlDocument(path);
-            document.setApkFile(null);
-            document.setPackageBlock(null);
             infoWriter.writeXmlDocument(path, document);
         }
     }

@@ -15,9 +15,10 @@
  */
 package com.reandroid.apkeditor.protect;
 
-import com.reandroid.apk.ApkModule;
+import com.reandroid.arsc.chunk.Chunk;
 import com.reandroid.arsc.chunk.ChunkType;
 import com.reandroid.arsc.chunk.xml.*;
+import com.reandroid.arsc.header.XmlNodeHeader;
 import com.reandroid.arsc.io.BlockReader;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.ResXmlString;
@@ -41,9 +42,14 @@ public class ManifestConfuser extends Confuser {
             logMessage("Skip");
             return;
         }
-        ApkModule apkModule = getApkModule();
-        AndroidManifestBlock manifestBlock = apkModule.getAndroidManifest();
+        AndroidManifestBlock manifestBlock = getApkModule().getAndroidManifest();
         placeBadChunk(manifestBlock);
+        confuseAttributes(manifestBlock);
+        placeEndElementChunk(manifestBlock);
+        manifestBlock.refresh();
+    }
+
+    private void confuseAttributes(AndroidManifestBlock manifestBlock) {
         int defaultAttributeSize = 20;
         List<ResXmlElement> elementList = CollectionUtil.toList(manifestBlock.recursiveElements());
         Random random = new Random();
@@ -56,14 +62,20 @@ public class ManifestConfuser extends Confuser {
         }
         manifestBlock.getManifestElement().setAttributesUnitSize(
                 defaultAttributeSize, false);
-        manifestBlock.refresh();
     }
 
     private void placeBadChunk(AndroidManifestBlock manifestBlock) {
         placeBadChunk(manifestBlock, ChunkType.XML_END_NAMESPACE);
         placeBadChunk(manifestBlock, ChunkType.PACKAGE);
     }
-
+    @SuppressWarnings("unchecked")
+    private void placeEndElementChunk(AndroidManifestBlock manifestBlock) {
+        UnexpectedResXmlNode xmlNode = new UnexpectedResXmlNode(ChunkType.XML_END_ELEMENT);
+        manifestBlock.add(0, xmlNode);
+        ResXmlChunkApi endElement = new ResXmlChunkApi((Chunk<XmlNodeHeader>) xmlNode.getChunk());
+        endElement.setName("manifest");
+        endElement.refresh();
+    }
     private void placeBadChunk(AndroidManifestBlock manifestBlock, ChunkType chunkType) {
         UnknownResXmlNode unknown = manifestBlock.newUnknown();
         try {

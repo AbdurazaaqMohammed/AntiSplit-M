@@ -19,7 +19,6 @@ import com.reandroid.apk.APKLogger;
 import com.reandroid.apk.ApkModule;
 import com.reandroid.apk.DexDecoder;
 import com.reandroid.apk.DexFileInputSource;
-import com.reandroid.apkeditor.APKEditor;
 import com.reandroid.apkeditor.decompile.DecompileOptions;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.dex.model.DexDirectory;
@@ -38,7 +37,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import org.apache.commons.collections4.Predicate;
+import java.util.function.Predicate;
 
 public class SmaliDecompiler implements DexDecoder {
 
@@ -73,7 +72,7 @@ public class SmaliDecompiler implements DexDecoder {
             return;
         }
         DexDirectory directory = (DexDirectory) apkModule.getTag(DexDirectory.class);
-        if(directory == null) {
+        if (directory == null) {
             if (apkModule.listDexFiles().size() > decompileOptions.loadDex) {
                 DexDecoder.super.decodeDex(apkModule, mainDirectory);
                 return;

@@ -84,7 +84,6 @@ public class Merger extends CommandExecutor<MergerOptions> {
             clearMeta(mergedModule);
         }
         sanitizeManifest(mergedModule);
-        Util.addApkEditorInfo(mergedModule, getClass().getSimpleName());
         mergedModule.refreshTable();
         mergedModule.refreshManifest();
         logMessage("Writing apk ...");

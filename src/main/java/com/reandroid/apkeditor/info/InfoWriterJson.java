@@ -60,7 +60,7 @@ public class InfoWriterJson extends InfoWriter{
         stringPoolObject.put("sorted", stringPool.getHeaderBlock().isSorted());
         stringPoolObject.put("utf8", stringPool.isUtf8());
         stringPoolObject.put("bytes", stringPool.getHeaderBlock().getChunkSize());
-        stringPoolObject.put("strings", stringPool.getStringsArray());
+        stringPoolObject.put("strings", stringPool.toJson());
         mJsonObject.put("string_pool", stringPoolObject);
     }
     @Override

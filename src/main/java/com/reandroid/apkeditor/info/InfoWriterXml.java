@@ -74,9 +74,10 @@ public class InfoWriterXml extends InfoWriter{
         for (int i = 0; i < size; i++ ) {
             StringItem item = stringPool.get(i);
             writeIndent(serializer, indent);
-            serializer.startTag(null, "item");
-            serializer.text(item.get());
-            serializer.endTag(null, "item");
+            serializer.startTag(null, "string");
+            serializer.attribute(null, "id", Integer.toString(item.getIndex()));
+            item.serializeText(serializer);
+            serializer.endTag(null, "string");
         }
 
         indent = indent - 2;
@@ -88,6 +89,10 @@ public class InfoWriterXml extends InfoWriter{
     public void writeXmlDocument(String sourcePath, ResXmlDocument xmlDocument) throws IOException {
         KXmlSerializer serializer = getSerializer();
         serializer.flush();
+        boolean decode = false;
+        if (xmlDocument.getPackageBlock() != null) {
+            decode = true;
+        }
         Writer writer = getWriter();
         writer.write("\n");
         String name = "document";
@@ -97,7 +102,7 @@ public class InfoWriterXml extends InfoWriter{
         Iterator<ResXmlNode> iterator = xmlDocument.iterator();
         while (iterator.hasNext()) {
             ResXmlNode xmlNode = iterator.next();
-            xmlNode.serialize(documentSerializer, false);
+            xmlNode.serialize(documentSerializer, decode);
         }
         documentSerializer.flush();
         writer.write("\n");

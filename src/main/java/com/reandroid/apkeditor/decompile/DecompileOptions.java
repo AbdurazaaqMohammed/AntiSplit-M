@@ -83,6 +83,7 @@ public class DecompileOptions extends OptionsWithFramework {
             description = "dex_lib"
     )
     public String dexLib = DEX_LIB_JF;
+
     @OptionArg(name = "-sig", description = "signatures_path")
     public File signaturesDirectory;
 
