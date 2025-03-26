@@ -23,6 +23,8 @@ import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.io.FileUtil;
 import com.reandroid.utils.io.IOUtil;
 
+import org.apache.commons.collections4.Predicate;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -116,7 +118,7 @@ public class ProtectorOptions extends Options {
         }
         ArrayCollection<String> results = new ArrayCollection<>(
                 StringsUtil.split(full, '\n', true));
-        results.removeIf(new org.apache.commons.collections4.Predicate<String>() {
+        results.removeIf(new Predicate<String>() {
             @Override
             public boolean evaluate(String text) {
                 return StringsUtil.isEmpty(text);

@@ -17,10 +17,9 @@ package com.reandroid.apkeditor.utils;
 
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.ListIterator;
 
 public class StringHelper {
     public static String trueOrNull(Boolean value){
@@ -36,14 +35,13 @@ public class StringHelper {
         return String.valueOf(true);
     }
     public static List<String> sortAscending(List<String> nameList){
-        Comparator<String> cmp= (s1, s2) -> s1.compareTo(s2);
-        Object[] a = nameList.toArray();
-        com.reandroid.utils.collection.ArraySort.sort(a, (Comparator) cmp);
-        ListIterator<String> i = nameList.listIterator();
-        for (Object e : a) {
-            i.next();
-            i.set((String) e);
-        }
+        Comparator<String> cmp=new Comparator<String>() {
+            @Override
+            public int compare(String s1, String s2) {
+                return s1.compareTo(s2);
+            }
+        };
+        Collections.sort(nameList, cmp);
         return nameList;
     }
     public static void printNameAndValues(StringBuilder builder, String tab, int totalWidth, Object[][] objTable){

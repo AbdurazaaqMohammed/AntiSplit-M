@@ -3,6 +3,7 @@ package com.reandroid.commons.utils.log;
 import com.reandroid.commons.utils.FileUtil;
 
 import java.io.*;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
@@ -72,7 +73,8 @@ public class FileLogger extends WriterLogger{
             dir.mkdirs();
         }
         FileOutputStream outputStream=new FileOutputStream(file, true);
-        return new OutputStreamWriter(outputStream, "UTF-8");
+        OutputStreamWriter writer=new OutputStreamWriter(outputStream, Charset.forName("UTF-8"));
+        return writer;
     }
     public static FileLogger create(File file){
         try {

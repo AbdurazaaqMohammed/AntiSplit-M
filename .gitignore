@@ -3,3 +3,5 @@
 /build/
 /build/classes/java/main/
 /.github/
+.idea/misc.xml
+.idea/workspace.xml

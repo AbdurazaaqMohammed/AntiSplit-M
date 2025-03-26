@@ -48,13 +48,7 @@ public class TypeNameMap implements Comparator<TypeNameMap.TypeName> {
     }
     public List<TypeName> listTypeNames(){
         List<TypeName> results=new ArrayList<>(this.map.values());
-        Object[] a = results.toArray();
-        com.reandroid.utils.collection.ArraySort.sort(a, (Comparator) this);
-        ListIterator<TypeName> i = results.listIterator();
-        for (Object e : a) {
-            i.next();
-            i.set((com.reandroid.apkeditor.refactor.TypeNameMap.TypeName) e);
-        }
+        Collections.sort(results, this);
         return results;
     }
     public int count(){

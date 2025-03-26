@@ -15,7 +15,6 @@
  */
 package com.reandroid.apkeditor.info;
 
-import com.java.util.Base64;
 import com.reandroid.archive.block.ApkSignatureBlock;
 import com.reandroid.archive.block.CertificateBlock;
 import com.reandroid.arsc.chunk.PackageBlock;
@@ -33,9 +32,7 @@ import com.reandroid.utils.collection.CollectionUtil;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public abstract class InfoWriter implements Closeable {
     private final Writer writer;
@@ -74,7 +71,10 @@ public abstract class InfoWriter implements Closeable {
     public abstract void writeNameValue(String name, Object value) throws IOException;
     public abstract void flush() throws IOException;
     boolean contains(SpecTypePair specTypePair, List<String> filterList){
-        return filterList.isEmpty() || filterList.contains(specTypePair.getTypeName());
+        if(filterList.size() == 0){
+            return true;
+        }
+        return filterList.contains(specTypePair.getTypeName());
     }
     public Writer getWriter() {
         return writer;
@@ -108,7 +108,8 @@ public abstract class InfoWriter implements Closeable {
         return HexUtil.toHex8("0x", value.getData());
     }
     static String toBase64(byte[] bytes) {
-        return Base64.encodeToString(bytes, 0);
+        return android.Base64.encodeToString(bytes, 0);
+        //return Base64.getEncoder().encodeToString(bytes);
     }
 
     static void writeSpaces(Writer writer, int amount) throws IOException {

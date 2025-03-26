@@ -36,7 +36,6 @@ import com.reandroid.dex.model.DexDirectory;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.HexUtil;
-import com.reandroid.utils.StringsUtil;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 
@@ -156,7 +155,7 @@ public class Info extends CommandExecutor<InfoOptions> {
     }
     private void printResList(ApkModule apkModule) throws IOException {
         InfoOptions options = getOptions();
-        if(options.resList.isEmpty()){
+        if(options.resList.size() == 0){
             return;
         }
         if(!apkModule.hasTableBlock()){
@@ -307,14 +306,10 @@ public class Info extends CommandExecutor<InfoOptions> {
             return;
         }
         List<String> usesPermissions = manifest.getUsesPermissions();
-        if(usesPermissions.isEmpty()) return;
-        Object[] a = usesPermissions.toArray();
-        com.reandroid.utils.collection.ArraySort.sort(a, (Comparator) CompareUtil.getComparableComparator());
-        ListIterator<String> i = usesPermissions.listIterator();
-        for (Object e : a) {
-            i.next();
-            i.set((String) e);
+        if(usesPermissions.size() == 0){
+            return;
         }
+        Collections.sort(usesPermissions, CompareUtil.getComparableComparator());
         //printLine("Uses permission (" + usesPermissions.size() + ")");
         String tag = AndroidManifest.TAG_uses_permission;
         InfoWriter infoWriter = getInfoWriter();
@@ -330,7 +325,7 @@ public class Info extends CommandExecutor<InfoOptions> {
             return;
         }
         List<ResXmlElement> activityList = CollectionUtil.toList(manifest.getActivities(true));
-        if(activityList.isEmpty()){
+        if(activityList.size() == 0){
             return;
         }
         ResXmlElement main = manifest.getMainActivity();
@@ -434,16 +429,13 @@ public class Info extends CommandExecutor<InfoOptions> {
         List<String> qualifiers = CollectionUtil.toUniqueList(
                 ComputeIterator.of(iterator, config -> {
                     String qualifier = config.getQualifiers();
-                    return StringsUtil.isEmpty(qualifier) ? qualifier : qualifier.substring(1);
+                    if (qualifier.length() != 0) {
+                        qualifier = qualifier.substring(1);
+                    }
+                    return qualifier;
                 }));
 
-        Object[] a = qualifiers.toArray();
-        com.reandroid.utils.collection.ArraySort.sort(a, (Comparator) CompareUtil.getComparableComparator());
-        ListIterator<String> i = qualifiers.listIterator();
-        for (Object e : a) {
-            i.next();
-            i.set((String) e);
-        }
+        Collections.sort(qualifiers, CompareUtil.getComparableComparator());
 
         getInfoWriter().writeArray("configurations", qualifiers.toArray(new String[0]));
     }
@@ -456,13 +448,7 @@ public class Info extends CommandExecutor<InfoOptions> {
         List<String> languages = CollectionUtil.toUniqueList(
                 ComputeIterator.of(iterator, ResConfig::getLanguage));
 
-        Object[] a = languages.toArray();
-        com.reandroid.utils.collection.ArraySort.sort(a, (Comparator) CompareUtil.getComparableComparator());
-        ListIterator<String> i = languages.listIterator();
-        for (Object e : a) {
-            i.next();
-            i.set((String) e);
-        }
+        Collections.sort(languages, CompareUtil.getComparableComparator());
 
         getInfoWriter().writeArray("languages", languages.toArray(new String[0]));
     }
@@ -477,13 +463,7 @@ public class Info extends CommandExecutor<InfoOptions> {
 
         locales.remove("");
 
-        Object[] a = locales.toArray();
-        com.reandroid.utils.collection.ArraySort.sort(a, (Comparator) CompareUtil.getComparableComparator());
-        ListIterator<String> i = locales.listIterator();
-        for (Object e : a) {
-            i.next();
-            i.set((String) e);
-        }
+        Collections.sort(locales, CompareUtil.getComparableComparator());
 
         getInfoWriter().writeArray("locales", locales.toArray(new String[0]));
     }
@@ -503,7 +483,7 @@ public class Info extends CommandExecutor<InfoOptions> {
             return;
         }
         List<Entry> entryList = tableBlock.resolveReference(resourceId);
-        if(entryList.isEmpty()){
+        if(entryList.size() == 0){
             logWarn("WARN: Can't find resource: " + HexUtil.toHex8("@0x", resourceId));
             //infoWriter.writeNameValue(varName, HexUtil.toHex8("@0x", resourceId));
             return;
@@ -581,17 +561,7 @@ public class Info extends CommandExecutor<InfoOptions> {
         }else {
             results = new ArrayList<>(entryCollection);
         }
-        Comparator<Object> cmp = (entry1, entry2) -> {
-            return ((Entry)entry1).getResConfig().compareTo(((Entry)entry2).getResConfig());
-        };
-        //results.sort(cmp);
-        Object[] elements = results.toArray();
-        com.reandroid.utils.collection.ArraySort.sort(elements, cmp);
-        ListIterator<Entry> iterator = results.listIterator();
-        for (Object element : elements) {
-            iterator. next();
-            iterator. set((Entry) element);
-        }
+        Collections.sort(results, (entry1, entry2) -> entry1.getResConfig().compareTo(entry2.getResConfig()));
         return results;
     }
 }
