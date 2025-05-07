@@ -59,7 +59,7 @@
     <string name="light_theme">"Light theme"</string>
     <string name="system_theme">"System theme"</string>
     <string name="suffix">"Suffix"</string>
-    <string name="pairip_warning">"The app you are trying to merge uses Pairip/Google Integrity Protection to protect it from modification. The merged version will crash on opening unless you know how to modify the APK to bypass it."</string>
+    <string name="pairip_warning">"The app you are trying to merge uses PairIP/Google Integrity Protection to protect it from modification. The merged version will crash on opening unless you know how to modify the APK to bypass it."</string>
     <string name="force">"Force merging mismatched splits (with different versionCode or package name)"</string>
     <string name="file_save_method">"File saving method"</string>
     <string name="pick_folder">"Select folder"</string>
