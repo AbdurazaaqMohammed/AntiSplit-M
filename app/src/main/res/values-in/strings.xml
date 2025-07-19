@@ -1,13 +1,13 @@
 <resources>
     <string name="app_name" translatable="false">AntiSplit M</string>
-    <string name="merge">Pilih APK terpisah yang ingin Digabungkan/Di-AntiSplit</string>
+    <string name="merge">Pilih APK terpisah yang ingin digabungkan/di-AntiSplit</string>
     <string name="success_saved">Berkas berhasil disimpan</string>
-    <string name="enable_logs" >Aktifkan log</string>
+    <string name="enable_logs">Aktifkan log</string>
     <string name="ask">Tanyakan setiap saat</string>
     <string name="same">Direktori yang sama dengan berkas yang dipilih</string>
     <string name="grant_storage">Perizinan penyimpanan diperlukan untuk menyimpan ke direktori yang sama dengan berkas yang dipilih</string>
-    <string name="no_filepath">"Tidak dapat menulis ke jalur berkas"</string>
-    <string name="output">"Direktori keluaran: "</string>
+    <string name="no_filepath">Tidak dapat menulis ke jalur berkas</string>
+    <string name="output">Direktori keluaran:</string>
     <string name="show_dialog">Tampilkan dialog yang memungkinkan pemilihan APK terpisah mana yang akan disertakan</string>
     <string name="nothing">Tidak ada yang dipilih</string>
     <string name="change_text_color">Ubah warna teks</string>
@@ -23,16 +23,16 @@
     <string name="sign_failed">Gagal menandatangani APK, sedang menyimpan tanpa menandatangani</string>
     <string name="signing">Menandatangani APK…</string>
     <string name="saving">Menyimpan…</string>
-    <string name="removed_table_entry">"Entri-tabel yang dihapus : "</string>
+    <string name="removed_table_entry">Entri tabel yang dihapus:</string>
     <string name="sanitizing_manifest">Menyanitasi manifest…</string>
-    <string name="skipping">"Melewati "</string>
+    <string name="skipping">Melewati</string>
     <string name="not_apk">: Bukan sebuah berkas APK</string>
     <string name="unselected">: Tidak dipilih</string>
     <string name="searching">Mencari berkas APK…</string>
     <string name="cancel">Batalkan</string>
     <string name="select">Pilih</string>
     <string name="label_parent_directory">Direktori Induk</string>
-    <string name="last_edit">Terakhir kali disunting: </string>
+    <string name="last_edit">Terakhir kali disunting:</string>
     <string name="error_dir_access">Direktori tidak dapat diakses</string>
     <string name="lang" translatable="false">Language</string>
     <string name="update">Pembaruan tersedia</string>
@@ -45,13 +45,13 @@
     <string name="close">Tutup</string>
     <string name="mismatch">APK terpisah (%1$s) berikut ini memiliki kode versi yang tidak cocok. Mereka hanya kode bahasa, sehingga aplikasi dapat berjalan tanpa kode tersebut, tetapi bahasa ini tidak akan berfungsi di aplikasi. Apakah Anda ingin melanjutkan penggabungan?</string>
     <string name="warning">Peringatan</string>
-    <string name="mismatch_base">" kode versi tidak cocok dengan kode versi base.apk"</string>
+    <string name="mismatch_base">Kode versi tidak cocok dengan kode versi base.apk</string>
     <string name="label_parent_dir" translatable="false">…</string>
-    <string name="create_issue">Buat Laporan Masalah di GitHub</string>
+    <string name="create_issue">Buat laporan masalah di GitHub</string>
     <string name="copy_log">Salin log</string>
     <string name="pause">Tombol jeda</string>
     <string name="copied_log">Log yang disalin</string>
-    <string name="select_from_installed_apps">Pilih dari Aplikasi Terpasang</string>
+    <string name="select_from_installed_apps">Pilih dari aplikasi terpasang</string>
     <string name="app_icon_list_label">Ikon aplikasi</string>
     <string name="install">Pasang</string>
     <string name="black_theme">Tema Hitam</string>
