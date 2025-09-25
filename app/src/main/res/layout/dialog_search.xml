@@ -2,6 +2,7 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -21,7 +22,7 @@
             app:boxCornerRadiusTopEnd="24dp"
             app:boxCornerRadiusBottomStart="24dp"
             app:boxCornerRadiusBottomEnd="24dp"
-            >
+            tools:ignore="HardcodedText">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/search_bar"
@@ -29,7 +30,8 @@
                 android:paddingEnd="100dp"
                 android:layout_height="wrap_content"
                 android:importantForAutofill="no"
-                android:inputType="text" />
+                android:inputType="text"
+                tools:ignore="RtlSymmetry" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <LinearLayout
@@ -52,7 +54,8 @@
                 android:visibility="gone"
                 app:tooltipText="Clear"
                 android:contentDescription="Clear"
-                style="@style/Widget.Material3.Button.IconButton" />
+                style="@style/Widget.Material3.Button.IconButton"
+                tools:ignore="HardcodedText" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/filter_button"
@@ -63,7 +66,8 @@
                 app:icon="@android:drawable/ic_menu_sort_by_size"
                 app:tooltipText="Sort"
                 android:contentDescription="Sort"
-                style="@style/Widget.Material3.Button.IconButton" />
+                style="@style/Widget.Material3.Button.IconButton"
+                tools:ignore="HardcodedText" />
         </LinearLayout>
     </FrameLayout>
 

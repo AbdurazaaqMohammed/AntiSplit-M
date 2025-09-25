@@ -1,11 +1,15 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/sort_name"
-        android:title="Name" />
+        android:title="Name"
+        tools:ignore="HardcodedText" />
     <item
         android:id="@+id/date_updated"
-        android:title="Date updated" />
+        android:title="Date updated"
+        tools:ignore="HardcodedText" />
     <item
         android:id="@+id/date_install"
-        android:title="Date installed" />
+        android:title="Date installed"
+        tools:ignore="HardcodedText" />
 </menu>

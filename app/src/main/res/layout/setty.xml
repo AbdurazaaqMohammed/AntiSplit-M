@@ -19,7 +19,8 @@
             android:outlineSpotShadowColor="@android:color/transparent"
             card_view:cardElevation="0dp"
             app:cardElevation="0dp"
-            app:cardCornerRadius="8dp">
+            app:cardCornerRadius="8dp"
+            card_view:targetApi="28">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -107,7 +108,8 @@
             style="@style/Widget.Material3.TextInputLayout.FilledBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Select Item">
+            android:hint="Select Item"
+            card_view:ignore="HardcodedText">
 
             <AutoCompleteTextView
                 android:id="@+id/auto_complete_tv"
@@ -116,7 +118,8 @@
                 android:inputType="none"
                 android:singleLine="false"
                 android:lines="2"
-                android:maxLines="3"/>
+                android:maxLines="3"
+                card_view:ignore="LabelFor" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <View

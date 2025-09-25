@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    >
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"
+        tools:ignore="RequestInstallPackagesPolicy" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="PackageVisibilityPolicy,QueryAllPackagesPermission" />
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" android:minSdkVersion="30"
-        tools:ignore="ScopedStorage" />
+        tools:ignore="AllFilesAccessPolicy,ScopedStorage" />
     <application
         android:allowBackup="true"
         android:theme="@style/Theme.Material3.DayNight.NoActionBar"

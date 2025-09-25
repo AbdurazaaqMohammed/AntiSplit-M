@@ -774,7 +774,7 @@ public class MainActivity extends AppCompatActivity {
             try {
                 currentVer = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
             } catch (Exception ex) {
-                currentVer = "2.2.6";
+                currentVer = "2.2.7";
             }
             fullLog.append(currentVer).append('\n')
                     .append("Storage permission granted: ")

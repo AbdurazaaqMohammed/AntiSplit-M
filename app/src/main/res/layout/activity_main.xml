@@ -23,7 +23,8 @@
             android:outlineSpotShadowColor="@android:color/transparent"
             card_view:cardElevation="0dp"
             app:cardElevation="0dp"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="16dp"
+            tools:targetApi="28">
 
             <LinearLayout
                 android:id="@+id/processButtons"
@@ -144,7 +145,8 @@
             android:elevation="0dp"
             app:elevation="0dp"
             android:contentDescription="@string/settings"
-            android:src="@drawable/settings" />
+            android:src="@drawable/settings"
+            android:visibility="gone" />
 
     </LinearLayout>
 </FrameLayout>

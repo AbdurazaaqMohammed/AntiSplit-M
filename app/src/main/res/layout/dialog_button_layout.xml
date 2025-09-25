@@ -13,7 +13,8 @@
         android:outlineSpotShadowColor="@android:color/transparent"
         card_view:cardElevation="0dp"
         android:layout_margin="16dp"
-        app:cardElevation="0dp">
+        app:cardElevation="0dp"
+        card_view:targetApi="28">
         <com.google.android.material.textview.MaterialTextView
             android:id="@+id/errorD"
             android:padding="8dp"
