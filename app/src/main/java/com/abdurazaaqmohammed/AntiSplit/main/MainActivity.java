@@ -211,7 +211,7 @@ public class MainActivity extends AppCompatActivity {
             .setType("*/*")
             .putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
             .putExtra(Intent.EXTRA_MIME_TYPES,
-                new String[]{"application/zip", "application/vnd.android.package-archive", "application/octet-stream"}) // XAPK usually octet-stream
+                new String[]{"application/zip", "application/vnd.android.package-archive", "application/vnd.apkm", "application/octet-stream"}) // XAPK usually octet-stream
             , 1)
         );
         cleanupAppFolder();
