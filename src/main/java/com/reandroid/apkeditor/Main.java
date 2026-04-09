@@ -74,7 +74,7 @@ public class Main {
 
     @OtherOption(
             names = {"-h", "-help"}, alternates = {"--help"},
-            description = "Displays this help and exit"
+            description = "app_help"
     )
     void onMainHelp() {
         mExitCode = 2;
@@ -85,7 +85,7 @@ public class Main {
     }
     @OtherOption(
             names = {"-v", "-version"}, alternates = {"--version"},
-            description = "Displays version"
+            description = "app_version"
     )
     void onPrintVersion() {
         mExitCode = 2;

@@ -1,50 +1,59 @@
 package com.reandroid.commons.utils.log;
 
-import com.reandroid.commons.utils.FileUtil;
+import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.io.FileUtil;
 
-import java.io.*;
-import java.nio.charset.Charset;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
-import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public class FileLogger extends WriterLogger{
-    private final Object mLock=new Object();
+public class FileLogger extends WriterLogger {
+    
+    private final Object mLock = new Object();
     private File mFile;
+    
     public FileLogger(File file) throws IOException {
         super(createWriter(file), countLines(file));
-        this.mFile=file;
+        this.mFile = file;
     }
-    public File getFile(){
+    
+    public File getFile() {
         return mFile;
     }
     public boolean setFile(File file) throws IOException {
-        File prev=getFile();
-        if(Objects.equals(prev, file)){
+        File prev = getFile();
+        if (ObjectsUtil.equals(prev, file)) {
             return false;
         }
-        synchronized (mLock){
-            Writer writer= createWriter(file);
+        synchronized (mLock) {
+            Writer writer = createWriter(file);
             super.setWriter(writer);
             super.resetCount();
-            writer.write("// Previous file: "+prev);
+            writer.write("// Previous file: " + prev);
             writer.flush();
-            this.mFile=file;
+            this.mFile = file;
             return true;
         }
     }
     @Override
-    void onTotalCount(Writer writer, int totalCount){
-        if(totalCount<MAX_LINES){
+    void onTotalCount(Writer writer, int totalCount) {
+        if (totalCount < MAX_LINES) {
             return;
         }
-        File newFile=FileUtil.getLastNumberedFile(getFile());
-        newFile=FileUtil.getNextNumberedFile(newFile);
+        File newFile = getLastNumberedFile(getFile());
+        newFile = getNextNumberedFile(newFile);
         try {
-            boolean setOk=setFile(newFile);
-            if(setOk){
+            if (setFile(newFile)) {
                 writer.close();
             }
-        } catch (IOException exception) {
+        } catch (IOException ignored) {
         }
     }
     @Override
@@ -55,12 +64,11 @@ public class FileLogger extends WriterLogger{
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        FileLogger that = (FileLogger) o;
-        return Objects.equals(getFile(), that.getFile());
+        return ObjectsUtil.equals(getFile(), ((FileLogger) o).getFile());
     }
     @Override
     public int hashCode() {
-        return Objects.hash(getFile());
+        return ObjectsUtil.hash(getFile());
     }
     @Override
     public String toString() {
@@ -68,19 +76,13 @@ public class FileLogger extends WriterLogger{
     }
 
     private static Writer createWriter(File file) throws IOException {
-        File dir=file.getParentFile();
-        if(dir!=null && !dir.exists()){
-            dir.mkdirs();
-        }
-        FileOutputStream outputStream=new FileOutputStream(file, true);
-        OutputStreamWriter writer=new OutputStreamWriter(outputStream, Charset.forName("UTF-8"));
-        return writer;
+        return new OutputStreamWriter(FileUtil.outputStream(file), StandardCharsets.UTF_8);
     }
-    public static FileLogger create(File file){
+    public static FileLogger create(File file) {
         try {
-            file=FileUtil.getLastNumberedFile(file);
-            file=prepare(file);
-            FileLogger fileLogger=new FileLogger(file);
+            file = getLastNumberedFile(file);
+            file = prepare(file);
+            FileLogger fileLogger= new FileLogger(file);
             fileLogger.setEnable(true);
             fileLogger.setIgnoreSameLine(true);
             return fileLogger;
@@ -88,28 +90,141 @@ public class FileLogger extends WriterLogger{
             return null;
         }
     }
-    public static File prepare(File file){
-        File dir=file.getParentFile();
-        if(dir!=null && !dir.exists()){
-            dir.mkdirs();
-        }
-        int lines=countLines(file);
-        if(lines<MAX_LINES){
+    public static File prepare(File file) {
+        FileUtil.ensureParentDirectory(file);
+        int lines = countLines(file);
+        if (lines < MAX_LINES) {
             return file;
         }
-        File next=FileUtil.getNextNumberedFile(file);
-        if(file.equals(next)){
+        File next = getNextNumberedFile(file);
+        if (file.equals(next)) {
             // will not happen
             return file;
         }
         return prepare(next);
     }
-    private static int countLines(File file){
+    private static int countLines(File file) {
         try {
-            return FileUtil.countLines(file);
+            return countContentLines(file);
         } catch (IOException exception) {
             return 0;
         }
     }
-    private static final int MAX_LINES=25000;
+    private static int countContentLines(File file) throws IOException{
+        if (file == null) {
+            throw new IOException("file == null");
+        }
+        if (!file.isFile()) {
+            return 0;
+        }
+        int result = 0;
+        InputStreamReader inputStreamReader= new InputStreamReader(new FileInputStream(file));
+        final BufferedReader reader = new BufferedReader(inputStreamReader);
+        while (reader.readLine() != null) {
+            result++;
+        }
+        reader.close();
+        return result;
+    }
+
+    public static File getNextNumberedFile(File file) {
+        if (file == null) {
+            return null;
+        }
+        String name = file.getName();
+        String ext = "";
+        int i = name.lastIndexOf(".");
+        if (i>0) {
+            ext=name.substring(i);
+            name=name.substring(0,i);
+        }
+        i = getLastNum(name) + 1;
+        name = removeLastNum(name);
+        File dir=file.getParentFile();
+        return new File(dir,buildNumberFileName(name, i, ext));
+    }
+    public static File getLastNumberedFile(File file) {
+        if (file == null) {
+            return null;
+        }
+        if (!file.isFile()) {
+            return file;
+        }
+        String name = file.getName();
+        String ext = "";
+        int i = name.lastIndexOf(".");
+        if (i > 0) {
+            ext = name.substring(i);
+            name = name.substring(0,i);
+        }
+        File dir = file.getParentFile();
+        File[] files = dir.listFiles();
+        if (files == null) {
+            return file;
+        }
+        i = getLastNum(name) + 1;
+        name = removeLastNum(name);
+        File result=file;
+        for (File f : files) {
+            if (!f.isFile()) {
+                continue;
+            }
+            String n = f.getName();
+            if (!n.startsWith(name) || !n.endsWith(ext)) {
+                continue;
+            }
+            int i2 = getLastNum(f);
+            if (i2 <= i) {
+                continue;
+            }
+            result = f;
+            i = i2;
+        }
+        return result;
+    }
+    private static int getLastNum(File file) {
+        String name = file.getName();
+        int i = name.lastIndexOf(".");
+        if (i > 0) {
+            name = name.substring(0,i);
+        }
+        Pattern pattern = Pattern.compile("^.+_([0-9]{1,6})$");
+        Matcher matcher = pattern.matcher(name);
+        if (!matcher.find()) {
+            return 0;
+        }
+        String num = matcher.group(1);
+        return Integer.parseInt(num);
+    }
+
+    private static String buildNumberFileName(String name, int i, String ext) {
+        String num;
+        if (i < 10000) {
+            num = String.format("%04d",i);
+        }else {
+            num = String.valueOf(i);
+        }
+        return name + "_" + num + ext;
+    }
+    private static String removeLastNum(String name) {
+        Pattern pattern = Pattern.compile("^.+(_[0-9]{1,6})$");
+        Matcher matcher = pattern.matcher(name);
+        if (!matcher.find()) {
+            return name;
+        }
+        String num = matcher.group(1);
+        int i = name.length() - num.length();
+        return name.substring(0, i);
+    }
+    private static int getLastNum(String name) {
+        Pattern pattern = Pattern.compile("^.+_([0-9]{1,6})$");
+        Matcher matcher = pattern.matcher(name);
+        if (!matcher.find()) {
+            return 0;
+        }
+        String num = matcher.group(1);
+        return Integer.parseInt(num);
+    }
+
+    private static final int MAX_LINES = 25000;
 }

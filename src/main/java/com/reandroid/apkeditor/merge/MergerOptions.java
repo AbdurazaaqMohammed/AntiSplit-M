@@ -16,6 +16,7 @@
 package com.reandroid.apkeditor.merge;
 
 import com.reandroid.apkeditor.Options;
+import com.reandroid.jcommand.annotations.ChoiceArg;
 import com.reandroid.jcommand.annotations.CommandOptions;
 import com.reandroid.jcommand.annotations.OptionArg;
 
@@ -30,6 +31,18 @@ import java.io.File;
                 "merge_example_1"
         })
 public class MergerOptions extends Options {
+
+
+    @ChoiceArg(
+            name = "-extractNativeLibs",
+            values = {
+                    "manifest",
+                    "none",
+                    "false",
+                    "true"
+            },
+            description = "extract_native_libs")
+    public String extractNativeLibs;
 
     @OptionArg(name = "-vrd", flag = true, description = "validate_resources_dir")
     public boolean validateResDir;
@@ -60,5 +73,13 @@ public class MergerOptions extends Options {
     @Override
     public File generateOutputFromInput(File input) {
         return generateOutputFromInput(input, "_merged.apk");
+    }
+
+    public String getExtractNativeLibs() {
+        String extractNativeLibs = this.extractNativeLibs;
+        if (extractNativeLibs == null) {
+            extractNativeLibs = "manifest";
+        }
+        return extractNativeLibs;
     }
 }

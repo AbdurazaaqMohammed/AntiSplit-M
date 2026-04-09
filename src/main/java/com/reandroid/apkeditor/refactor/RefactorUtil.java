@@ -127,6 +127,4 @@ public class RefactorUtil {
     }
     private static final Pattern PATTERN_GOOD_NAME =Pattern.compile("^[A-Za-z]{2,15}[_.A-Za-z0-9]*$");
     private static final Pattern PATTERN_GENERATED_NAME=Pattern.compile("^.+_(0x[0-9a-f]{7,8})$");
-
-    public static final String RES_DIR="res";
 }

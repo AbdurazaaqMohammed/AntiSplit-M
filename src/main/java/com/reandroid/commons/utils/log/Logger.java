@@ -238,12 +238,12 @@ public abstract class Logger {
         }
         return mConsoleWidth;
     }
-    private void updateConsoleWidth(){
+    private void updateConsoleWidth() {
         widthCheckTime.reset();
-        if(mConsoleWidth == 0){
+        mConsoleWidth = ConsoleUtil.getConsoleWidth();
+        if (mConsoleWidth <= 0) {
             mConsoleWidth = 80;
         }
-        mConsoleWidth = ConsoleUtil.getConsoleWidth();
     }
     public static void clearFileLoggers(){
         Logger logger=getLogger();

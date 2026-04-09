@@ -59,6 +59,7 @@ public class Protector extends CommandExecutor<ProtectorOptions> {
         new DirectoryConfuser(this).confuse();
         new FileNameConfuser(this).confuse();
         new TableConfuser(this).confuse();
+        new DexConfuser(this).confuse();
         module.getTableBlock().refresh();
         logMessage("Writing apk ...");
         if (options.confuse_zip) {

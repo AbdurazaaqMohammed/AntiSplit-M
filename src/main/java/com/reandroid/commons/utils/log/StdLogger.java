@@ -27,6 +27,9 @@ public class StdLogger extends Logger{
     @Override
     public void writeSameLine(String line) {
         synchronized (mLock){
+            if (!ConsoleUtil.isConsole()) {
+                return;
+            }
             if(line == null){
                 line = "null";
             }

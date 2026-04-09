@@ -2,7 +2,7 @@
 apply plugin: 'java'
 
 group 'com.reandroid.apkeditor'
-version '1.4.2'
+version '1.4.8'
 
 java {
     sourceCompatibility JavaVersion.VERSION_1_8
@@ -54,12 +54,5 @@ task fatJar(type: Jar) {
     }
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
-}
-
-task betaJar() {
-    doFirst {
-        version = "${version}-beta"
-    }
-    finalizedBy(fatJar)
 }
 

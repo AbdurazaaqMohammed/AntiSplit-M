@@ -86,6 +86,7 @@ public class Merger extends CommandExecutor<MergerOptions> {
         sanitizeManifest(mergedModule);
         mergedModule.refreshTable();
         mergedModule.refreshManifest();
+        applyExtractNativeLibs(mergedModule, options.getExtractNativeLibs());
         logMessage("Writing apk ...");
         mergedModule.writeApk(options.outputFile);
         mergedModule.close();
@@ -154,9 +155,6 @@ public class Merger extends CommandExecutor<MergerOptions> {
             AndroidManifest.NAME_requiredSplitTypes, this);
         AndroidManifestHelper.removeAttributeFromManifestByName(manifest,
             AndroidManifest.NAME_splitTypes, this);
-        AndroidManifestHelper.removeAttributeFromManifestAndApplication(manifest,
-                AndroidManifest.ID_extractNativeLibs,
-                this, AndroidManifest.NAME_extractNativeLibs);
         AndroidManifestHelper.removeAttributeFromManifestAndApplication(manifest,
                 AndroidManifest.ID_isSplitRequired,
                 this, AndroidManifest.NAME_isSplitRequired);

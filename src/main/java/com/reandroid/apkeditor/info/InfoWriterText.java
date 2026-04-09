@@ -247,6 +247,7 @@ public class InfoWriterText extends InfoWriter {
                 writer.write(ARRAY_TAB);
                 writer.write(marker.toString());
             }
+            writer.write("\n");
         }
     }
     @Override

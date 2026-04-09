@@ -49,11 +49,14 @@ public class ProtectorOptions extends Options {
     @OptionArg(name = "-keep-type", description = "protect_keep_type")
     public final Set<String> keepTypes = new HashSet<>();
 
-    @OptionArg(name = "-dic-dir-names", flag = true, description = "protect_dic_dir_name")
+    @OptionArg(name = "-dic-dir-names", description = "protect_dic_dir_name")
     public File dic_dir_name;
 
-    @OptionArg(name = "-dic-file-names", flag = true, description = "protect_dic_file_name")
+    @OptionArg(name = "-dic-file-names", description = "protect_dic_file_name")
     public File dic_file_name;
+
+    @OptionArg(name = "-dex-level", description = "dex_protect_level")
+    public int dexLevel;
 
     public ProtectorOptions() {
         super();

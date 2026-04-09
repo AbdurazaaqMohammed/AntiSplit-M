@@ -10,16 +10,29 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ConsoleUtil {
+
+    private static final boolean IS_WINDOWS;
+    private static final int DEFAULT_WIDTH;
+
+    static {
+        String str = System.getProperty("os.name");
+        if (str == null) {
+            str = "";
+        }
+        IS_WINDOWS = str.toLowerCase().contains("windows");
+        DEFAULT_WIDTH = 80;
+    }
+
     private static Boolean succeedOnce;
     /**
      * Attempt to find the width of the console. If it can't get the width, return a default of 80
      * @return The current console width
      */
     public static int getConsoleWidth() {
-        if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+        if (IS_WINDOWS) {
             try {
                 return attemptMode();
-            } catch (Exception ex) {
+            } catch (Throwable ignored) {
                 succeedOnce = false;
             }
         } else {
@@ -30,7 +43,15 @@ public class ConsoleUtil {
             }
         }
 
-        return 80;
+        return DEFAULT_WIDTH;
+    }
+    public static boolean isConsole() {
+        Boolean succeed = succeedOnce;
+        if (succeed == null) {
+            getConsoleWidth();
+            succeed = succeedOnce;
+        }
+        return succeed != null && succeed;
     }
     public static Boolean getSucceedOnce() {
         return succeedOnce;
@@ -39,52 +60,60 @@ public class ConsoleUtil {
         String output = attemptCommand(new String[]{"sh", "-c", "stty size < /dev/tty"});
         if (output == null) {
             succeedOnce = false;
-            return 80;
+            return DEFAULT_WIDTH;
         }
-
-        String[] vals = output.split(" ");
+        String[] vals = output.trim().split(" ");
         if (vals.length < 2) {
+            logWidthIssue(output);
             succeedOnce = false;
-            return 80;
+            return DEFAULT_WIDTH;
         }
-        int result = Integer.parseInt(vals[1]);
-        if(succeedOnce == null || !succeedOnce){
-            succeedOnce = true;
+        try {
+            int result = Integer.parseInt(vals[1]);
+            if (result > 0) {
+                if(succeedOnce == null || !succeedOnce){
+                    succeedOnce = true;
+                }
+                return result;
+            }
+        } catch (NumberFormatException ignored) {
         }
-        return result;
+        logWidthIssue(output);
+        succeedOnce = false;
+        return DEFAULT_WIDTH;
     }
 
     private static int attemptMode() {
         String output = attemptCommand(new String[]{"mode", "con"});
         if (output == null) {
             succeedOnce = false;
-            return 80;
+            return DEFAULT_WIDTH;
         }
 
-        Pattern pattern = Pattern.compile("Columns:[ \t]*(\\d+)");
+        Pattern pattern = Pattern.compile("Columns:\\S*(\\d+)");
         Matcher m = pattern.matcher(output);
-        if (!m.find()) {
-            succeedOnce = false;
-            return 80;
+        if (m.find()) {
+            int result = Integer.parseInt(m.group(1));
+            if (result > 0) {
+                if (succeedOnce == null || !succeedOnce) {
+                    succeedOnce = true;
+                }
+                return result;
+            }
         }
-
-        int result = Integer.parseInt(m.group(1));
-        if(succeedOnce == null || !succeedOnce){
-            succeedOnce = true;
-        }
-        return result;
+        logWidthIssue(output);
+        succeedOnce = false;
+        return DEFAULT_WIDTH;
     }
 
-    private static String attemptCommand(String[] command) {
+    public static String attemptCommand(String[] command) {
         StringBuffer buffer = null;
 
         try {
-
             Process p = Runtime.getRuntime().exec(command);
+            p.waitFor();
             BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-
             String line;
-
             while ((line = reader.readLine()) != null) {
                 if (buffer == null) {
                     buffer = new StringBuffer();
@@ -97,8 +126,21 @@ public class ConsoleUtil {
                 return buffer.toString();
             }
             return null;
-        } catch (Exception ex) {
+        } catch (Throwable ignored) {
             return null;
         }
+    }
+
+    private static boolean issue_logged;
+    private static void logWidthIssue(String output) {
+        if (issue_logged) {
+            return;
+        }
+        issue_logged = true;
+        String msg = "Failed to parse console width\n" +
+                "Please create issue at https://github.com/REAndroid/APKEditor\n" +
+                "os.name=" + System.getProperty("os.name")
+                + "\nCommand output=" + output;
+        System.err.println(msg);
     }
 }

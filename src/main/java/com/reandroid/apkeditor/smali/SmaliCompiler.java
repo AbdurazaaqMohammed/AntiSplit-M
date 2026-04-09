@@ -108,6 +108,7 @@ public class SmaliCompiler implements DexEncoder {
     private InputSource buildWithInternalLib(String progress, File classesDir, File dexCacheFile) throws IOException {
         logMessage(progress + "Smali<INTERNAL>: " + dexCacheFile.getName());
         DexFile dexFile = DexFile.createDefault();
+        dexFile.setSimpleName(dexCacheFile.getName());
         int version = 0;
         if (this.minSdkVersion != null) {
             version = minSdkVersion;

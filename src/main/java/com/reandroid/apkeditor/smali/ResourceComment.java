@@ -26,84 +26,98 @@ import org.jf.baksmali.CommentProvider;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ResourceComment extends CommentProvider{
+public class ResourceComment extends CommentProvider {
+
     private final TableBlock tableBlock;
     private final PackageBlock packageBlock;
     private final Map<Integer, String> mCommentCache;
-    public ResourceComment(TableBlock tableBlock){
+
+    public ResourceComment(TableBlock tableBlock) {
         this.tableBlock = tableBlock;
         this.packageBlock = tableBlock.pickOne();
         this.mCommentCache = new HashMap<>();
     }
 
     @Override
-    public String getComment(int resourceId){
-        if(!PackageBlock.isResourceId(resourceId)){
+    public String getComment(int resourceId) {
+        if (!PackageBlock.isResourceId(resourceId)) {
             return null;
         }
-        synchronized (this){
+        synchronized (this) {
             String comment = mCommentCache.get(resourceId);
-            if(comment != null){
+            if (comment != null) {
                 return comment;
             }
             comment = buildComment(resourceId);
-            if(comment != null){
+            if (comment != null) {
                 mCommentCache.put(resourceId, comment);
             }
             return comment;
         }
     }
-    private String buildComment(int resourceId){
+    private String buildComment(int resourceId) {
         ResourceEntry resourceEntry = tableBlock.getResource(resourceId);
-        if(resourceEntry == null || !resourceEntry.isDeclared()){
+        if (resourceEntry == null || !resourceEntry.isDeclared()) {
             return null;
         }
 
         String ref = resourceEntry
                 .buildReference(packageBlock, ValueType.REFERENCE);
 
-        if(resourceEntry.getPackageBlock().getTableBlock() != tableBlock){
+        if (resourceEntry.getPackageBlock().getTableBlock() != tableBlock) {
             return ref;
         }
-        if("id".equals(resourceEntry.getType())){
+        if ("id".equals(resourceEntry.getType())) {
             return ref;
         }
 
-        Entry entry = resourceEntry.get();
-        if(entry == null){
+        Entry entry = resourceEntry.get("-en");
+        if (entry == null || !entry.isScalar()) {
+            entry = resourceEntry.get();
+        }
+        if (entry == null) {
             return ref;
         }
         ResValue resValue = entry.getResValue();
-        if(resValue == null){
+        if (resValue == null) {
             return ref;
         }
         String decoded = resValue.decodeValue();
-        if(decoded == null){
+        if (decoded == null) {
             return ref;
         }
-        if(decoded.length() > 100){
+        if (decoded.length() > 100) {
             decoded = decoded.substring(0, 100) + " ...";
         }
-        return ref + " '" + replaceNewLines(decoded)+ "'";
+        return ref + " '" + escapeNewLines(decoded)+ "'";
     }
-    private String replaceNewLines(String decoded){
-        StringBuilder builder = new StringBuilder();
-        char[] chars = decoded.toCharArray();
-        for(char ch : chars){
-            builder.append(escapeChar(ch));
+    private String escapeNewLines(String str) {
+        StringBuilder builder = null;
+        int length = str.length();
+        for (int i = 0; i < length; i++) {
+            char ch = str.charAt(i);
+            char escaped = ch;
+            if (ch == '\n') {
+                escaped = 'n';
+            } else if (ch == '\r') {
+                escaped = 'r';
+            } else if (ch == '\t') {
+                escaped = 't';
+            }
+            if (escaped != ch) {
+                if (builder == null) {
+                    builder = new StringBuilder(length + 2);
+                    builder.append(str, 0, i);
+                }
+                builder.append('\\');
+                builder.append(escaped);
+            } else if (builder != null) {
+                builder.append(ch);
+            }
         }
-        return builder.toString();
-    }
-    private String escapeChar(char ch){
-        if(ch == '\n'){
-            return "\\n";
+        if (builder != null) {
+            str = builder.toString();
         }
-        if(ch == '\t'){
-            return "\\t";
-        }
-        if(ch == '\r'){
-            return "\\r";
-        }
-        return String.valueOf(ch);
+        return str;
     }
 }

@@ -24,6 +24,7 @@ import com.reandroid.archive.block.ApkSignatureBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.arsc.coder.xml.XmlCoder;
 
+import java.io.File;
 import java.io.IOException;
 
 public class Decompiler extends CommandExecutor<DecompileOptions> {
@@ -62,33 +63,93 @@ public class Decompiler extends CommandExecutor<DecompileOptions> {
         decoder.decode(options.outputFile);
         logMessage("Saved to: "+options.outputFile);
     }
-    private ApkModuleDecoder getApkModuleDecoder(ApkModule apkModule){
-
+    private ApkModuleDecoder getApkModuleDecoder(ApkModule apkModule) throws IOException {
         DecompileOptions options = getOptions();
         ApkModuleDecoder decoder;
-        if(DecompileOptions.TYPE_JSON.equals(options.type)){
+        if (DecompileOptions.TYPE_JSON.equals(options.type)) {
             decoder = new ApkModuleJsonDecoder(apkModule, options.splitJson);
-            decoder.setDexDecoder(getSmaliDecompiler(apkModule.getTableBlock()));
-        }else if(DecompileOptions.TYPE_RAW.equals(options.type)){
+        } else if (DecompileOptions.TYPE_RAW.equals(options.type)){
             decoder = new ApkModuleRawDecoder(apkModule);
-            decoder.setDexDecoder(getSmaliDecompiler(apkModule.getTableBlock()));
-        }else{
+        } else {
             ApkModuleXmlDecoder xmlDecoder = new ApkModuleXmlDecoder(apkModule);
             xmlDecoder.setKeepResPath(options.keepResPath);
             decoder = xmlDecoder;
             XmlCoder.getInstance().getSetting().setLogger(this);
         }
         decoder.sanitizeFilePaths();
-        decoder.setDexDecoder(getSmaliDecompiler(apkModule.getTableBlock()));
+        decoder.setDexDecoder(getSmaliDecompiler(apkModule));
+        DexProfileDecoderImpl dexProfileDecoder = new DexProfileDecoderImpl(options);
+        dexProfileDecoder.setApkLogger(this);
+        decoder.setDexProfileDecoder(dexProfileDecoder);
         return decoder;
     }
-    private SmaliDecompiler getSmaliDecompiler(TableBlock tableBlock){
-        if(getOptions().dex){
+    private SmaliDecompiler getSmaliDecompiler(ApkModule apkModule) throws IOException {
+        if (getOptions().dex) {
             return null;
         }
+        TableBlock tableBlock = getTableBlockForDexComment(apkModule);
         SmaliDecompiler smaliDecompiler = new SmaliDecompiler(tableBlock, getOptions());
         smaliDecompiler.setApkLogger(this);
         return smaliDecompiler;
+    }
+    private TableBlock getTableBlockForDexComment(ApkModule apkModule) throws IOException {
+        if (apkModule.listDexFiles().isEmpty()) {
+            return null;
+        }
+        if (apkModule.hasTableBlock()) {
+            return apkModule.getTableBlock();
+        }
+        TableBlock tableBlock = getUserFrameworkForDexComment();
+        if (tableBlock == null) {
+            tableBlock = getInternalFrameworkForDexComment();
+        }
+        return tableBlock;
+    }
+    private TableBlock getUserFrameworkForDexComment() throws IOException {
+        DecompileOptions options = getOptions();
+
+        File[] files = options.getFrameworks();
+        if (files.length == 1 && options.frameworkVersion == null) {
+            logMessage("Loading framework: " + files[0]);
+            return ApkModule.loadApkFile(files[0]).getTableBlock();
+        }
+        TableBlock tableBlock = null;
+        if (files.length != 0) {
+            tableBlock = TableBlock.createEmpty();
+            for (File file : files) {
+                logMessage("Loading framework: " + file);
+                tableBlock.addFramework(ApkModule.loadApkFile(file)
+                        .getTableBlock());
+            }
+        }
+        if (tableBlock != null) {
+            if (options.frameworkVersion != null) {
+                FrameworkApk frameworkApk = AndroidFrameworks.getBestMatch(options.frameworkVersion);
+                if (frameworkApk != null) {
+                    tableBlock.addFramework(frameworkApk.getTableBlock());
+                }
+            }
+            return tableBlock;
+        }
+        return null;
+    }
+    private TableBlock getInternalFrameworkForDexComment() {
+        DecompileOptions options = getOptions();
+        FrameworkApk frameworkApk = null;
+        if (options.frameworkVersion != null) {
+            frameworkApk = AndroidFrameworks.getBestMatch(options.frameworkVersion);
+        }
+        if (frameworkApk == null) {
+            frameworkApk = AndroidFrameworks.getCurrent();
+        }
+        if (frameworkApk == null) {
+            frameworkApk = AndroidFrameworks.getLatest();
+        }
+        if (frameworkApk != null) {
+            logMessage("Using internal framework: " + frameworkApk.getName());
+            return frameworkApk.getTableBlock();
+        }
+        return null;
     }
     private void dumpSignatureBlock() throws IOException {
         logMessage("Dumping signature blocks ...");

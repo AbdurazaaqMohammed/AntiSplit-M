@@ -48,6 +48,17 @@ public class BuildOptions extends OptionsWithFramework {
             description = "build_types")
     public String type;
 
+    @ChoiceArg(
+            name = "-extractNativeLibs",
+            values = {
+                    "manifest",
+                    "none",
+                    "false",
+                    "true"
+            },
+            description = "extract_native_libs")
+    public String extractNativeLibs;
+
     @OptionArg(name = "-vrd", description = "validate_resources_dir", flag = true)
     public boolean validateResDir;
 
@@ -64,10 +75,13 @@ public class BuildOptions extends OptionsWithFramework {
             },
             description = "dex_lib"
     )
-    public String dexLib = DEX_LIB_JF;
+    public String dexLib = DEX_LIB_INTERNAL;
 
     @OptionArg(name = "-sig", description = "signatures_path")
     public File signaturesDirectory;
+
+    @OptionArg(name = "-dex-profile", flag = true, description = "encode_dex_profile")
+    public boolean dexProfile;
 
     public BuildOptions() {
         super();
@@ -128,6 +142,13 @@ public class BuildOptions extends OptionsWithFramework {
         return generateOutputFromInput(file, "_out.apk");
     }
 
+    public String getExtractNativeLibs() {
+        String extractNativeLibs = this.extractNativeLibs;
+        if (extractNativeLibs == null) {
+            extractNativeLibs = "manifest";
+        }
+        return extractNativeLibs;
+    }
     private static boolean isRawInputDirectory(File dir){
         File file=new File(dir, AndroidManifest.FILE_NAME_BIN);
         if(!file.isFile()) {

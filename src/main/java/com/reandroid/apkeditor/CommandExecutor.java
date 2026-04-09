@@ -62,6 +62,27 @@ public class CommandExecutor<T extends Options> implements APKLogger, XmlCoderLo
         return options;
     }
 
+    protected void applyExtractNativeLibs(ApkModule apkModule, String extractNativeLibs) {
+        if (extractNativeLibs != null) {
+            Boolean value;
+            if ("manifest".equalsIgnoreCase(extractNativeLibs)) {
+                if (apkModule.hasAndroidManifest()) {
+                    value = apkModule.getAndroidManifest().isExtractNativeLibs();
+                } else {
+                    value = null;
+                }
+            } else if ("true".equalsIgnoreCase(extractNativeLibs)) {
+                value = Boolean.TRUE;
+            } else if ("false".equalsIgnoreCase(extractNativeLibs)) {
+                value = Boolean.FALSE;
+            } else {
+                value = null;
+            }
+            logMessage("Applying: extractNativeLibs=" + value);
+            apkModule.setExtractNativeLibs(value);
+        }
+    }
+
     protected void setLogTag(String tag) {
         if(tag == null){
             tag = "";

@@ -15,11 +15,15 @@
  */
 package com.reandroid.apkeditor.protect;
 
-import com.reandroid.arsc.chunk.Chunk;
 import com.reandroid.arsc.chunk.ChunkType;
-import com.reandroid.arsc.chunk.xml.*;
-import com.reandroid.arsc.header.XmlNodeHeader;
+import com.reandroid.arsc.chunk.xml.AndroidManifestBlock;
+import com.reandroid.arsc.chunk.xml.ResXmlAttribute;
+import com.reandroid.arsc.chunk.xml.ResXmlDocument;
+import com.reandroid.arsc.chunk.xml.ResXmlElement;
+import com.reandroid.arsc.chunk.xml.ResXmlElementApi;
+import com.reandroid.arsc.chunk.xml.UnknownResXmlNode;
 import com.reandroid.arsc.io.BlockReader;
+import com.reandroid.arsc.item.ByteArray;
 import com.reandroid.arsc.item.IntegerItem;
 import com.reandroid.arsc.item.ResXmlString;
 import com.reandroid.arsc.pool.ResXmlStringPool;
@@ -27,6 +31,7 @@ import com.reandroid.utils.NumbersUtil;
 import com.reandroid.utils.collection.CollectionUtil;
 
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
@@ -45,7 +50,7 @@ public class ManifestConfuser extends Confuser {
         AndroidManifestBlock manifestBlock = getApkModule().getAndroidManifest();
         placeBadChunk(manifestBlock);
         confuseAttributes(manifestBlock);
-        placeEndElementChunk(manifestBlock);
+        confuseOffset(manifestBlock);
         manifestBlock.refresh();
     }
 
@@ -64,17 +69,33 @@ public class ManifestConfuser extends Confuser {
                 defaultAttributeSize, false);
     }
 
+    private void confuseOffset(AndroidManifestBlock manifestBlock) {
+        ResXmlElement manifest = manifestBlock.getManifestElement();
+        Iterator<ResXmlElement> iterator = manifest.getElements();
+        while (iterator.hasNext()) {
+            confuseOffset(iterator.next());
+        }
+        confuseOffset(manifest);
+    }
+    private void confuseOffset(ResXmlElement element) {
+        ResXmlElementApi elementApi = new ResXmlElementApi(element);
+
+        int size = elementApi.getAttributeArray().countBytes() + 1;
+
+        ByteArray byteArray = new ByteArray();
+        byteArray.setSize(size);
+        for (int i = 0; i < size; i = i + 4) {
+            byteArray.putInteger(i, -1);
+        }
+        elementApi.getStartElement()
+                .getFirstPlaceHolder()
+                .setItem(byteArray);
+
+        element.refresh();
+    }
     private void placeBadChunk(AndroidManifestBlock manifestBlock) {
         placeBadChunk(manifestBlock, ChunkType.XML_END_NAMESPACE);
         placeBadChunk(manifestBlock, ChunkType.PACKAGE);
-    }
-    @SuppressWarnings("unchecked")
-    private void placeEndElementChunk(AndroidManifestBlock manifestBlock) {
-        UnexpectedResXmlNode xmlNode = new UnexpectedResXmlNode(ChunkType.XML_END_ELEMENT);
-        manifestBlock.add(0, xmlNode);
-        ResXmlChunkApi endElement = new ResXmlChunkApi((Chunk<XmlNodeHeader>) xmlNode.getChunk());
-        endElement.setName("manifest");
-        endElement.refresh();
     }
     private void placeBadChunk(AndroidManifestBlock manifestBlock, ChunkType chunkType) {
         UnknownResXmlNode unknown = manifestBlock.newUnknown();

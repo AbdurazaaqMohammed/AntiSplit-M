@@ -15,7 +15,11 @@
   */
 package com.reandroid.apkeditor.compile;
 
-import com.reandroid.apk.*;
+import com.reandroid.apk.ApkModule;
+import com.reandroid.apk.ApkModuleJsonEncoder;
+import com.reandroid.apk.ApkModuleRawEncoder;
+import com.reandroid.apk.ApkModuleXmlEncoder;
+import com.reandroid.apk.DexProfileEncoder;
 import com.reandroid.apkeditor.CommandExecutor;
 import com.reandroid.apkeditor.Options;
 import com.reandroid.apkeditor.smali.SmaliCompiler;
@@ -71,6 +75,7 @@ public class Builder extends CommandExecutor<BuildOptions> {
         BuildOptions options = getOptions();
 
         encoder.setDexEncoder(getSmaliCompiler());
+        encoder.setDexProfileEncoder(getDexProfileEncoder());
 
         encoder.scanDirectory(options.inputFile);
         ApkModule loadedModule = encoder.getApkModule();
@@ -83,11 +88,8 @@ public class Builder extends CommandExecutor<BuildOptions> {
             logMessage("Validating resources dir ...");
             loadedModule.validateResourcesDir();
         }
-        logMessage("Writing apk...");
         loadedModule.getZipEntryMap().autoSortApkFiles();
-        loadedModule.writeApk(options.outputFile, null);
-        loadedModule.close();
-        logMessage("Saved to: " + options.outputFile);
+        writeApk(loadedModule);
     }
     public void buildXml() throws IOException {
         logMessage("Scanning XML directory ...");
@@ -98,6 +100,7 @@ public class Builder extends CommandExecutor<BuildOptions> {
         BuildOptions options = getOptions();
 
         encoder.setDexEncoder(getSmaliCompiler());
+        encoder.setDexProfileEncoder(getDexProfileEncoder());
 
         ApkModule loadedModule = encoder.getApkModule();
         loadedModule.setAPKLogger(this);
@@ -108,10 +111,7 @@ public class Builder extends CommandExecutor<BuildOptions> {
         }
         encoder.scanDirectory(options.inputFile);
         loadedModule = encoder.getApkModule();
-        logMessage("Writing apk...");
-        loadedModule.writeApk(options.outputFile, null);
-        loadedModule.close();
-        logMessage("Saved to: " + options.outputFile);
+        writeApk(loadedModule);
     }
     public void buildRaw() throws IOException {
         logMessage("Scanning Raw directory ...");
@@ -125,6 +125,7 @@ public class Builder extends CommandExecutor<BuildOptions> {
         }
 
         encoder.setDexEncoder(getSmaliCompiler());
+        encoder.setDexProfileEncoder(getDexProfileEncoder());
 
         ApkModule loadedModule = encoder.getApkModule();
         loadedModule.setAPKLogger(this);
@@ -135,14 +136,26 @@ public class Builder extends CommandExecutor<BuildOptions> {
         }
         encoder.scanDirectory(options.inputFile);
         loadedModule = encoder.getApkModule();
+        writeApk(loadedModule);
+    }
+    private void writeApk(ApkModule apkModule) throws IOException {
+        BuildOptions options = getOptions();
+        if (!Options.TYPE_RAW.equals(options.type) && !Options.TYPE_SIG.equals(options.type)) {
+            applyExtractNativeLibs(apkModule, options.getExtractNativeLibs());
+        }
         logMessage("Writing apk...");
-        loadedModule.writeApk(options.outputFile, null);
-        loadedModule.close();
+        apkModule.writeApk(options.outputFile, null);
+        apkModule.close();
         logMessage("Saved to: " + options.outputFile);
     }
     private SmaliCompiler getSmaliCompiler() {
         SmaliCompiler smaliCompiler = new SmaliCompiler(getOptions());
         smaliCompiler.setApkLogger(this);
         return smaliCompiler;
+    }
+    private DexProfileEncoder getDexProfileEncoder() {
+        DexProfileEncoderImpl encoder = new DexProfileEncoderImpl(getOptions());
+        encoder.setApkLogger(this);
+        return encoder;
     }
 }
