@@ -109,7 +109,6 @@ public abstract class InfoWriter implements Closeable {
     }
     static String toBase64(byte[] bytes) {
         return android.Base64.encodeToString(bytes, 0);
-        //return Base64.getEncoder().encodeToString(bytes);
     }
 
     static void writeSpaces(Writer writer, int amount) throws IOException {

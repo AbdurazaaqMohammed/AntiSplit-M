@@ -26,8 +26,9 @@ import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.EmptyList;
 
-import java.util.List;
 import org.apache.commons.collections4.Predicate;
+
+import java.util.List;
 
 public class AndroidManifestHelper {
 

@@ -561,7 +561,13 @@ public class Info extends CommandExecutor<InfoOptions> {
         }else {
             results = new ArrayList<>(entryCollection);
         }
-        Collections.sort(results, (entry1, entry2) -> entry1.getResConfig().compareTo(entry2.getResConfig()));
+        Comparator<Entry> cmp = new Comparator<Entry>() {
+            @Override
+            public int compare(Entry entry1, Entry entry2) {
+                return entry1.getResConfig().compareTo(entry2.getResConfig());
+            }
+        };
+        Collections.sort(results, cmp);
         return results;
     }
 }

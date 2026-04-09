@@ -195,7 +195,7 @@ public class ResourceStrings implements CommandStringResource {
             throw new RuntimeException("Missing resource: '" + path + "'");
         }
         try {
-            properties.load(new InputStreamReader(inputStream, "UTF-8"));
+            properties.load(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
             try {
                 inputStream.close();
             } catch (Throwable ignored) {

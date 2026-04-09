@@ -60,25 +60,29 @@ public class ElapsedTime {
         }
         return System.currentTimeMillis()-startTime;
     }
-    private String msToDisplayTime(long l, boolean includeMs, boolean ignoreZero) {
-        long hr = l / 3600000; // 1 hour = 3600000 milliseconds
-        long min = (l % 3600000) / 60000; // 1 minute = 60000 milliseconds
-        long sec = (l % 60000) / 1000; // 1 second = 1000 milliseconds
-        long ms = l % 1000; // Remaining milliseconds
-
-        if (!includeMs) {
-            return String.format(Locale.ENGLISH, "%02d:%02d:%02d", hr, min, sec);
+    private String msToDisplayTime(long l, boolean includeMs, boolean ignoreZero){
+        final long hr = TimeUnit.MILLISECONDS.toHours(l);
+        final long min = TimeUnit.MILLISECONDS.toMinutes(l - TimeUnit.HOURS.toMillis(hr));
+        final long sec = TimeUnit.MILLISECONDS.toSeconds(l - TimeUnit.HOURS.toMillis(hr) - TimeUnit.MINUTES.toMillis(min));
+        if(!includeMs){
+            return String.format(Locale.ENGLISH,"%02d:%02d:%02d", hr, min, sec);
         }
-
-        boolean showMs = min < 10;
-        if (ignoreZero) {
-            if (hr == 0 && min == 0) {
-                return String.format(Locale.ENGLISH, "%02d.%03d", sec, ms);
+        final long ms = TimeUnit.MILLISECONDS.toMillis(l - TimeUnit.HOURS.toMillis(hr) - TimeUnit.MINUTES.toMillis(min) - TimeUnit.SECONDS.toMillis(sec));
+        boolean showMs=min<10;
+        if(ignoreZero){
+            if(hr==0&&min==0){
+                return String.format(Locale.ENGLISH,"%02d.%03d",  sec, ms);
             }
-            if (hr == 0) {
-                return showMs ? String.format(Locale.ENGLISH, "%02d:%02d.%03d", min, sec, ms) : String.format(Locale.ENGLISH, "%02d:%02d", min, sec);
+            if(hr==0){
+                if(showMs){
+                    return String.format(Locale.ENGLISH,"%02d:%02d.%03d", min, sec, ms);
+                }
+                return String.format(Locale.ENGLISH,"%02d:%02d", min, sec);
             }
         }
-        return showMs ? String.format(Locale.ENGLISH, "%02d:%02d:%02d.%03d", hr, min, sec, ms) : String.format(Locale.ENGLISH, "%02d:%02d:%02d", hr, min, sec);
+        if(showMs){
+            return String.format(Locale.ENGLISH,"%02d:%02d:%02d.%03d", hr, min, sec, ms);
+        }
+        return String.format(Locale.ENGLISH,"%02d:%02d:%02d", hr, min, sec);
     }
 }

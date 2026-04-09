@@ -38,7 +38,7 @@ public class PublicXmlRefactor {
         try {
             tableIdentifier.loadPublicXml(pubXmlFile);
         } catch (XmlPullParserException ex) {
-            throw new RuntimeException(ex);
+            throw new IOException(ex);
         }
         logMessage("Applying from public xml ...");
         tableIdentifier.setTableBlock(apkModule.getTableBlock());

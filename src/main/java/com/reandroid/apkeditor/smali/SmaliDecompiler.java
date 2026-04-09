@@ -30,6 +30,8 @@ import com.reandroid.dex.sections.MapList;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliWriterSetting;
 import com.reandroid.dex.smali.formatters.ResourceIdComment;
+
+import org.apache.commons.collections4.Predicate;
 import org.jf.baksmali.Baksmali;
 import org.jf.baksmali.BaksmaliOptions;
 import org.jf.dexlib2.Opcodes;
@@ -43,7 +45,6 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
-import java.util.function.Predicate;
 
 public class SmaliDecompiler implements DexDecoder {
 

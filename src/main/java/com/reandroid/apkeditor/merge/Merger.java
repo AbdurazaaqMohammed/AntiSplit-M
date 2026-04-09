@@ -35,11 +35,12 @@ import com.reandroid.arsc.chunk.xml.ResXmlElement;
 import com.reandroid.arsc.value.Entry;
 import com.reandroid.arsc.value.ValueType;
 
+import org.apache.commons.collections4.Predicate;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
-import org.apache.commons.collections4.Predicate;
 
 public class Merger extends CommandExecutor<MergerOptions> {
 
@@ -107,7 +108,7 @@ public class Merger extends CommandExecutor<MergerOptions> {
         tmp.deleteOnExit();
         ArchiveFile archive = new ArchiveFile(file);
         fixFilePermissions(archive);
-        Predicate <ArchiveEntry> filter = archiveEntry -> archiveEntry.getName().endsWith(".apk");
+        Predicate<ArchiveEntry> filter = archiveEntry -> archiveEntry.getName().endsWith(".apk");
         int count = archive.extractAll(tmp, filter, this);
         archive.close();
         if(count == 0){

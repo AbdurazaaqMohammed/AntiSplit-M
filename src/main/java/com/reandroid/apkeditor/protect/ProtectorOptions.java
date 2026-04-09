@@ -23,13 +23,12 @@ import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.io.FileUtil;
 import com.reandroid.utils.io.IOUtil;
 
-import org.apache.commons.collections4.Predicate;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Set;
+import org.apache.commons.collections4.Predicate;
 
 @CommandOptions(
         name = "p",
