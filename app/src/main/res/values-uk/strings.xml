@@ -30,6 +30,7 @@
     <string name="all">Вибрати все</string>
     <string name="androidx_startup">androidx.startup</string>
     <string name="app_icon_list_label">App icon</string>
+    <string name="app_name">AntiSplit M</string>
     <string name="appbar_scrolling_view_behavior">com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior</string>
     <string name="arch_for_device">Виберіть архітектуру для Вашого пристрою</string>
     <string name="ask">Запитувати кожного разу</string>
@@ -60,7 +61,8 @@
     <string name="copied_log">Скопійований журнал</string>
     <string name="copy_log">Копіювати журнал</string>
     <string name="create_issue">Створити проблему на GitHub</string>
-	<string name="dark_theme">Темна тема</string>																	
+	<string name="dark_theme">Темна тема</string>
+	<string name="default_c">За замовчуванням</string>
     <string name="dl">Завантажити</string>
     <string name="dpi_for_device">Вибрати (DPI) вашого пристрою</string>
     <string name="enable_logs">Увімкнути журнали</string>
@@ -79,7 +81,7 @@
     <string name="item_view_role_description">Tab</string>
     <string name="lang">Мова</string>
     <string name="lang_for_device">Виберіть мову для Вашого пристрою</string>
-    <string name="light_theme">Світла тема</string>
+	<string name="light_theme">Світла тема</string>
 	<string name="m3_exceed_max_badge_text_suffix">%1$s%2$s</string>
     <string name="m3_ref_typeface_brand_medium">sans-serif-medium</string>
     <string name="m3_ref_typeface_brand_regular">sans-serif</string>
@@ -127,10 +129,10 @@
     <string name="mtrl_checkbox_button_icon_path_group_name">icon</string>
     <string name="mtrl_checkbox_button_icon_path_indeterminate">M13.4,15 11,15 11,17 13.4,17 21,17 21,15z</string>
     <string name="mtrl_checkbox_button_icon_path_name">icon path</string>
-    <string name="mtrl_checkbox_button_path_checked">M23,7H9C7.9,7,7,7.9,7,9v14c0,1.1,0.9,2,2,2h14c1.1,0,2–0.9,2-2V9C25,7.9,24.1,7,23,7z</string>
+    <string name="mtrl_checkbox_button_path_checked">M23,7H9C7.9,7,7,7.9,7,9v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V9C25,7.9,24.1,7,23,7z</string>
     <string name="mtrl_checkbox_button_path_group_name">button</string>
     <string name="mtrl_checkbox_button_path_name">button path</string>
-    <string name="mtrl_checkbox_button_path_unchecked">M23,7H9C7.9,7,7,7.9,7,9v14c0,1.1,0.9,2,2,2h14c1.1,0,2–0.9,2-2V9C25,7.9,24.1,7,23,7z M23,23H9V9h14V23z</string>
+    <string name="mtrl_checkbox_button_path_unchecked">M23,7H9C7.9,7,7,7.9,7,9v14c0,1.1,0.9,2,2,2h14c1.1,0,2-0.9,2-2V9C25,7.9,24.1,7,23,7z M23,23H9V9h14V23z</string>
     <string name="mtrl_checkbox_state_description_checked">Перевірено</string>
     <string name="mtrl_checkbox_state_description_indeterminate">Частково перевірено</string>
     <string name="mtrl_checkbox_state_description_unchecked">Не перевірено</string>
@@ -228,5 +230,4 @@
     <string name="unselected">: Не вибрано</string>
     <string name="update">Доступне оновлення</string>
     <string name="warning">Попередження</string>
-    <string name="default_c">усталене значення</string>
 </resources>
