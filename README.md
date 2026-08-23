@@ -6,9 +6,9 @@ This project is a simple GUI implementation of Merge utilities from [REAndroid A
 
 Some other apps that can perform this task like Apktool M, AntiSplit G2, NP Manager are all closed source. In addition, some older apps have a large problem in not removing the information about splits in the APK from the AndroidManifest.xml. If a merged/non-split APK contains this information it will cause an "App not installed" error on some devices. Fortunately the implementation by REAndroid fixes this issue.
 
-Version 2.x - Material You design, support Android 4.4+
+### Note
 
-Version 1.x - Support Android 1.6+
+All features of this app with better speed and other functions have been implemented in my new app <a href="https://github.com/AbdurazaaqMohammed/MP-Manager">MP Manager</a>
 
 ## Usage
 
