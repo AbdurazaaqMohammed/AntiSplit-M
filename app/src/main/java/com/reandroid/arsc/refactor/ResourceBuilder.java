@@ -35,7 +35,7 @@ import com.reandroid.utils.collection.ArrayCollection;
 import com.reandroid.utils.collection.FilterIterator;
 
 import java.util.*;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class ResourceBuilder {
 
@@ -236,7 +236,7 @@ public class ResourceBuilder {
             }
         }
         List<String> typeList = new ArrayCollection<>(typeSet);
-        Collections.sort(typeList, CompareUtil.getComparableComparator());
+        java.util.Collections.sort(typeList, CompareUtil.getComparableComparator());
         resultPackage.getTypeStringPool().addStrings(typeList);
     }
     private void initializeSpecString(PackageBlock sourcePackage, PackageBlock resultPackage) {
@@ -255,7 +255,7 @@ public class ResourceBuilder {
         Iterator<ResourceEntry> iterator = FilterIterator.of(
                 sourcePackage.getResources(typeName),
                 resourceEntry -> resourceEntry.isDefined() &&
-                        keepEntries.evaluate(resourceEntry));
+                        keepEntries.test(resourceEntry));
         sourceEntryList.addAll(iterator);
 
         sourceEntryList.sort(this::compareEntryNames);

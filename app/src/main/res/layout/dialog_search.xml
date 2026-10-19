@@ -1,74 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="5dp">
+    android:paddingStart="24dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="24dp">
 
-    <FrameLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/tilly"
-            android:layout_width="match_parent"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:hint="⌕"
-            app:boxBackgroundMode="outline"
-            app:boxCornerRadiusTopStart="24dp"
-            app:boxCornerRadiusTopEnd="24dp"
-            app:boxCornerRadiusBottomStart="24dp"
-            app:boxCornerRadiusBottomEnd="24dp"
-            >
+            android:layout_weight="1"
+            android:hint="@string/search"
+            app:endIconMode="clear_text"
+            app:startIconDrawable="@drawable/ic_search">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/search_bar"
                 android:layout_width="match_parent"
-                android:paddingEnd="100dp"
                 android:layout_height="wrap_content"
                 android:importantForAutofill="no"
                 android:inputType="text" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <LinearLayout
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/filter_button"
+            style="@style/Widget.Material3.Button.IconButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="end"
-            android:background="@android:color/transparent"
-            android:backgroundTint="@android:color/transparent"
-            android:layout_gravity="end|top"
-            android:padding="8dp">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/clear_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@android:color/transparent"
-                android:backgroundTint="@android:color/transparent"
-                app:icon="@android:drawable/ic_menu_close_clear_cancel"
-                android:visibility="gone"
-                app:tooltipText="Clear"
-                android:contentDescription="Clear"
-                style="@style/Widget.Material3.Button.IconButton" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/filter_button"
-                android:layout_width="wrap_content"
-                android:background="@android:color/transparent"
-                android:backgroundTint="@android:color/transparent"
-                android:layout_height="wrap_content"
-                app:icon="@android:drawable/ic_menu_sort_by_size"
-                app:tooltipText="Sort"
-                android:contentDescription="Sort"
-                style="@style/Widget.Material3.Button.IconButton" />
-        </LinearLayout>
-    </FrameLayout>
+            android:layout_marginStart="8dp"
+            android:contentDescription="@string/sort"
+            app:icon="@drawable/ic_sort"
+            app:iconTint="?attr/colorOnSurfaceVariant"
+            app:tooltipText="@string/sort" />
+    </LinearLayout>
 
     <ListView
         android:id="@+id/list_view"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:divider="?attr/colorOutlineVariant"
+        android:dividerHeight="1dp"
+        android:paddingBottom="8dp"
+        android:scrollbars="vertical" />
 </LinearLayout>

@@ -16,15 +16,15 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.ins.InsPackedSwitch;
-import com.reandroid.dex.ins.InsPackedSwitchData;
 import com.reandroid.dex.ins.Opcode;
-import com.reandroid.dex.smali.*;
+import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.SmaliRegion;
 
 public class SmaliPayloadPackedSwitch extends SmaliSwitchPayload<SmaliPackedSwitchEntry>
         implements SmaliRegion {
 
-    public SmaliPayloadPackedSwitch(){
-        super(new SmaliInstructionOperand.SmaliHexOperand());
+    public SmaliPayloadPackedSwitch() {
+        super(Opcode.PACKED_SWITCH_PAYLOAD);
     }
 
     public int getFirstKey() {
@@ -53,10 +53,6 @@ public class SmaliPayloadPackedSwitch extends SmaliSwitchPayload<SmaliPackedSwit
         return (SmaliInstructionOperand.SmaliHexOperand) super.getOperand();
     }
 
-    @Override
-    public Opcode<InsPackedSwitchData> getOpcode() {
-        return Opcode.PACKED_SWITCH_PAYLOAD;
-    }
     @Override
     SmaliPackedSwitchEntry createEntry() {
         return new SmaliPackedSwitchEntry();

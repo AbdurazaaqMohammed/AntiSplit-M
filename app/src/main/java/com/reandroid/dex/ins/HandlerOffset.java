@@ -21,14 +21,14 @@ import com.reandroid.utils.CompareUtil;
 
 public class HandlerOffset extends BlockItem implements Comparable<HandlerOffset>{
 
-    private TryItem mTryItem;
+    private InsTryItem mTryItem;
 
     HandlerOffset() {
         super(8);
     }
 
     public int getIdx() {
-        TryItem tryItem = getTryItem();
+        InsTryItem tryItem = getTryItem();
         if (tryItem != null) {
             return tryItem.getIndex();
         }
@@ -53,10 +53,10 @@ public class HandlerOffset extends BlockItem implements Comparable<HandlerOffset
         Block.putShort(getBytesInternal(), 6, value);
     }
 
-    TryItem getTryItem() {
+    InsTryItem getTryItem() {
         return mTryItem;
     }
-    void setTryItem(TryItem tryItem) {
+    void setTryItem(InsTryItem tryItem) {
         this.mTryItem = tryItem;
     }
 
@@ -72,11 +72,11 @@ public class HandlerOffset extends BlockItem implements Comparable<HandlerOffset
         if(handlerOffset == null){
             return 0;
         }
-        TryItem tryItem = getTryItem();
+        InsTryItem tryItem = getTryItem();
         if(tryItem == null){
             throw new NullPointerException("Unlinked handler offset: " + this.toString());
         }
-        TryItem other = handlerOffset.getTryItem();
+        InsTryItem other = handlerOffset.getTryItem();
         if(other == null){
             throw new NullPointerException("Unlinked handler offset: " + handlerOffset.toString());
         }

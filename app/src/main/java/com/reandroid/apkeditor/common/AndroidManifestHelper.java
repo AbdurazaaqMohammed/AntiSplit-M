@@ -26,7 +26,7 @@ import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.EmptyList;
 
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 import java.util.List;
 

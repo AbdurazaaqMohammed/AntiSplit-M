@@ -53,6 +53,7 @@ public class AndroidApiLevel implements Comparable<AndroidApiLevel>{
     public static final AndroidApiLevel UPSIDE_DOWN_CAKE;
     public static final AndroidApiLevel VANILLA_ICE_CREAM;
     public static final AndroidApiLevel BAKLAVA;
+    public static final AndroidApiLevel CINNAMON_BUN;
 
     public static final AndroidApiLevel ANDROID_PLATFORM;
 
@@ -98,10 +99,11 @@ public class AndroidApiLevel implements Comparable<AndroidApiLevel>{
         UPSIDE_DOWN_CAKE = new AndroidApiLevel("UPSIDE_DOWN_CAKE", 34, "14", "Upside Down Cake");
         VANILLA_ICE_CREAM = new AndroidApiLevel("VANILLA_ICE_CREAM", 35, "15", "Vanilla Ice Cream");
         BAKLAVA = new AndroidApiLevel("BAKLAVA", 36, "16", "Baklava");
+        CINNAMON_BUN = new AndroidApiLevel("CINNAMON_BUN", 37, "17", "Cinnamon Bun");
 
         ANDROID_PLATFORM = new AndroidApiLevel("ANDROID_PLATFORM", 10000, "10000", "ANDROID_PLATFORM");
 
-        LATEST = BAKLAVA;
+        LATEST = CINNAMON_BUN;
 
         VALUES = new AndroidApiLevel[]{
                 B,
@@ -140,6 +142,7 @@ public class AndroidApiLevel implements Comparable<AndroidApiLevel>{
                 UPSIDE_DOWN_CAKE,
                 VANILLA_ICE_CREAM,
                 BAKLAVA,
+                CINNAMON_BUN,
                 ANDROID_PLATFORM
         };
 

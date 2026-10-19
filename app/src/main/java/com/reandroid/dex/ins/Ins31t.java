@@ -17,7 +17,6 @@ package com.reandroid.dex.ins;
 
 import com.reandroid.dex.program.InstructionLabel;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.utils.HexUtil;
 
 import java.io.IOException;
 
@@ -58,13 +57,6 @@ public class Ins31t extends Size6Ins implements RegistersSet, InstructionLabel {
     @Override
     public void setTargetAddress(int targetAddress){
         setData(targetAddress - getAddress());
-    }
-    @Override
-    public String getLabelName() {
-        return HexUtil.toHex(getLabelPrefix(), getTargetAddress(), 1);
-    }
-    String getLabelPrefix(){
-        return ":payload_";
     }
     @Override
     public void appendCode(SmaliWriter writer) throws IOException {

@@ -52,7 +52,9 @@ public class SignUtil {
     }
 
     public static void signDebugKey(Context c, File inputApk, File output, boolean v1, boolean v2, boolean v3) throws IOException, ApkFormatException, UnrecoverableEntryException, CertificateException, KeyStoreException, NoSuchAlgorithmException, SignatureException, InvalidKeyException {
-        signApk(c.getAssets().open("debug23.keystore"), "android", inputApk, output, v1, v2, v3);
+        try (InputStream key = c.getAssets().open("debug23.keystore")) {
+            signApk(key, "android", inputApk, output, v1, v2, v3);
+        }
     }
 
     public static void signDebugKey(Context c, File inputApk, File output) throws IOException, ApkFormatException, UnrecoverableEntryException, CertificateException, KeyStoreException, NoSuchAlgorithmException, SignatureException, InvalidKeyException {

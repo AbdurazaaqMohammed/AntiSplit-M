@@ -24,7 +24,7 @@ import com.reandroid.arsc.value.ValueType;
 import com.reandroid.utils.collection.ArrayCollection;
 
 import java.util.*;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class ReferenceResolver{
     private final TableBlock entryStore;
@@ -53,7 +53,7 @@ public class ReferenceResolver{
     public List<Entry> resolveWithConfig(int referenceId, ResConfig resConfig){
         ConfigFilter configFilter = new ConfigFilter(resConfig);
         List<Entry> results = resolveAll(referenceId, configFilter);
-        Collections.sort(results, configFilter);
+        java.util.Collections.sort(results, configFilter);
         return results;
     }
     public List<Entry> resolveAll(int referenceId){
@@ -100,7 +100,7 @@ public class ReferenceResolver{
         return this.limit >= this.results.size();
     }
     private void addResult(Predicate<Entry> filter, Entry entry){
-        if(filter == null || filter.evaluate(entry)){
+        if(filter == null || filter.test(entry)){
             this.results.add(entry);
         }
     }
@@ -123,7 +123,7 @@ public class ReferenceResolver{
             this.config = config;
         }
         @Override
-        public boolean evaluate(Entry entry) {
+        public boolean test(Entry entry) {
             ResConfig resConfig = entry.getResConfig();
             if(resConfig == null){
                 return false;

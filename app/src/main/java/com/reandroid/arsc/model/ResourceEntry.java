@@ -34,16 +34,24 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Set;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class ResourceEntry implements Iterable<Entry> {
 
-    private final int resourceId;
     private final PackageBlock packageBlock;
+    private final int resourceId;
+    private final int stageAliasId;
 
-    public ResourceEntry(PackageBlock packageBlock, int resourceId) {
-        this.resourceId = resourceId;
+    public ResourceEntry(PackageBlock packageBlock, int resourceId, int stageAliasId) {
         this.packageBlock = packageBlock;
+        this.resourceId = resourceId;
+        if (stageAliasId == resourceId) {
+            stageAliasId = 0;
+        }
+        this.stageAliasId = stageAliasId;
+    }
+    public ResourceEntry(PackageBlock packageBlock, int resourceId) {
+        this(packageBlock, resourceId, 0);
     }
 
     public Iterator<String> getStringValues() {
@@ -291,6 +299,19 @@ public class ResourceEntry implements Iterable<Entry> {
     public int getResourceId() {
         return resourceId;
     }
+    public int getStageAliasId() {
+        return stageAliasId;
+    }
+    public boolean isStageAliasId() {
+        return getStageAliasId() != 0;
+    }
+    public ResourceEntry setStageAliasId(int stageAliasId) {
+        if (stageAliasId == this.stageAliasId) {
+            return this;
+        }
+        return new ResourceEntry(getPackageBlock(), getResourceId(), stageAliasId);
+    }
+
     public String getPackageName() {
         return getPackageBlock().getName();
     }
@@ -364,21 +385,29 @@ public class ResourceEntry implements Iterable<Entry> {
         if (referenceType != null) {
             if (referenceType == ValueType.REFERENCE) {
                 builder.append('@');
-            } else {
+            } else if (referenceType == ValueType.DYNAMIC_REFERENCE) {
+                builder.append("@@");
+            } else if (referenceType == ValueType.ATTRIBUTE) {
                 builder.append('?');
+            } else if (referenceType == ValueType.DYNAMIC_ATTRIBUTE) {
+                builder.append("??");
             }
         }
-        PackageBlock packageBlock = getPackageBlock();
-        if (context != packageBlock && !packageBlock.isEmpty()) {
-            String packageName = getPackageName();
-            if (packageName != null) {
-                builder.append(packageName);
-                builder.append(':');
+        if (isStageAliasId()) {
+            builder.append(HexUtil.toHex8(getStageAliasId()));
+        } else {
+            PackageBlock packageBlock = getPackageBlock();
+            if (context != packageBlock && !packageBlock.isEmpty()) {
+                String packageName = getPackageName();
+                if (packageName != null) {
+                    builder.append(packageName);
+                    builder.append(':');
+                }
             }
+            builder.append(getType());
+            builder.append('/');
+            builder.append(getName());
         }
-        builder.append(getType());
-        builder.append('/');
-        builder.append(getName());
         return builder.toString();
     }
     public String decodeAttributeData(int data) {

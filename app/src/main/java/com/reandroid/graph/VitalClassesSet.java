@@ -40,7 +40,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class VitalClassesSet extends BaseApkModuleProcessor implements Predicate<TypeKey> {
 
@@ -66,7 +66,7 @@ public class VitalClassesSet extends BaseApkModuleProcessor implements Predicate
         return sourceStringClasses.iterator();
     }
     @Override
-    public boolean evaluate(TypeKey typeKey) {
+    public boolean test(TypeKey typeKey) {
         return mainClasses.contains(typeKey);
     }
     public boolean containsSourceString(TypeKey typeKey) {

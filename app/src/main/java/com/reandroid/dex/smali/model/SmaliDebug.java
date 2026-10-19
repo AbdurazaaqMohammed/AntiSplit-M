@@ -20,11 +20,8 @@ import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.utils.collection.CollectionUtil;
-import com.reandroid.utils.collection.InstanceIterator;
 
 import java.io.IOException;
-import java.util.Iterator;
 
 public abstract class SmaliDebug extends SmaliCode implements SmaliRegion {
 
@@ -33,22 +30,21 @@ public abstract class SmaliDebug extends SmaliCode implements SmaliRegion {
     }
 
     public int getTargetAddress() {
-        return searchAddress();
-    }
-    private int searchAddress(){
-        SmaliCodeSet codeSet = getCodeSet();
-        if(codeSet == null){
-            return -1;
-        }
-        Iterator<SmaliCode> iterator = codeSet.iterator(codeSet.indexOf(this) + 1);
-        SmaliInstruction next = CollectionUtil.getFirst(
-                InstanceIterator.of(iterator, SmaliInstruction.class));
-        if(next != null){
-            return next.getAddress();
+        SmaliInstruction instruction = getTargetInstruction();
+        if (instruction != null) {
+            return instruction.getAddress();
         }
         return -1;
     }
     public void setTargetAddress(int address) {
+        throw new RuntimeException("Method not implemented");
+    }
+    public SmaliInstruction getTargetInstruction() {
+        SmaliCodeSet codeSet = getCodeSet();
+        if (codeSet != null) {
+            return codeSet.getNextInstruction(getIndex() + 1);
+        }
+        return null;
     }
 
     @Override

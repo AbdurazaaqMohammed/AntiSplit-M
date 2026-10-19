@@ -20,7 +20,7 @@ import com.reandroid.arsc.container.CountedBlockList;
 import com.reandroid.arsc.item.IntegerReference;
 
 import java.util.Iterator;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class ProfileDataBody extends ProfileBody {
 
@@ -77,7 +77,7 @@ public class ProfileDataBody extends ProfileBody {
     }
     @Override
     public boolean removeIfName(Predicate<String> predicate) {
-        return dataList.removeIf(dexProfileData -> predicate.evaluate(dexProfileData.getName()));
+        return dataList.removeIf(dexProfileData -> predicate.test(dexProfileData.getName()));
     }
     @Override
     public boolean removeData(int i) {

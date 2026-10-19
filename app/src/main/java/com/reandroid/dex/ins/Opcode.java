@@ -1010,92 +1010,119 @@ public class Opcode<T extends Ins> implements InstructionOpcode, BlockCreator<T>
     public boolean hasOutRegisters() {
         return getRegisterFormat().isOut();
     }
+    @Override
     public boolean isConstString() {
         int value = this.value;
         return value == 0x1a || value == 0x1b;
     }
+    @Override
     public boolean isArrayGet() {
         int value = this.value;
         return value >= 0x44 && value <= 0x4a;
     }
+    @Override
     public boolean isArrayPut() {
         int value = this.value;
         return value >= 0x4b && value <= 0x51;
     }
+    @Override
     public boolean isArrayOp() {
         int value = this.value;
         return value >= 0x44 && value <= 0x51;
     }
+    @Override
     public boolean isFieldOp() {
         int value = this.value;
         return value >= 0x52 && value <= 0x6d;
     }
+    @Override
     public boolean isFieldInstanceOp() {
         int value = this.value;
         return value >= 0x52 && value <= 0x5f;
     }
+    @Override
     public boolean isFieldInstanceGet() {
         int value = this.value;
         return value >= 0x52 && value <= 0x58;
     }
+    @Override
     public boolean isFieldInstancePut() {
         int value = this.value;
         return value >= 0x59 && value <= 0x5f;
     }
+    @Override
     public boolean isFieldStaticOp() {
         int value = this.value;
         return value >= 0x60 && value <= 0x6d;
     }
+    @Override
     public boolean isFieldStaticGet() {
         int value = this.value;
         return value >= 0x60 && value <= 0x66;
     }
+    @Override
     public boolean isFieldStaticPut() {
         int value = this.value;
         return value >= 0x67 && value <= 0x6d;
     }
+    @Override
     public boolean isFieldGet() {
         return isFieldInstanceGet() || isFieldStaticGet();
     }
+    @Override
     public boolean isFieldPut() {
         return isFieldInstancePut() || isFieldStaticPut();
     }
+    @Override
     public boolean isMethodInvokeVirtual() {
         int value = this.value;
         return value == 0x6e || value == 0x74;
     }
+    @Override
     public boolean isMethodInvokeSuper() {
         int value = this.value;
         return value == 0x6f || value == 0x75;
     }
+    @Override
     public boolean isMethodInvokeDirect() {
         int value = this.value;
         return value == 0x70 || value == 0x76;
     }
+    @Override
     public boolean isMethodInvokeStatic() {
         int value = this.value;
         return value == 0x71 || value == 0x77;
     }
+    @Override
     public boolean isMethodInvokeInterface() {
         int value = this.value;
         return value == 0x72 || value == 0x78;
     }
+    @Override
     public boolean isMethodInvoke() {
         int value = this.value;
         return value != 0x73 && value >= 0x6e && value <= 0x78;
     }
+    @Override
+    public boolean isConst() {
+        return isConstNumber() || isConstString() || this == CONST_CLASS;
+    }
+    @Override
     public boolean isConstNumber() {
         int value = this.value;
         return value >= 0x12 && value <= 0x19;
     }
+    @Override
     public boolean isConstInteger() {
         int value = this.value;
         return value >= 0x12 && value <= 0x15;
     }
+    @Override
     public boolean isConstWide() {
         int value = this.value;
         return value >= 0x16 && value <= 0x19;
     }
+    @Override
     public boolean isReturn() {
         int value = this.value;
         if (value >= 0x0e && value <= 0x11) {
@@ -1103,26 +1130,32 @@ public class Opcode<T extends Ins> implements InstructionOpcode, BlockCreator<T>
         }
         return value == 0xf1 || value == 0x73;
     }
+    @Override
     public boolean isMoveResult() {
         int value = this.value;
         return value == 0x0a || value == 0x0b || value == 0x0c;
     }
+    @Override
     public boolean isMove() {
         int value = this.value;
         return value >= 0x1 && value <= 0x9;
     }
+    @Override
     public boolean isIfTest() {
         int value = this.value;
         return value >= 0x32 && value <= 0x3d;
     }
+    @Override
     public boolean isGoto() {
         int value = this.value;
         return value == 0x28 || value == 0x29 || value == 0x2a;
     }
+    @Override
     public boolean isSwitch() {
         int value = this.value;
         return value == 0x2b || value == 0x2c;
     }
+    @Override
     public boolean isPayload() {
         int value = this.value;
         return value == 0x100 || value == 0x200 || value == 0x300;
@@ -1133,9 +1166,11 @@ public class Opcode<T extends Ins> implements InstructionOpcode, BlockCreator<T>
     public boolean isBranching() {
         return isInsBranching() || isSwitch();
     }
+    @Override
     public boolean isMethodExit() {
         return isReturn() || this == THROW;
     }
+    @Override
     public boolean isRange() {
         return getRegisterFormat().isRange();
     }

@@ -39,7 +39,7 @@ package com.reandroid.arsc.value.plurals;
     }
     @Override
     public String toString(){
-        return name().toLowerCase();
+        return name().toLowerCase(java.util.Locale.ROOT);
     }
     public static PluralsQuantity valueOf(short id){
         PluralsQuantity[] all=values();
@@ -61,7 +61,7 @@ package com.reandroid.arsc.value.plurals;
         if(name==null){
             return null;
         }
-        name=name.trim().toUpperCase();
+        name=name.trim().toUpperCase(java.util.Locale.ROOT);
         PluralsQuantity[] all=values();
         for(PluralsQuantity pq:all){
             if(name.equals(pq.name())){

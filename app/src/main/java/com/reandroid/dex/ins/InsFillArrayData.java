@@ -54,8 +54,4 @@ public class InsFillArrayData extends Ins31t{
     public InstructionLabelType getLabelType() {
         return InstructionLabelType.ARRAY;
     }
-    @Override
-    String getLabelPrefix(){
-        return ":array_";
-    }
 }

@@ -52,8 +52,4 @@ public class InsPackedSwitch extends InsSwitch {
     public InstructionLabelType getLabelType() {
         return InstructionLabelType.P_SWITCH_DATA;
     }
-    @Override
-    String getLabelPrefix(){
-        return ":pswitch_data_";
-    }
 }

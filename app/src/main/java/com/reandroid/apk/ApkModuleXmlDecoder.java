@@ -34,7 +34,7 @@ import org.xmlpull.v1.XmlSerializer;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<Entry> {
     private final Map<Integer, Set<ResConfig>> decodedEntries;
@@ -305,7 +305,7 @@ public class ApkModuleXmlDecoder extends ApkModuleDecoder implements Predicate<E
         overlayableList.serialize(serializer);
     }
     @Override
-    public boolean evaluate(Entry entry) {
+    public boolean test(Entry entry) {
         return containsDecodedEntry(entry);
     }
 }

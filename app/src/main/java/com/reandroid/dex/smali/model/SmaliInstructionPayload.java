@@ -24,22 +24,20 @@ import java.util.Iterator;
 public abstract class SmaliInstructionPayload<T extends Smali> extends SmaliInstruction
         implements SmaliRegion {
 
-    private final SmaliInstructionOperand operand;
     private final SmaliSet<T> entries;
 
-    public SmaliInstructionPayload(SmaliInstructionOperand operand){
-        super();
-        this.operand = operand;
+    public SmaliInstructionPayload(Opcode<?> opcode) {
+        super(opcode);
         this.entries = new SmaliSet<>();
-
-        this.operand.setParent(this);
         this.entries.setParent(this);
     }
 
     @Override
     public abstract int getCodeUnits();
     @Override
-    public abstract Opcode<?> getOpcode();
+    public Opcode<?> getOpcode() {
+        return super.getOpcode();
+    }
     abstract T createEntry();
     public void addEntry(T entry) {
         getEntries().add(entry);
@@ -52,10 +50,6 @@ public abstract class SmaliInstructionPayload<T extends Smali> extends SmaliInst
     }
     public Iterator<T> entries() {
         return getEntries().iterator();
-    }
-    @Override
-    public SmaliInstructionOperand getOperand() {
-        return this.operand;
     }
     public SmaliSet<T> getEntries() {
         return entries;
@@ -94,5 +88,13 @@ public abstract class SmaliInstructionPayload<T extends Smali> extends SmaliInst
     }
     void parseOperand(Opcode<?> opcode, SmaliReader reader) throws IOException {
         getOperand().parse(opcode, reader);
+    }
+    @Override
+    public void validate() throws IOException {
+        super.validate();
+        validateEntries();
+    }
+    public void validateEntries() throws IOException {
+        getEntries().validate();
     }
 }

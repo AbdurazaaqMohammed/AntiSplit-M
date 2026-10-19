@@ -26,7 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
-import org.apache.commons.collections4.Transformer;
+import com.reandroid.utils.function.Function;
 
 public class DexUtils {
 
@@ -50,11 +50,11 @@ public class DexUtils {
     public static<T> Comparator<T> getDexPathComparator(){
         return DexUtils::compareDex;
     }
-    public static<T, E> Comparator<T> getDexPathComparator(org.apache.commons.collections4.Transformer<T, E> transformer){
-        return (dex1, dex2) -> compareDex(transformer, dex1, dex2);
+    public static<T, E> Comparator<T> getDexPathComparator(Function<T, E> function){
+        return (dex1, dex2) -> compareDex(function, dex1, dex2);
     }
-    public static<T, E> int compareDex(org.apache.commons.collections4.Transformer<T, E> transformer, T dexPath1, T dexPath2){
-        return compareDex(transformer.transform(dexPath1), transformer.transform(dexPath2));
+    public static<T, E> int compareDex(Function<T, E> function, T dexPath1, T dexPath2){
+        return compareDex(function.apply(dexPath1), function.apply(dexPath2));
     }
     public static int compareDex(Object dexPath1, Object dexPath2){
         if(dexPath1 == dexPath2){

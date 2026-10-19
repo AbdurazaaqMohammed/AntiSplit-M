@@ -15,15 +15,10 @@
  */
 package com.reandroid.utils.collection;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import org.apache.commons.collections4.Transformer;
-import org.apache.commons.collections4.Predicate;
+import java.util.*;
+import com.reandroid.utils.function.Consumer;
+import com.reandroid.utils.function.Function;
+import com.reandroid.utils.function.Predicate;
 
 @SuppressWarnings("unchecked")
 public class MultiMap<K, V> {
@@ -36,7 +31,7 @@ public class MultiMap<K, V> {
     public MultiMap() {
     }
 
-    public void findDuplicates(Comparator<? super V> comparator, org.apache.commons.collections4.Closure<List<V>> consumer) {
+    public void findDuplicates(Comparator<? super V> comparator, Consumer<List<V>> consumer) {
         synchronized (mLock) {
             Map<K, Object> map = this.map;
             if(map == null || map.isEmpty()) {
@@ -59,7 +54,7 @@ public class MultiMap<K, V> {
             }
         }
     }
-    private void processDuplicateValues(Comparator<? super V> comparator, org.apache.commons.collections4.Closure<List<V>> consumer, EntryList<V> entryList) {
+    private void processDuplicateValues(Comparator<? super V> comparator, Consumer<List<V>> consumer, EntryList<V> entryList) {
         int size = entryList.size();
         if(size < 2) {
             return;
@@ -73,7 +68,7 @@ public class MultiMap<K, V> {
 
         V previous = sortedList.get(0);
         if(comparator.compare(previous, sortedList.get(size - 1)) == 0) {
-            consumer.execute(sortedList);
+            consumer.accept(sortedList);
             return;
         }
 
@@ -84,7 +79,7 @@ public class MultiMap<K, V> {
             int compare = comparator.compare(previous, value);
             if(compare != 0) {
                 if(result.size() > 1) {
-                    consumer.execute(result);
+                    consumer.accept(result);
                 }
                 result.clearTemporarily();
             }
@@ -92,14 +87,14 @@ public class MultiMap<K, V> {
             previous = value;
         }
         if(result.size() > 1) {
-            consumer.execute(result);
+            consumer.accept(result);
         }
     }
-    public void putAll(Transformer<? super V, K> transformer, Iterator<? extends V> iterator) {
+    public void putAll(Function<? super V, K> function, Iterator<? extends V> iterator) {
         synchronized (mLock) {
             while (iterator.hasNext()) {
                 V value = iterator.next();
-                putUnlocked(transformer.transform(value), value);
+                putUnlocked(function.apply(value), value);
             }
         }
     }
@@ -214,7 +209,7 @@ public class MultiMap<K, V> {
                 }
                 return (V) obj;
             }
-            if(predicate.evaluate((V) obj)) {
+            if(predicate.test((V) obj)) {
                 return (V) map.remove(key);
             }
             return null;
@@ -251,7 +246,7 @@ public class MultiMap<K, V> {
                 EntryList<V> entryList = (EntryList<V>) obj;
                 return entryList.containsIf(predicate);
             }
-            return predicate.evaluate((V) obj);
+            return predicate.test((V) obj);
         }
     }
 
@@ -353,7 +348,7 @@ public class MultiMap<K, V> {
                 return getFromEntryList(key, (EntryList<?>) obj, predicate);
             }
             V value = (V) obj;
-            if(predicate != null && !predicate.evaluate(value)) {
+            if(predicate != null && !predicate.test(value)) {
                 value = null;
             }
             return value;
@@ -402,7 +397,7 @@ public class MultiMap<K, V> {
         if(entryList == null || entryList.size() < 2) {
             return false;
         }
-        Collections.sort(entryList, (Comparator<? super Object>) comparator);
+        java.util.Collections.sort(entryList, (Comparator<? super Object>) comparator);
         return true;
     }
     public void setFavouriteObjectsSorter(Comparator<? super V> favouriteObjectsSorter) {

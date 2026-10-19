@@ -28,13 +28,9 @@ import com.reandroid.utils.io.FilePermissions;
 import com.reandroid.utils.io.FileUtil;
 import com.reandroid.utils.io.IOUtil;
 
-import java.io.Closeable;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 import java.util.zip.Inflater;
 import java.util.zip.InflaterInputStream;
 

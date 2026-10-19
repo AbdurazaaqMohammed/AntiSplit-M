@@ -17,10 +17,10 @@ package com.reandroid.dex.model;
 
 import com.reandroid.dex.base.DexException;
 import com.reandroid.dex.data.InstructionList;
-import com.reandroid.dex.ins.ExceptionHandler;
+import com.reandroid.dex.ins.InsExceptionHandler;
 import com.reandroid.dex.ins.ExceptionLabel;
 import com.reandroid.dex.ins.Ins;
-import com.reandroid.dex.ins.TryItem;
+import com.reandroid.dex.ins.InsTryItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -35,16 +35,16 @@ import java.util.Iterator;
 public class DexTry extends DexCode {
 
     private final DexMethod dexMethod;
-    private final TryItem tryItem;
+    private final InsTryItem tryItem;
     private final int address;
 
-    public DexTry(DexMethod dexMethod, TryItem tryItem, int address) {
+    public DexTry(DexMethod dexMethod, InsTryItem tryItem, int address) {
         super();
         this.dexMethod = dexMethod;
         this.tryItem = tryItem;
         this.address = address;
     }
-    public DexTry(DexMethod dexMethod, TryItem tryItem) {
+    public DexTry(DexMethod dexMethod, InsTryItem tryItem) {
         this(dexMethod, tryItem, -1);
     }
 
@@ -82,11 +82,11 @@ public class DexTry extends DexCode {
         getTryItem().setStartAddress(address);
     }
     public int getEndAddress(){
-        TryItem tryItem = getTryItem();
+        InsTryItem tryItem = getTryItem();
         return tryItem.getStartAddress() + tryItem.getCatchCodeUnit();
     }
     public void setEndAddress(int address){
-        TryItem tryItem = getTryItem();
+        InsTryItem tryItem = getTryItem();
         int start = tryItem.getStartAddress();
         if(address < start){
             throw new DexException("Invalid try end address "
@@ -98,7 +98,7 @@ public class DexTry extends DexCode {
         return create(getTryItem().getCatchAllHandler());
     }
     public DexCatch getOrCreateCatchAll() {
-        TryItem tryItem = getTryItem();
+        InsTryItem tryItem = getTryItem();
         boolean hasCatchAll = tryItem.hasCatchAllHandler();
         DexCatch dexCatch = create(getTryItem().getOrCreateCatchAll());
         if(!hasCatchAll){
@@ -110,7 +110,7 @@ public class DexTry extends DexCode {
         return create(getTryItem().getExceptionHandler(typeKey));
     }
     public int getCatchCount() {
-        TryItem tryItem = getTryItem();
+        InsTryItem tryItem = getTryItem();
         int count = 0;
         if(tryItem.hasCatchAllHandler()){
             count = 1;
@@ -141,7 +141,7 @@ public class DexTry extends DexCode {
     public boolean traps(TypeKey typeKey, int address) {
         return getTryItem().traps(typeKey, address);
     }
-    DexCatch create(ExceptionHandler handler) {
+    DexCatch create(InsExceptionHandler handler) {
         if(handler != null) {
             return new DexCatch(this, handler);
         }
@@ -157,7 +157,7 @@ public class DexTry extends DexCode {
                 getTryItem().isRemoved();
     }
 
-    public TryItem getTryItem() {
+    public InsTryItem getTryItem() {
         return tryItem;
     }
 
@@ -179,8 +179,8 @@ public class DexTry extends DexCode {
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
-        TryItem tryItem = getTryItem();
-        Iterator<ExceptionHandler> handlers = tryItem.getExceptionHandlers();
+        InsTryItem tryItem = getTryItem();
+        Iterator<InsExceptionHandler> handlers = tryItem.handlers();
         if(!handlers.hasNext()){
             writer.appendComment("Empty try-catch");
             writer.newLine();
@@ -200,7 +200,7 @@ public class DexTry extends DexCode {
         Iterator<DexInstruction> instructions = getInstructions();
         writer.appendAll(instructions, true);
         writer.indentMinus();
-        handlers = tryItem.getExceptionHandlers();
+        handlers = tryItem.handlers();
         previous = null;
         while (handlers.hasNext()){
             ExceptionLabel label = handlers.next().getEndLabel();
@@ -211,7 +211,7 @@ public class DexTry extends DexCode {
             writer.newLine();
             label.appendLabelName(writer);
         }
-        handlers = tryItem.getExceptionHandlers();
+        handlers = tryItem.handlers();
         while (handlers.hasNext()){
             ExceptionLabel label = handlers.next().getHandlerLabel();
             writer.newLine();
@@ -219,19 +219,19 @@ public class DexTry extends DexCode {
         }
     }
 
-    public static Iterator<DexTry> create(DexMethod dexMethod, Iterator<TryItem> iterator) {
+    public static Iterator<DexTry> create(DexMethod dexMethod, Iterator<InsTryItem> iterator) {
         return create(dexMethod, -1, iterator);
     }
-    public static Iterator<DexTry> create(DexMethod dexMethod, int address, Iterator<TryItem> iterator){
+    public static Iterator<DexTry> create(DexMethod dexMethod, int address, Iterator<InsTryItem> iterator){
         if(dexMethod == null){
             return EmptyIterator.of();
         }
         return ComputeIterator.of(iterator, tryItem -> create(dexMethod, tryItem, address));
     }
-    public static DexTry create(DexMethod dexMethod, TryItem tryItem) {
+    public static DexTry create(DexMethod dexMethod, InsTryItem tryItem) {
         return create(dexMethod, tryItem, -1);
     }
-    public static DexTry create(DexMethod dexMethod, TryItem tryItem, int address) {
+    public static DexTry create(DexMethod dexMethod, InsTryItem tryItem, int address) {
         if(dexMethod == null || tryItem == null){
             return null;
         }

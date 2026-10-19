@@ -49,7 +49,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Set;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class XmlCoder {
 
@@ -180,7 +180,7 @@ public class XmlCoder {
                            ResConfig resConfig,
                            Predicate<Entry> decodedEntries) throws IOException {
             Entry entry = resourceEntry.get(resConfig);
-            if(entry == null || decodedEntries.evaluate(entry)){
+            if(entry == null || decodedEntries.test(entry)){
                 return false;
             }
             if(entry.isComplex()){

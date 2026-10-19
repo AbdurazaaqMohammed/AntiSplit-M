@@ -18,11 +18,20 @@ package com.reandroid.identifiers;
 import com.reandroid.arsc.chunk.PackageBlock;
 import com.reandroid.arsc.chunk.TableBlock;
 import com.reandroid.utils.StringsUtil;
+import com.reandroid.utils.io.FileUtil;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.*;
-import java.util.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 public class TableIdentifier{
     private final List<PackageIdentifier> mPackages;
@@ -31,7 +40,7 @@ public class TableIdentifier{
     public TableIdentifier() {
         this.mPackages = new ArrayList<>();
         this.mNameMap = new HashMap<>();
-        this.mCaseInsensitive = Identifier.CASE_INSENSITIVE_FS;
+        this.mCaseInsensitive = FileUtil.isCaseInsensitiveFileSystem();
     }
 
     public void load(TableBlock tableBlock){

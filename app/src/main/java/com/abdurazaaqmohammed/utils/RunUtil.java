@@ -1,6 +1,5 @@
 package com.abdurazaaqmohammed.utils;
 
-
 import android.os.Handler;
 import android.text.TextUtils;
 import android.widget.Toast;
@@ -10,9 +9,14 @@ import com.abdurazaaqmohammed.AntiSplit.main.MainActivity;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 public class RunUtil {
+
+    private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "antisplit-worker");
+        thread.setDaemon(true);
+        return thread;
+    });
 
     private final Handler handler;
     private final MainActivity context;
@@ -25,37 +29,34 @@ public class RunUtil {
     }
 
     public static void runInBackground(Runnable runnable) {
-        try {
-            Executors.newSingleThreadExecutor().submit(runnable);
-        } catch (Exception ignored) { }
+        EXECUTOR.execute(runnable);
     }
 
     public void runInBackground(Callable<Boolean> callable) {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        Future<Boolean> future = executor.submit(callable);
-
-        executor.submit(() -> {
+        EXECUTOR.execute(() -> {
             try {
-                Boolean success = future.get();
-
+                Boolean success = callable.call();
                 if (success && handler != null && !TextUtils.isEmpty(msg))
                     handler.post(() -> Toast.makeText(context, msg, Toast.LENGTH_SHORT).show());
-            } catch (Exception e) {
-                (context).showError(e);
+            } catch (Throwable e) {
+                context.showError(e);
             }
         });
     }
 
     public void runInBackground(Callable<Boolean> callable, Runnable doAfter, boolean onlyIfSuccessful) {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        Future<Boolean> future = executor.submit(callable);
-
-        executor.submit(() -> {
+        EXECUTOR.execute(() -> {
             try {
-                if (future.get() && handler != null) handler.post(doAfter);
-            } catch (Exception e) {
-                if (!onlyIfSuccessful && handler != null) handler.post(doAfter);
-                (context).showError(e);
+                if (callable.call()) {
+                    if (handler != null)
+                        handler.post(doAfter);
+                } else if (!onlyIfSuccessful && handler != null) {
+                    handler.post(doAfter);
+                }
+            } catch (Throwable e) {
+                if (!onlyIfSuccessful && handler != null)
+                    handler.post(doAfter);
+                context.showError(e);
             }
         });
     }

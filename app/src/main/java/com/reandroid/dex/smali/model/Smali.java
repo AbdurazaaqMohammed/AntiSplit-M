@@ -26,9 +26,26 @@ import java.io.IOException;
 public abstract class Smali implements SmaliFormat, SmaliParser {
 
     private Smali parent;
+    private int mIndex;
+
     private Origin origin;
 
-    public Smali(){
+    public Smali() {
+        this.mIndex = -1;
+    }
+
+    public int getIndex() {
+        Smali parent = getParent();
+        if (parent instanceof SmaliSet) {
+            SmaliSet<?> codeSet = (SmaliSet<?>) parent;
+            if (codeSet.get(mIndex) != this) {
+                codeSet.updateIndexes();
+            }
+        }
+        return mIndex;
+    }
+    public void setIndex(int index) {
+        this.mIndex = index;
     }
 
     public Origin getOrigin() {
@@ -50,35 +67,37 @@ public abstract class Smali implements SmaliFormat, SmaliParser {
         return parent;
     }
     @SuppressWarnings("unchecked")
-    public<T extends Smali> T getParent(Class<T> parentClass){
+    public<T extends Smali> T getParent(Class<T> parentClass) {
         Smali parent = getParent();
-        if(parent == null){
+        if (parent == null) {
             return null;
         }
-        if(parent.getClass() == parentClass){
+        if (parent.getClass() == parentClass) {
             return (T) parent;
         }
         return parent.getParent(parentClass);
     }
     @SuppressWarnings("unchecked")
-    public<T extends Smali> T getParentInstance(Class<T> parentClass){
+    public<T extends Smali> T getParentInstance(Class<T> parentClass) {
         Smali parent = getParent();
-        if(parent == null){
-            return null;
+        while (parent != null) {
+            if (parentClass.isInstance(parent)) {
+                return (T) parent;
+            }
+            parent = parent.getParent();
         }
-        if(parentClass.isInstance(parent)){
-            return (T) parent;
-        }
-        return parent.getParentInstance(parentClass);
+        return null;
     }
 
     void setParent(Smali parent) {
-        if(parent == this){
+        if (parent == this) {
             throw new RuntimeException("Cyclic parent set");
         }
         this.parent = parent;
     }
 
+    public void validate() throws IOException {
+    }
     public ProgramType programType() {
         return ProgramType.SMALI;
     }
@@ -87,14 +106,14 @@ public abstract class Smali implements SmaliFormat, SmaliParser {
 
     }
 
-    public String toDebugString(){
+    public String toDebugString() {
         Origin origin = getOrigin();
-        if(origin != null) {
+        if (origin != null) {
             return origin.toString();
         }
-        try{
+        try {
             return toString();
-        }catch (Throwable e){
+        } catch (Throwable e) {
             return e.getMessage();
         }
     }

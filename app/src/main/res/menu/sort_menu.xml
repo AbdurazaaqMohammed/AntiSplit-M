@@ -1,11 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/sort_name"
-        android:title="Name" />
+        android:title="@string/sort_name" />
     <item
         android:id="@+id/date_updated"
-        android:title="Date updated" />
+        android:title="@string/sort_date_updated" />
     <item
         android:id="@+id/date_install"
-        android:title="Date installed" />
+        android:title="@string/sort_date_installed" />
 </menu>

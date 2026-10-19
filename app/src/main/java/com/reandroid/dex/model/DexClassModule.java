@@ -12,7 +12,7 @@ import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.SingleIterator;
 
 import java.util.Iterator;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public interface DexClassModule extends DexClassRepository {
 

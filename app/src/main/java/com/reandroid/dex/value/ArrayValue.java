@@ -27,7 +27,7 @@ import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
 import java.util.Iterator;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class ArrayValue extends DexValueBlock<EncodedArray>
         implements Iterable<DexValueBlock<?>> {

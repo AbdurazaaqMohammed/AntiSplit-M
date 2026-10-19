@@ -20,7 +20,7 @@ import com.reandroid.utils.collection.ArraySort;
 import com.reandroid.utils.collection.CollectionUtil;
 
 import java.util.*;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 import java.util.regex.Pattern;
 
 public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSource>{
@@ -51,7 +51,7 @@ public class ZipEntryMap implements Comparator<InputSource>, Iterable<InputSourc
         return ArrayIterator.of(toArray(), filter);
     }
     public Iterator<InputSource> iteratorWithPath(Predicate<? super String> filter){
-        return iterator(inputSource -> filter.evaluate(inputSource.getAlias()));
+        return iterator(inputSource -> filter.test(inputSource.getAlias()));
     }
     public Iterator<InputSource> withinDirectory(String directory) {
         return withinDirectory(directory, true);

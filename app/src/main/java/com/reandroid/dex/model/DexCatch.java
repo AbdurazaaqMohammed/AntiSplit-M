@@ -15,8 +15,8 @@
  */
 package com.reandroid.dex.model;
 
-import com.reandroid.dex.ins.CatchAllHandler;
-import com.reandroid.dex.ins.ExceptionHandler;
+import com.reandroid.dex.ins.InsCatchAllHandler;
+import com.reandroid.dex.ins.InsExceptionHandler;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -26,9 +26,9 @@ import java.io.IOException;
 public class DexCatch extends DexCode {
 
     private final DexTry dexTry;
-    private final ExceptionHandler exceptionHandler;
+    private final InsExceptionHandler exceptionHandler;
 
-    public DexCatch(DexTry dexTry, ExceptionHandler exceptionHandler) {
+    public DexCatch(DexTry dexTry, InsExceptionHandler exceptionHandler) {
         super();
         this.dexTry = dexTry;
         this.exceptionHandler = exceptionHandler;
@@ -44,7 +44,7 @@ public class DexCatch extends DexCode {
         return getExceptionHandler().traps(typeKey);
     }
     public boolean isCatchAll() {
-        return getExceptionHandler() instanceof CatchAllHandler;
+        return getExceptionHandler() instanceof InsCatchAllHandler;
     }
     public int getCatchAddress(){
         return getExceptionHandler().getCatchAddress();
@@ -72,7 +72,7 @@ public class DexCatch extends DexCode {
     public DexTry getDexTry() {
         return dexTry;
     }
-    public ExceptionHandler getExceptionHandler() {
+    public InsExceptionHandler getExceptionHandler() {
         return exceptionHandler;
     }
 

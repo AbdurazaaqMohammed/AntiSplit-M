@@ -34,7 +34,7 @@ import com.reandroid.utils.io.FileIterator;
 
 import java.io.*;
 import java.util.Iterator;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class DexLayout implements DexClassModule, Closeable,
         Iterable<DexClass> {
@@ -127,7 +127,7 @@ public class DexLayout implements DexClassModule, Closeable,
     }
     @Override
     public boolean removeClasses(Predicate<? super DexClass> filter) {
-        Predicate<ClassId> classIdFilter = classId -> filter.evaluate(DexLayout.this.create(classId));
+        Predicate<ClassId> classIdFilter = classId -> filter.test(DexLayout.this.create(classId));
         return getDexLayoutBlock().removeEntries(SectionType.CLASS_ID, classIdFilter);
     }
     @Override

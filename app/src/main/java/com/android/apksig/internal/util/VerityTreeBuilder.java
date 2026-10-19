@@ -33,7 +33,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Phaser;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
@@ -208,8 +208,7 @@ public class VerityTreeBuilder implements Closeable {
         levelOffset[0] = 0;
         for (int i = 0; i < levelSize.size(); i++) {
             // We don't support verity tree if it is larger then Integer.MAX_VALUE.
-            levelOffset[i + 1] = levelOffset[i] + Math.toIntExact(
-                    levelSize.get(levelSize.size() - i - 1));
+            levelOffset[i + 1] = levelOffset[i] + (int) (long) levelSize.get(levelSize.size() - i - 1);
         }
         return levelOffset;
     }
@@ -229,7 +228,8 @@ public class VerityTreeBuilder implements Closeable {
         final byte[][] hashes = new byte[chunks][];
 
         {
-            Phaser tasks = new Phaser(1);
+            final int taskCount = (int) divideRoundup(divideRoundup(size, CHUNK_SIZE), ioSizeChunks);
+            CountDownLatch tasks = new CountDownLatch(taskCount);
             // Reading the input file as fast as we can.
             final long maxReadSize = ioSizeChunks * CHUNK_SIZE;
 
@@ -248,15 +248,17 @@ public class VerityTreeBuilder implements Closeable {
 
                 final int readChunkIndex = startChunkIndex;
                 Runnable task = () -> {
-                    final MessageDigest md = cloneMessageDigest();
-                    for (int offset = 0, finish = buffer.capacity(), chunkIndex = readChunkIndex;
-                         offset < finish; offset += CHUNK_SIZE, ++chunkIndex) {
-                        ByteBuffer chunk = slice(buffer, offset, offset + CHUNK_SIZE);
-                        hashes[chunkIndex] = saltedDigest(md, chunk);
+                    try {
+                        final MessageDigest md = cloneMessageDigest();
+                        for (int offset = 0, finish = buffer.capacity(), chunkIndex = readChunkIndex;
+                             offset < finish; offset += CHUNK_SIZE, ++chunkIndex) {
+                            ByteBuffer chunk = slice(buffer, offset, offset + CHUNK_SIZE);
+                            hashes[chunkIndex] = saltedDigest(md, chunk);
+                        }
+                    } finally {
+                        tasks.countDown();
                     }
-                    tasks.arriveAndDeregister();
                 };
-                tasks.register();
                 mExecutor.execute(task);
 
                 startChunkIndex += bufferSizeChunks;
@@ -264,7 +266,12 @@ public class VerityTreeBuilder implements Closeable {
             }
 
             // Waiting for the tasks to complete.
-            tasks.arriveAndAwaitAdvance();
+            try {
+                tasks.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IOException("Interrupted while computing verity tree", e);
+            }
         }
         // Streaming hashes back.
         for (byte[] hash : hashes) {

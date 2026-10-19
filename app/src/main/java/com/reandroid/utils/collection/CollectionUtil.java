@@ -19,7 +19,7 @@ import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
 
 import java.util.*;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class CollectionUtil {
 
@@ -68,7 +68,7 @@ public class CollectionUtil {
     }
 
     public static<T extends Comparable<T>> void sort(List<T> list) {
-        Collections.sort(list, CompareUtil.getComparableComparator());
+        java.util.Collections.sort(list, CompareUtil.getComparableComparator());
     }
     public static<T> T getLast(Iterator<T> iterator) {
         if (iterator == null) {
@@ -329,7 +329,7 @@ public class CollectionUtil {
         if (filter2 == null || filter2 == getRejectAll()) {
             return ObjectsUtil.cast(filter1);
         }
-        return t -> (filter1.evaluate(t) || filter2.evaluate(t));
+        return t -> (filter1.test(t) || filter2.test(t));
     }
     public static<T> Predicate<T> andFilter(Predicate<T> filter1, Predicate<T> filter2) {
         if (filter1 == null || filter1 == getAcceptAll()) {
@@ -338,16 +338,16 @@ public class CollectionUtil {
         if (filter2 == null || filter2 == getAcceptAll()) {
             return filter1;
         }
-        return t -> (filter1.evaluate(t) && filter2.evaluate(t));
+        return t -> (filter1.test(t) && filter2.test(t));
     }
     public static<T> Predicate<T> negateFilter(Predicate<T> filter) {
-        return t -> !filter.evaluate(t);
+        return t -> !filter.test(t);
     }
     public static<T> Predicate<T> diffFilter(Predicate<T> filter1, Predicate<T> filter2) {
-        return t -> (filter1.evaluate(t) != filter2.evaluate(t));
+        return t -> (filter1.test(t) != filter2.test(t));
     }
     public static<T> Predicate<T> equalFilter(Predicate<T> filter1, Predicate<T> filter2) {
-        return t -> (filter1.evaluate(t) == filter2.evaluate(t));
+        return t -> (filter1.test(t) == filter2.test(t));
     }
     @Deprecated
     @SuppressWarnings("unchecked")

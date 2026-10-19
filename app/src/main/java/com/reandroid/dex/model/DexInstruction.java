@@ -54,7 +54,7 @@ import com.reandroid.utils.collection.LinkedIterator;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class DexInstruction extends DexCode implements Instruction {
 
@@ -150,6 +150,14 @@ public class DexInstruction extends DexCode implements Instruction {
         return null;
     }
     public Key getKey() {
+        IdItem entry = getIdSectionEntry();
+        if (entry != null) {
+            return entry.getKey();
+        }
+        return null;
+    }
+    @Override
+    public Key getAsKey() {
         IdItem entry = getIdSectionEntry();
         if (entry != null) {
             return entry.getKey();
@@ -262,110 +270,11 @@ public class DexInstruction extends DexCode implements Instruction {
             ((RegistersSet) edit()).setRegistersCount(count);
         }
     }
-    public boolean is(Opcode<?> opcode) {
-        return opcode == getOpcode();
-    }
-    public boolean isConst() {
-        Opcode<?> opcode = getOpcode();
-        return opcode.isConstNumber() ||
-                opcode.isConstString() ||
-                opcode == Opcode.CONST_CLASS;
-    }
-    public boolean isConstString() {
-        return getOpcode().isConstString();
-    }
-    public boolean isConstNumber() {
-        return getOpcode().isConstNumber();
-    }
-    public boolean isConstInteger() {
-        return getOpcode().isConstInteger();
-    }
-    public boolean isConstWide() {
-        return getOpcode().isConstWide();
-    }
-    public boolean isGoto() {
-        return getOpcode().isGoto();
-    }
-    public boolean isIfTest() {
-        return getOpcode().isIfTest();
-    }
-    public boolean isSwitch() {
-        return getOpcode().isSwitch();
-    }
-    public boolean isPayload() {
-        return getOpcode().isPayload();
-    }
-    public boolean isReturn() {
-        return getOpcode().isReturn();
-    }
     public boolean isThrow() {
         return getOpcode() == Opcode.THROW;
     }
-    public boolean isMethodExit() {
-        return getOpcode().isMethodExit();
-    }
     public boolean isInsBranching() {
         return getOpcode().isInsBranching();
-    }
-    public boolean isArrayOp() {
-        return getOpcode().isArrayOp();
-    }
-    public boolean isArrayGet() {
-        return getOpcode().isArrayGet();
-    }
-    public boolean isArrayPut() {
-        return getOpcode().isArrayPut();
-    }
-    public boolean isFieldInstanceGet() {
-        return getOpcode().isFieldInstanceGet();
-    }
-    public boolean isFieldInstancePut() {
-        return getOpcode().isFieldInstancePut();
-    }
-    public boolean isFieldInstanceOp() {
-        return getOpcode().isFieldInstanceOp();
-    }
-    public boolean isFieldStaticGet() {
-        return getOpcode().isFieldStaticGet();
-    }
-    public boolean isFieldStaticPut() {
-        return getOpcode().isFieldStaticPut();
-    }
-    public boolean isFieldGet() {
-        return getOpcode().isFieldGet();
-    }
-    public boolean isFieldPut() {
-        return getOpcode().isFieldPut();
-    }
-    public boolean isFieldStaticOp() {
-        return getOpcode().isFieldStaticOp();
-    }
-    public boolean isFieldOp() {
-        return getOpcode().isFieldOp();
-    }
-    public boolean isMethodInvokeVirtual() {
-        return getOpcode().isMethodInvokeVirtual();
-    }
-    public boolean isMethodInvokeSuper() {
-        return getOpcode().isMethodInvokeSuper();
-    }
-    public boolean isMethodInvokeDirect() {
-        return getOpcode().isMethodInvokeDirect();
-    }
-    public boolean isMethodInvokeStatic() {
-        return getOpcode().isMethodInvokeStatic();
-    }
-    public boolean isMethodInvokeInterface() {
-        return getOpcode().isMethodInvokeInterface();
-    }
-    public boolean isMethodInvoke() {
-        return getOpcode().isMethodInvoke();
-    }
-    public boolean isMove() {
-        return getOpcode().isMove();
-    }
-    public boolean isMoveResult() {
-        return getOpcode().isMoveResult();
     }
     public boolean hasOutRegisters() {
         return getOpcode().hasOutRegisters();
@@ -545,7 +454,7 @@ public class DexInstruction extends DexCode implements Instruction {
         return replaceWithSmali(SmaliReader.of(smaliString));
     }
     public DexInstruction replaceWithSmali(SmaliReader reader) throws IOException {
-        SmaliInstruction smaliInstruction = new SmaliInstruction();
+        SmaliInstruction smaliInstruction = new SmaliInstruction(Opcode.parseSmali(reader, false));
         smaliInstruction.parse(reader);
         return replace(smaliInstruction);
     }
@@ -569,7 +478,7 @@ public class DexInstruction extends DexCode implements Instruction {
         return createNextFromSmali(SmaliReader.of(smaliString));
     }
     public DexInstruction createNextFromSmali(SmaliReader reader) throws IOException {
-        SmaliInstruction smaliInstruction = new SmaliInstruction();
+        SmaliInstruction smaliInstruction = new SmaliInstruction(Opcode.parseSmali(reader, false));
         smaliInstruction.parse(reader);
         Ins ins = edit().createNext(smaliInstruction.getOpcode());
         ins.fromSmali(smaliInstruction);
@@ -652,9 +561,6 @@ public class DexInstruction extends DexCode implements Instruction {
     }
 
     public SmaliInstruction toSmali() {
-        if (toString().contains(" Lkr/co/psynet/LiveScoreApplication;->getInstance()Lkr/co/psynet/LiveScoreApplication;")) {
-            String junk = "";
-        }
         return getIns().toSmali();
     }
     @Override
@@ -695,7 +601,7 @@ public class DexInstruction extends DexCode implements Instruction {
     }
     public boolean hasTargetingInstructionsIfOpcode(Predicate<Opcode<?>> predicate) {
         return FilterIterator.of(getIns().getForcedReferencingLabels(Ins.class),
-                ins -> predicate.evaluate(ins.getOpcode())).hasNext();
+                ins -> predicate.test(ins.getOpcode())).hasNext();
     }
     public Iterator<DexInstruction> getTargetingInstructions() {
         return DexInstruction.createAll(getDexMethod(),
@@ -706,7 +612,7 @@ public class DexInstruction extends DexCode implements Instruction {
         if (!iterator.hasNext()) {
             return EmptyIterator.of();
         }
-        iterator = FilterIterator.of(iterator, ins -> predicate.evaluate(ins.getOpcode()));
+        iterator = FilterIterator.of(iterator, ins -> predicate.test(ins.getOpcode()));
         return DexInstruction.createAll(getDexMethod(), iterator);
     }
     // for switch payload instruction
@@ -853,7 +759,7 @@ public class DexInstruction extends DexCode implements Instruction {
                 for (int i = 0; i < size; i++) {
                     if (register == previous.getRegister(i) &&
                             RegisterType.READ.is(registerFormat.get(i))) {
-                        if (predicate.evaluate(previous)) {
+                        if (predicate.test(previous)) {
                             return previous;
                         }
                         return null;
@@ -882,7 +788,7 @@ public class DexInstruction extends DexCode implements Instruction {
                 for (int i = 0; i < size; i++) {
                     if (register == previous.getRegister(i) &&
                             RegisterType.WRITE.is(format.get(i))) {
-                        if (predicate.evaluate(previous)) {
+                        if (predicate.test(previous)) {
                             return previous;
                         }
                         return null;

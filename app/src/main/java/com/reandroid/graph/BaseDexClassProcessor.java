@@ -20,7 +20,7 @@ import com.reandroid.dex.model.DexClassRepository;
 import com.reandroid.utils.collection.FilterIterator;
 
 import java.util.Iterator;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public abstract class BaseDexClassProcessor extends GraphTask {
 

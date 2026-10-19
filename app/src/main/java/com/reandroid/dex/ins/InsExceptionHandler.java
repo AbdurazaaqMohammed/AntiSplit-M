@@ -20,16 +20,12 @@ import com.reandroid.dex.id.TypeId;
 import com.reandroid.dex.data.FixedDexContainerWithTool;
 import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.key.TypeKey;
-import com.reandroid.dex.program.Instruction;
-import com.reandroid.dex.program.InstructionLabel;
-import com.reandroid.dex.program.InstructionLabelSet;
-import com.reandroid.dex.program.InstructionLabelType;
+import com.reandroid.dex.program.*;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.dex.smali.model.SmaliCodeExceptionHandler;
+import com.reandroid.dex.smali.model.SmaliExceptionHandler;
 import com.reandroid.utils.CompareUtil;
-import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.ArrayIterator;
 import com.reandroid.utils.collection.CollectionUtil;
@@ -38,8 +34,8 @@ import com.reandroid.utils.collection.EmptyIterator;
 import java.io.IOException;
 import java.util.Iterator;
 
-public abstract class ExceptionHandler extends FixedDexContainerWithTool
-        implements SmaliRegion, Iterable<InstructionLabel>, InstructionLabelSet {
+public abstract class InsExceptionHandler extends FixedDexContainerWithTool
+        implements SmaliRegion, Iterable<InstructionLabel>, ExceptionHandler {
 
     private final Ule128Item catchAddress;
 
@@ -48,10 +44,9 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
     private final ExceptionLabel handlerLabel;
     private final ExceptionLabel catchLabel;
 
-    private InstructionLabel[] mLabels;
+    private Object[] labels;
 
-
-    private ExceptionHandler(int childesCount, Ule128Item catchAddress, int index) {
+    private InsExceptionHandler(int childesCount, Ule128Item catchAddress, int index) {
         super(childesCount);
         this.catchAddress = catchAddress;
         if (catchAddress != null) {
@@ -60,33 +55,33 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
 
         this.startLabel = new TryStartLabel(this);
         this.endLabel = new TryEndLabel(this);
-        this.handlerLabel = new HandlerLabel(this);
+        this.handlerLabel = new InsHandlerLabel(this);
         this.catchLabel = new CatchLabel(this);
 
-        this.mLabels = new InstructionLabel[]{this.startLabel, this.endLabel, this.handlerLabel, this.catchLabel};
+        this.labels = new Object[]{this.startLabel, this.endLabel,
+                this.handlerLabel, this.catchLabel};
     }
-    ExceptionHandler(int childesCount) {
+    InsExceptionHandler(int childesCount) {
         this(childesCount + 1, new Ule128Item(), childesCount);
     }
 
-    ExceptionHandler() {
+    InsExceptionHandler() {
         this(0, null, 0);
     }
 
-
-    public TypeKey getKey() {
-        return null;
-    }
     public void setKey(TypeKey typeKey) {
     }
 
-    public abstract boolean isCatchAll();
+    @Override
+    public ProgramType programType() {
+        return ProgramType.DEX;
+    }
 
     public boolean isAddressBounded(int address) {
         if (address == -1) {
             return true;
         }
-        return address >= getStartAddress() && address <= getAddress();
+        return address >= getStartAddress() && address <= getTargetAddress();
     }
     public int getInstructionCount() {
         return CollectionUtil.count(getTryInstructions());
@@ -100,7 +95,7 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
                 getStartLabel().getTargetAddress(), getCodeUnit());
     }
     private InstructionList getInstructionList() {
-        TryItem tryItem = getTryItem();
+        InsTryItem tryItem = getTryItem();
         if (tryItem != null) {
             return tryItem.getInstructionList();
         }
@@ -120,17 +115,20 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
     }
     @Override
     public Iterator<InstructionLabel> iterator() {
-        return ArrayIterator.of(mLabels);
+        return ArrayIterator.of(labels);
     }
     public ExceptionLabel getHandlerLabel() {
         return handlerLabel;
     }
+    @Override
     public ExceptionLabel getStartLabel() {
         return startLabel;
     }
+    @Override
     public ExceptionLabel getEndLabel() {
         return endLabel;
     }
+    @Override
     public ExceptionLabel getCatchLabel() {
         return catchLabel;
     }
@@ -159,49 +157,64 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
     public void setCatchAddress(int address) {
         getCatchAddressUle128().set(address);
     }
-    public int getAddress() {
+    @Override
+    public int getTargetAddress() {
         return getStartAddress() + getCodeUnit();
     }
-    public void setAddress(int address) {
+    @Override
+    public void setTargetAddress(int address) {
         setCodeUnit(address - getStartAddress());
     }
+    @Override
+    public int getOwnerAddress() {
+        return getTargetAddress();
+    }
+    @Override
+    public Ins getTargetInstruction() {
+        return (Ins) handlerLabel.getTargetInstruction();
+    }
+    @Override
+    public void setTargetInstruction(Instruction ins) {
+        handlerLabel.setTargetInstruction(ins);
+    }
 
+    @Override
     public int getStartAddress() {
-        TryItem tryItem = getTryItem();
+        InsTryItem tryItem = getTryItem();
         if (tryItem != null) {
             return tryItem.getStartAddress();
         }
         return 0;
     }
     public void setStartAddress(int address) {
-        TryItem tryItem = getTryItem();
+        InsTryItem tryItem = getTryItem();
         if (tryItem != null) {
             tryItem.setStartAddress(address);
         }
     }
     public int getCodeUnit() {
-        TryItem tryItem = getTryItem();
+        InsTryItem tryItem = getTryItem();
         if (tryItem != null) {
             return tryItem.getCatchCodeUnit();
         }
         return 0;
     }
     public void setCodeUnit(int value) {
-        TryItem tryItem = getTryItem();
+        InsTryItem tryItem = getTryItem();
         if (tryItem != null) {
             tryItem.getHandlerOffset().setCatchCodeUnit(value);
         }
     }
-    TryItem getTryItem() {
-        return getParentInstance(TryItem.class);
+    InsTryItem getTryItem() {
+        return getParentInstance(InsTryItem.class);
     }
 
     public void onRemove() {
-        mLabels = null;
+        labels = null;
         setParent(null);
     }
     public void removeSelf() {
-        TryItem tryItem = getTryItem();
+        InsTryItem tryItem = getTryItem();
         if (tryItem != null) {
             tryItem.remove(this);
         }
@@ -209,16 +222,16 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
     public boolean isRemoved() {
         return getParent() == null;
     }
-    int compareHandler(ExceptionHandler handler) {
+    int compareHandler(InsExceptionHandler handler) {
         if (handler == this) {
             return 0;
         }
-        int i = CompareUtil.compare(this.getAddress(), handler.getAddress());
+        int i = CompareUtil.compare(this.getTargetAddress(), handler.getTargetAddress());
         if (i != 0) {
             return i;
         }
-        TryItem tryItem1 = getTryItem();
-        TryItem tryItem2 = handler.getTryItem();
+        InsTryItem tryItem1 = getTryItem();
+        InsTryItem tryItem2 = handler.getTryItem();
         i = CompareUtil.compare(tryItem1.getIndex(), tryItem2.getIndex());
         if (i != 0) {
             return i;
@@ -230,18 +243,27 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
         return CompareUtil.compare(this.getIndex(),
                 handler.getIndex());
     }
-    public void merge(ExceptionHandler handler) {
+    public void merge(InsExceptionHandler handler) {
         catchAddress.set(handler.getCatchAddress());
     }
     @Override
     public void append(SmaliWriter writer) throws IOException {
 
     }
-    public void fromSmali(SmaliCodeExceptionHandler smaliCodeExceptionHandler) {
-        getHandlerLabel().setTargetAddress(smaliCodeExceptionHandler.getAddress());
-        getStartLabel().setTargetAddress(smaliCodeExceptionHandler.getStart().getAddress());
-        getEndLabel().setTargetAddress(smaliCodeExceptionHandler.getEnd().getAddress());
-        getCatchLabel().setTargetAddress(smaliCodeExceptionHandler.getCatchLabel().getAddress());
+    public void fromSmali(SmaliExceptionHandler smaliExceptionHandler) {
+        getHandlerLabel().setTargetAddress(smaliExceptionHandler.getTargetAddress());
+        getStartLabel().setTargetAddress(smaliExceptionHandler.getStartLabel().getTargetAddress());
+        getEndLabel().setTargetAddress(smaliExceptionHandler.getEndLabel().getTargetAddress());
+        getCatchLabel().setTargetAddress(smaliExceptionHandler.getCatchLabel().getTargetAddress());
+    }
+    public void fromProgram(ExceptionHandler handler) {
+        if (isCatchAll() != handler.isCatchAll()) {
+            throw new IllegalArgumentException("Mismatch catch handler");
+        }
+        getHandlerLabel().setTargetAddress(handler.getTargetAddress());
+        getStartLabel().setTargetAddress(handler.getStartLabel().getTargetAddress());
+        getEndLabel().setTargetAddress(handler.getEndLabel().getTargetAddress());
+        getCatchLabel().setTargetAddress(handler.getCatchLabel().getTargetAddress());
     }
 
     @Override
@@ -252,9 +274,9 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        ExceptionHandler handler = (ExceptionHandler) obj;
+        InsExceptionHandler handler = (InsExceptionHandler) obj;
         return getStartAddress() == handler.getStartAddress() &&
-                getAddress() == handler.getAddress() &&
+                getTargetAddress() == handler.getTargetAddress() &&
                 getCatchAddress() == handler.getCatchAddress() &&
                 ObjectsUtil.equals(getKey(), handler.getKey());
     }
@@ -263,7 +285,7 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
     public int hashCode() {
         int hash = 1;
         hash = hash * 31 + getStartAddress();
-        hash = hash * 31 + getAddress();
+        hash = hash * 31 + getTargetAddress();
         hash = hash * 31 + getCatchAddress();
         hash = hash * 31;
         TypeKey key = getKey();
@@ -281,14 +303,14 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
     static abstract class AbstractExceptionLabel implements ExceptionLabel {
 
         private Instruction targetInstruction;
-        private final ExceptionHandler handler;
+        private final InsExceptionHandler handler;
 
-        AbstractExceptionLabel(ExceptionHandler handler) {
+        AbstractExceptionLabel(InsExceptionHandler handler) {
             this.handler = handler;
         }
 
         @Override
-        public ExceptionHandler getHandler() {
+        public InsExceptionHandler getHandler() {
             return handler;
         }
         @Override
@@ -318,60 +340,37 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
             // update on handler is enough
         }
     }
-    public static class HandlerLabel extends AbstractExceptionLabel {
+    public static class InsHandlerLabel extends AbstractExceptionLabel {
 
-        HandlerLabel(ExceptionHandler handler) {
+        InsHandlerLabel(InsExceptionHandler handler) {
             super(handler);
         }
 
         @Override
         public int getOwnerAddress() {
-            return getHandler().getAddress();
+            return getHandler().getOwnerAddress();
         }
 
         @Override
         public int getTargetAddress() {
-            return getHandler().getAddress();
+            return getHandler().getTargetAddress();
         }
         @Override
         public void setTargetAddress(int targetAddress) {
-            getHandler().setAddress(targetAddress);
+            getHandler().setTargetAddress(targetAddress);
         }
-
         @Override
         public InstructionLabelType getLabelType() {
-            if (getHandler().isCatchAll()) {
-                return InstructionLabelType.CATCH_ALL_HANDLER;
-            }
-            return InstructionLabelType.CATCH_HANDLER;
+            return getHandler().getLabelType();
         }
-
         @Override
         public void updateTarget() {
             getHandler().refreshAddresses();
         }
-
         @Override
         public String getLabelName() {
-            ExceptionHandler handler = this.getHandler();
-            StringBuilder builder = new StringBuilder();
-            builder.append('.');
-            builder.append(handler.getSmaliDirective().getName());
-            builder.append(' ');
-            TypeId typeId = handler.getTypeId();
-            if (typeId != null) {
-                builder.append(typeId.getKey());
-                builder.append(' ');
-            }
-            builder.append("{");
-            builder.append(handler.getStartLabel().getLabelName());
-            builder.append(" .. ");
-            builder.append(handler.getEndLabel().getLabelName());
-            builder.append("} ");
-            builder.append(handler.getCatchLabel().getLabelName());
-            return builder.toString();
+            return getHandler().getLabelName();
         }
-
         @Override
         public boolean equalsLabel(Object obj) {
             if (obj == this) {
@@ -380,10 +379,9 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
             if (obj == null || this.getClass() != obj.getClass()) {
                 return false;
             }
-            HandlerLabel label = (HandlerLabel) obj;
+            InsHandlerLabel label = (InsHandlerLabel) obj;
             return this.getHandler() == label.getHandler();
         }
-
         @Override
         public int compareLabel(InstructionLabel label) {
             if (label == this) {
@@ -391,7 +389,7 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
             }
             int i = InstructionLabel.compareLabels(this, label);
             if (i == 0) {
-                HandlerLabel handlerLabel = (HandlerLabel) label;
+                InsHandlerLabel handlerLabel = (InsHandlerLabel) label;
                 i = this.getHandler().compareHandler(handlerLabel.getHandler());
             }
             return i;
@@ -399,7 +397,7 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
 
         @Override
         public void appendLabelName(SmaliWriter writer) throws IOException {
-            ExceptionHandler handler = this.getHandler();
+            InsExceptionHandler handler = this.getHandler();
             handler.getSmaliDirective().append(writer);
             TypeId typeId = handler.getTypeId();
             if (typeId != null) {
@@ -421,13 +419,13 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
 
     public static class TryStartLabel extends AbstractExceptionLabel {
 
-        TryStartLabel(ExceptionHandler handler) {
+        TryStartLabel(InsExceptionHandler handler) {
             super(handler);
         }
 
         @Override
         public int getOwnerAddress() {
-            return getHandler().getAddress();
+            return getHandler().getTargetAddress();
         }
         @Override
         public int getTargetAddress() {
@@ -441,12 +439,6 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
         public InstructionLabelType getLabelType() {
             return InstructionLabelType.TRY_START;
         }
-
-        @Override
-        public String getLabelName() {
-            return HexUtil.toHex(":try_start_", getTargetAddress(), 1);
-        }
-
         @Override
         public boolean equalsLabel(Object obj) {
             if (obj == this) {
@@ -469,21 +461,21 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
 
     public static class TryEndLabel extends AbstractExceptionLabel {
 
-        TryEndLabel(ExceptionHandler handler) {
+        TryEndLabel(InsExceptionHandler handler) {
             super(handler);
         }
 
         @Override
         public int getOwnerAddress() {
-            return getHandler().getAddress();
+            return getHandler().getTargetAddress();
         }
         @Override
         public int getTargetAddress() {
-            return getHandler().getAddress();
+            return getHandler().getTargetAddress();
         }
         @Override
         public void setTargetAddress(int targetAddress) {
-            getHandler().setAddress(targetAddress);
+            getHandler().setTargetAddress(targetAddress);
         }
         @Override
         public InstructionLabelType getLabelType() {
@@ -492,8 +484,7 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
 
         @Override
         public String getLabelName() {
-            int startAddress = getHandler().getStartLabel().getTargetAddress();
-            return HexUtil.toHex(":try_end_", startAddress, 1);
+            return getLabelType().buildLabelName(getHandler().getStartLabel().getTargetAddress());
         }
 
         @Override
@@ -518,7 +509,7 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
 
     public static class CatchLabel extends AbstractExceptionLabel {
 
-        CatchLabel(ExceptionHandler handler) {
+        CatchLabel(InsExceptionHandler handler) {
             super(handler);
         }
 
@@ -537,10 +528,6 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
         }
         public boolean isCatchAll() {
             return getHandler().isCatchAll();
-        }
-        @Override
-        public String getLabelName() {
-            return HexUtil.toHex(":" + getHandler().getSmaliDirective().getName() + "_", getTargetAddress(), 1);
         }
 
         @Override
@@ -586,7 +573,7 @@ public abstract class ExceptionHandler extends FixedDexContainerWithTool
         }
     }
 
-    static boolean areSimilar(ExceptionHandler handler1, ExceptionHandler handler2) {
+    static boolean areSimilar(InsExceptionHandler handler1, InsExceptionHandler handler2) {
         if (handler1 == null || handler2 == null) {
             return handler1 == handler2;
         }

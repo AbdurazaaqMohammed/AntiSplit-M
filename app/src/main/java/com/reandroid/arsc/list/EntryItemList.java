@@ -31,7 +31,7 @@ import com.reandroid.json.JSONObject;
 import com.reandroid.utils.CompareUtil;
 
 import java.util.Iterator;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class EntryItemList extends OffsetBlockList<Entry> implements JSONConvert<JSONArray> {
 
@@ -201,6 +201,13 @@ public class EntryItemList extends OffsetBlockList<Entry> implements JSONConvert
 
     public void merge(EntryItemList itemList) {
         if (itemList != null && itemList != this) {
+            int capacity;
+            if (this.isSparse()) {
+                capacity = itemList.size();
+            } else {
+                capacity = itemList.getHighestEntryId() + 1 - size();
+            }
+            ensureCapacity(capacity);
             Iterator<Entry> iterator = itemList.iterator(true);
             while (iterator.hasNext()) {
                 Entry comingBlock = iterator.next();

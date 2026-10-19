@@ -32,7 +32,6 @@ public class ApkBundle implements Closeable {
     private AndroidManifestBlockMerger mManifestMerger;
     private APKLogger apkLogger;
     private int compressionLevel = Deflater.DEFAULT_COMPRESSION;
-
     public ApkBundle(){
         this.mModulesMap=new HashMap<>();
         this.mManifestMerger = new AndroidManifestBlockMerger();
@@ -60,7 +59,7 @@ public class ApkBundle implements Closeable {
             throw new FileNotFoundException("Nothing to merge, empty modules");
         }
         ApkModule result = new ApkModule(generateMergedModuleName(), new ZipEntryMap());
-        result.setCompressionLevel(this.compressionLevel);
+        result.setCompressionLevel(compressionLevel);
         result.setAPKLogger(apkLogger);
         result.setLoadDefaultFramework(false);
 
@@ -178,7 +177,7 @@ public class ApkBundle implements Closeable {
     }
     public void addModule(ApkModule apkModule){
         apkModule.setLoadDefaultFramework(false);
-        apkModule.setCompressionLevel(this.compressionLevel);
+        apkModule.setCompressionLevel(compressionLevel);
         String name = apkModule.getModuleName();
         mModulesMap.remove(name);
         mModulesMap.put(name, apkModule);

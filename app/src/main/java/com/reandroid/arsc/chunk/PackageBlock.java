@@ -63,7 +63,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 
 public class PackageBlock extends Chunk<PackageHeader>
@@ -147,7 +147,8 @@ public class PackageBlock extends Chunk<PackageHeader>
         }
         int typeId = (alias >> 16 ) & 0xff;
         int entryId = alias & 0xffff;
-        return getResource(typeId, entryId);
+        return getResource(typeId, entryId)
+                .setStageAliasId(resourceId);
     }
     public ResourceEntry getResource(int typeId, int entryId){
         SpecTypePair specTypePair =
@@ -578,7 +579,7 @@ public class PackageBlock extends Chunk<PackageHeader>
     private Iterator<SpecTypePair> getAttrSpecs(){
         return getSpecTypePairArray().iterator(new Predicate<SpecTypePair>() {
             @Override
-            public boolean evaluate(SpecTypePair specTypePair) {
+            public boolean test(SpecTypePair specTypePair) {
                 return specTypePair != null && specTypePair.isTypeAttr();
             }
         });

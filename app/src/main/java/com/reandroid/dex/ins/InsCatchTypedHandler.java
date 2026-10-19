@@ -19,29 +19,29 @@ import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.base.UsageMarker;
 import com.reandroid.dex.id.TypeId;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.program.ExceptionHandler;
 import com.reandroid.dex.reference.Ule128IdItemReference;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
-import com.reandroid.dex.smali.model.SmaliCodeCatch;
-import com.reandroid.dex.smali.model.SmaliCodeExceptionHandler;
+import com.reandroid.dex.smali.model.SmaliCatchTypedHandler;
+import com.reandroid.dex.smali.model.SmaliExceptionHandler;
 
-
-public class CatchTypedHandler extends ExceptionHandler {
+public class InsCatchTypedHandler extends InsExceptionHandler {
 
     private final Ule128IdItemReference<TypeId> typeId;
 
-    public CatchTypedHandler() {
+    public InsCatchTypedHandler() {
         super(1);
         this.typeId = new Ule128IdItemReference<>(SectionType.TYPE_ID, UsageMarker.USAGE_INSTRUCTION);
         addChild(0, typeId);
     }
-    CatchTypedHandler(Ule128IdItemReference<TypeId> nullForCompact) {
+    InsCatchTypedHandler(Ule128IdItemReference<TypeId> nullForCompact) {
         super();
         this.typeId = nullForCompact;
     }
 
-    CatchTypedHandler newCompact(TryItem parent) {
-        CatchTypedHandler catchTypedHandler = new Compact(this);
+    InsCatchTypedHandler newCompact(InsTryItem parent) {
+        InsCatchTypedHandler catchTypedHandler = new Compact(this);
         catchTypedHandler.setIndex(getIndex());
         catchTypedHandler.setParent(parent);
         return catchTypedHandler;
@@ -84,24 +84,29 @@ public class CatchTypedHandler extends ExceptionHandler {
     }
 
     @Override
-    public void merge(ExceptionHandler handler) {
+    public void merge(InsExceptionHandler handler) {
         super.merge(handler);
-        CatchTypedHandler typedHandler = (CatchTypedHandler) handler;
+        InsCatchTypedHandler typedHandler = (InsCatchTypedHandler) handler;
         typeId.setKey(typedHandler.typeId.getKey());
     }
 
     @Override
-    public void fromSmali(SmaliCodeExceptionHandler smaliCodeExceptionHandler) {
-        SmaliCodeCatch smaliCodeCatch = (SmaliCodeCatch) smaliCodeExceptionHandler;
-        typeId.setKey(smaliCodeCatch.getType());
-        super.fromSmali(smaliCodeExceptionHandler);
+    public void fromSmali(SmaliExceptionHandler smaliExceptionHandler) {
+        SmaliCatchTypedHandler smaliCatchTypedHandler = (SmaliCatchTypedHandler) smaliExceptionHandler;
+        typeId.setKey(smaliCatchTypedHandler.getKey());
+        super.fromSmali(smaliExceptionHandler);
+    }
+    @Override
+    public void fromProgram(ExceptionHandler handler) {
+        typeId.setKey(handler.getKey());
+        super.fromProgram(handler);
     }
 
-    static class Compact extends CatchTypedHandler {
+    static class Compact extends InsCatchTypedHandler {
 
-        private final CatchTypedHandler catchTypedHandler;
+        private final InsCatchTypedHandler catchTypedHandler;
 
-        Compact(CatchTypedHandler catchTypedHandler) {
+        Compact(InsCatchTypedHandler catchTypedHandler) {
             super(null);
             this.catchTypedHandler = catchTypedHandler;
         }
@@ -121,7 +126,7 @@ public class CatchTypedHandler extends ExceptionHandler {
         }
 
         @Override
-        public void merge(ExceptionHandler handler) {
+        public void merge(InsExceptionHandler handler) {
         }
     }
 }

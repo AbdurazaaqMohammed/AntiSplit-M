@@ -15,23 +15,11 @@
  */
 package com.reandroid.dex.smali.model;
 
-import com.reandroid.dex.smali.SmaliReader;
-import com.reandroid.dex.smali.SmaliWriter;
-import java.io.IOException;
+import com.reandroid.dex.program.InstructionLabelType;
 
 public class SmaliPackedSwitchEntry extends SmaliSwitchEntry {
 
     public SmaliPackedSwitchEntry() {
-        super();
-    }
-
-    @Override
-    public void append(SmaliWriter writer) throws IOException {
-        getLabel().append(writer);
-    }
-    @Override
-    public void parse(SmaliReader reader) throws IOException {
-        reader.skipWhitespacesOrComment();
-        getLabel().parse(reader);
+        super(InstructionLabelType.P_SWITCH_DATA);
     }
 }

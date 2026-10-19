@@ -20,7 +20,7 @@ import com.reandroid.arsc.value.Entry;
 import com.reandroid.utils.CompareUtil;
 
 import java.util.Iterator;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class SpecString extends StringItem {
     public SpecString(boolean utf8) {
@@ -41,7 +41,7 @@ public class SpecString extends StringItem {
     public Iterator<Entry> getEntries(final int typeId){
         return getUsers(Entry.class, new Predicate<Entry>() {
             @Override
-            public boolean evaluate(Entry item) {
+            public boolean test(Entry item) {
                 return typeId == item.getTypeId();
             }
         });
@@ -49,7 +49,7 @@ public class SpecString extends StringItem {
     public Iterator<Entry> getEntries(final String typeName){
         return getUsers(Entry.class, new Predicate<Entry>() {
             @Override
-            public boolean evaluate(Entry item) {
+            public boolean test(Entry item) {
                 return typeName == null
                         || typeName.equals(item.getTypeName());
             }
@@ -58,7 +58,7 @@ public class SpecString extends StringItem {
     public Iterator<Entry> getEntries(final Block parentContext){
         return getUsers(Entry.class, new Predicate<Entry>() {
             @Override
-            public boolean evaluate(Entry item) {
+            public boolean test(Entry item) {
                 return item.getParentInstance(parentContext.getClass())
                         == parentContext;
             }

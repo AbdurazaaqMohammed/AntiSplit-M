@@ -49,7 +49,7 @@ import com.reandroid.utils.collection.SingleIterator;
 import com.reandroid.utils.collection.UniqueIterator;
 
 import java.util.Iterator;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public interface DexClassRepository extends FullRefresh, BlockRefresh {
 
@@ -183,7 +183,7 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         if (predicate == null) {
             return getClonedItems(sectionType);
         }
-        return getClonedItemsIf(sectionType, item -> predicate.evaluate(item.getKey()));
+        return getClonedItemsIf(sectionType, item -> predicate.test(item.getKey()));
     }
     default <T extends SectionItem> Iterator<T> getItems(SectionType<T> sectionType, Key key) {
         return new IterableIterator<Section<T>, T>(getSections(sectionType)) {
@@ -207,7 +207,7 @@ public interface DexClassRepository extends FullRefresh, BlockRefresh {
         if (predicate == null) {
             return getItems(sectionType);
         }
-        return getItemsIf(sectionType, item -> predicate.evaluate(item.getKey()));
+        return getItemsIf(sectionType, item -> predicate.test(item.getKey()));
     }
     default <T extends SectionItem> T getItem(SectionType<T> sectionType, int id) {
         Iterator<DexClassModule> iterator = modules();

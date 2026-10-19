@@ -18,19 +18,20 @@ package com.reandroid.dex.ins;
 import com.reandroid.dex.base.Ule128Item;
 import com.reandroid.dex.id.TypeId;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.program.ExceptionHandler;
 import com.reandroid.dex.smali.SmaliDirective;
 
-public class CatchAllHandler extends ExceptionHandler {
+public class InsCatchAllHandler extends InsExceptionHandler {
 
-    public CatchAllHandler() {
+    public InsCatchAllHandler() {
         super(0);
     }
-    CatchAllHandler(boolean forCompact) {
+    InsCatchAllHandler(boolean forCompact) {
         super();
     }
 
-    CatchAllHandler newCompact(TryItem parent){
-        CatchAllHandler handler = new Compact(this);
+    InsCatchAllHandler newCompact(InsTryItem parent){
+        InsCatchAllHandler handler = new Compact(this);
         handler.setIndex(getIndex());
         handler.setParent(parent);
         return handler;
@@ -48,17 +49,21 @@ public class CatchAllHandler extends ExceptionHandler {
     public boolean isCatchAll() {
         return true;
     }
+    @Override
+    public TypeKey getKey() {
+        return null;
+    }
 
     @Override
     public SmaliDirective getSmaliDirective(){
         return SmaliDirective.CATCH_ALL;
     }
 
-    static class Compact extends CatchAllHandler {
+    static class Compact extends InsCatchAllHandler {
 
-        private final CatchAllHandler catchAllHandler;
+        private final InsCatchAllHandler catchAllHandler;
 
-        Compact(CatchAllHandler catchAllHandler){
+        Compact(InsCatchAllHandler catchAllHandler){
             super(true);
             this.catchAllHandler = catchAllHandler;
         }

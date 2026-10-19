@@ -41,7 +41,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolHeader>
         implements Iterable<T>, JSONConvert<JSONArray> {
@@ -377,6 +377,7 @@ public abstract class StringPool<T extends StringItem> extends Chunk<StringPoolH
             return;
         }
         ensureStringLinkUnlockedInternal();
+        getStringsArray().ensureCapacity(stringPool.size());
         for (T stringItem : stringPool) {
             if (!containsInternal(stringItem)) {
                 createNewString().merge(stringItem);

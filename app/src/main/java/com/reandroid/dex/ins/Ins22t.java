@@ -58,10 +58,6 @@ public class Ins22t extends Ins22 implements InstructionLabel {
         return InstructionLabelType.COND;
     }
     @Override
-    public String getLabelName() {
-        return HexUtil.toHex(":cond_", getTargetAddress(), 1);
-    }
-    @Override
     public void appendCode(SmaliWriter writer) throws IOException {
         Opcode<?> opcode = getOpcode();
         writer.append(opcode.getName());

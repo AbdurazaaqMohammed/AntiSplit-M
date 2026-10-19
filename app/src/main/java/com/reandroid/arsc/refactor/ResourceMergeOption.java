@@ -36,7 +36,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class ResourceMergeOption {
 
@@ -52,7 +52,7 @@ public class ResourceMergeOption {
 
     public Predicate<? super Entry> getKeepEntryConfigs() {
         Predicate<? super ResConfig> keepConfigs = this.getKeepConfigs();
-        return (Predicate<Entry>) entry -> keepConfigs.evaluate(entry.getResConfig());
+        return (Predicate<Entry>) entry -> keepConfigs.test(entry.getResConfig());
     }
     public Predicate<? super ResConfig> getKeepConfigs() {
         Predicate<? super ResConfig> keepConfigs = this.keepConfigs;
@@ -70,12 +70,12 @@ public class ResourceMergeOption {
         Predicate<? super ResourceEntry> result = keepEntries;
         if(keepResourceNames != null) {
             result = (Predicate<ResourceEntry>) resourceEntry -> {
-                if(keepEntries.evaluate(resourceEntry)) {
+                if(keepEntries.test(resourceEntry)) {
                     return true;
                 }
                 ResourceName resourceName = resourceEntry.toResourceName();
                 if(resourceName != null) {
-                    return keepResourceNames.evaluate(resourceName);
+                    return keepResourceNames.test(resourceName);
                 }
                 return false;
             };

@@ -18,7 +18,6 @@ package com.reandroid.utils;
 import com.reandroid.utils.collection.ArrayIterator;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -572,7 +571,7 @@ public class StringsUtil {
         if(itemList == null || itemList.size() < 2){
             return;
         }
-        Collections.sort(itemList, CompareUtil.getToStringComparator());
+        java.util.Collections.sort(itemList, CompareUtil.getToStringComparator());
     }
     public static String formatNumber(long number, long maximumValue){
         int minLength = Long.toString(maximumValue).length();

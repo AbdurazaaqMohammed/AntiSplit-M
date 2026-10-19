@@ -15,8 +15,6 @@
  */
 package com.reandroid.dex.key;
 
-import android.os.Build;
-
 import com.reandroid.dex.common.DexUtils;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
@@ -31,7 +29,7 @@ import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.reflect.Type;
 import java.util.Iterator;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class TypeKey implements TypeDescriptorKey, ProgramKey {
 
@@ -107,7 +105,7 @@ public class TypeKey implements TypeDescriptorKey, ProgramKey {
         }
         if (platformPredicate != null) {
             TypeKey typeKey = i == 0 ? this : new TypeKey(name.substring(i));
-            if (platformPredicate.evaluate(typeKey)) {
+            if (platformPredicate.test(typeKey)) {
                 builder.append(typeKey.getTypeName());
                 return;
             }
@@ -600,7 +598,8 @@ public class TypeKey implements TypeDescriptorKey, ProgramKey {
         if (type instanceof Class<?>) {
             return convert((Class<?>) type);
         }
-        String name = dropSourceSignatures(Build.VERSION.SDK_INT >= Build.VERSION_CODES.P ? type.getTypeName() : type.toString());
+        String typeName = type instanceof Class ? ((Class<?>) type).getName() : type.toString();
+        String name = dropSourceSignatures(typeName);
         if (name.charAt(0) == '[') {
             return create(name.replace('.', '/'));
         }
@@ -700,10 +699,11 @@ public class TypeKey implements TypeDescriptorKey, ProgramKey {
         int position = reader.position();
         byte b = reader.get();
         if (b != 'L' && b != '[') {
-            TypeKey typeKey = primitiveType(reader.readASCII());
+            char c = reader.readASCII();
+            TypeKey typeKey = primitiveType(c);
             if (typeKey == null) {
                 reader.position(position);
-                throw new SmaliParseException("Invalid type", reader);
+                throw new SmaliParseException("Invalid type '" + c + "'.", reader);
             }
             return typeKey;
         }
@@ -714,9 +714,10 @@ public class TypeKey implements TypeDescriptorKey, ProgramKey {
         }
         b = reader.get(position);
         if (b != 'L') {
-            TypeKey typeKey = primitiveType((char) b);
+            char c = (char) b;
+            TypeKey typeKey = primitiveType(c);
             if (typeKey == null) {
-                throw new SmaliParseException("Invalid type name", reader);
+                throw new SmaliParseException("Invalid type name '" + c + "'", reader);
             }
             reader.skip(arrayLength + 1);
             if (arrayLength != 0) {
@@ -730,7 +731,7 @@ public class TypeKey implements TypeDescriptorKey, ProgramKey {
         }
         int length = (i - reader.position()) + 1;
         if ((length - arrayLength) < 3) {
-            throw new SmaliParseException("Invalid type nameXX", reader);
+            throw new SmaliParseException("Invalid type name", reader);
         }
         // TODO: support white space name for dex V040+
         return getOrCreate(reader.readString(length));
@@ -766,9 +767,6 @@ public class TypeKey implements TypeDescriptorKey, ProgramKey {
         return null;
     }
     private static TypeKey getOrCreate(String name) {
-        if ("Ljava/lang/Object;".equals(name)) {
-            String junk = "";
-        }
         int length = name.length();
         //Ljava/lang/Exception;
         if (length > 12  && length < 22 && name.charAt(1) == 'j') {

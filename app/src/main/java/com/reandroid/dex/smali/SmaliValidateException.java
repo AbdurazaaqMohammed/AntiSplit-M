@@ -18,14 +18,15 @@ package com.reandroid.dex.smali;
 import com.reandroid.common.Origin;
 import com.reandroid.dex.smali.model.Smali;
 import com.reandroid.dex.smali.model.SmaliDef;
+import com.reandroid.utils.exception.ExceptionMessage;
 
 import java.io.IOException;
 
-public class SmaliValidateException extends IOException {
+public class SmaliValidateException extends IOException implements ExceptionMessage {
 
     private final Smali smali;
 
-    public SmaliValidateException(String message, Smali smali){
+    public SmaliValidateException(String message, Smali smali) {
         super(message);
         this.smali = smali;
     }
@@ -34,20 +35,20 @@ public class SmaliValidateException extends IOException {
     public String getMessage() {
         String message = super.getMessage();
         Smali smali = this.smali;
-        if(smali == null){
+        if (smali == null) {
             return message;
         }
         Origin origin = smali.getOrigin();
-        if(origin != null) {
-            return message + "\n" + origin;
+        if (origin != null) {
+            return message + "\nat " + origin;
         }
         Smali debug;
-        if(smali instanceof SmaliDef){
+        if (smali instanceof SmaliDef) {
             debug = smali;
-        }else {
+        } else {
             debug = smali.getParentInstance(SmaliDef.class);
         }
-        if(debug == null){
+        if (debug == null) {
             return message;
         }
         return message + "\n at " + debug.toDebugString();

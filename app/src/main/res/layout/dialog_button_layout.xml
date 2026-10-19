@@ -1,24 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/errorView"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:id="@+id/errorView"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:card_view="http://schemas.android.com/tools"
-    android:layout_gravity="center_vertical"
-    android:orientation="vertical">
+    android:clipToPadding="false"
+    android:fillViewport="true"
+    android:scrollbars="vertical">
 
-    <com.google.android.material.card.MaterialCardView
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/errorD"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:outlineSpotShadowColor="@android:color/transparent"
-        card_view:cardElevation="0dp"
-        android:layout_margin="16dp"
-        app:cardElevation="0dp">
-        <com.google.android.material.textview.MaterialTextView
-            android:id="@+id/errorD"
-            android:padding="8dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-    </com.google.android.material.card.MaterialCardView>
-
+        android:fontFamily="monospace"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:textIsSelectable="true" />
 </ScrollView>

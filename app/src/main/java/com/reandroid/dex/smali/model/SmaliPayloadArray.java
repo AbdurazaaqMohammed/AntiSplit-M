@@ -15,18 +15,19 @@
  */
 package com.reandroid.dex.smali.model;
 
-import com.reandroid.dex.ins.InsArrayData;
 import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.key.PrimitiveKey;
-import com.reandroid.dex.smali.*;
+import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.SmaliParseException;
+import com.reandroid.dex.smali.SmaliReader;
 
 import java.io.IOException;
 import java.util.Iterator;
 
 public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValueX> {
 
-    public SmaliPayloadArray(){
-        super(new SmaliInstructionOperand.SmaliDecimalOperand());
+    public SmaliPayloadArray() {
+        super(Opcode.ARRAY_PAYLOAD);
     }
 
     public void addEntryKeys(Iterator<PrimitiveKey> iterator) {
@@ -37,11 +38,11 @@ public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValueX> {
     public void addEntry(PrimitiveKey key) {
         newEntry().setKey(key);
     }
-    public long[] getValuesAsLong(){
+    public long[] getValuesAsLong() {
         SmaliSet<SmaliValueX> entries = getEntries();
         int size = entries.size();
         long[] result = new long[size];
-        for(int i = 0; i < size; i++){
+        for(int i = 0; i < size; i++) {
             result[i] = entries.get(i).getValueAsLong();
         }
         return result;
@@ -83,10 +84,6 @@ public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValueX> {
         return SmaliDirective.ARRAY_DATA;
     }
     @Override
-    public Opcode<InsArrayData> getOpcode() {
-        return Opcode.ARRAY_PAYLOAD;
-    }
-    @Override
     SmaliValueX createEntry() {
         SmaliValueX value =  new SmaliValueX();
         value.setWidth(getWidth());
@@ -105,5 +102,8 @@ public class SmaliPayloadArray extends SmaliInstructionPayload<SmaliValueX> {
             reader.position(position);
             throw new SmaliParseException("Array width out of range (0 .. 8) : '" + width + "'", reader);
         }
+    }
+    @Override
+    public void validateEntries() {
     }
 }

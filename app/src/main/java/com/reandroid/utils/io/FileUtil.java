@@ -23,13 +23,58 @@ import com.reandroid.utils.collection.ArrayCollection;
 
 import java.io.*;
 import java.nio.channels.FileChannel;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings({"ResultOfMethodCallIgnored", "unused"})
 public class FileUtil {
+
+    private static int caseInsensitiveFs;
+
+    public static boolean isCaseInsensitiveFileSystem() {
+        int i = caseInsensitiveFs;
+        if (i == 0) {
+            testCaseInsensitiveFileSystem();
+            i = caseInsensitiveFs;
+        }
+        return i == 2;
+    }
+    public static boolean isCaseSensitiveFileSystem() {
+        return !isCaseInsensitiveFileSystem() && caseInsensitiveFs == 1;
+    }
+    private static void testCaseInsensitiveFileSystem() {
+        synchronized (FileUtil.class) {
+            String name = "arsclib_test_case_insensitive";
+            File tmp = getTempDir();
+            File lowerCase = new File(tmp, name);
+            File upperCase = new File(tmp, name.toUpperCase(java.util.Locale.ROOT));
+            deleteFileSilent(lowerCase);
+            deleteFileSilent(upperCase);
+            int i = 3;
+            if (!lowerCase.exists() && !upperCase.exists()) {
+                try {
+                    ensureParentDirectory(lowerCase);
+                    FileWriter writer = new FileWriter(lowerCase);
+                    writer.write("test");
+                    writer.close();
+                    if (lowerCase.exists()) {
+                        i = upperCase.exists() ? 2 : 1;
+                    }
+                } catch (Throwable ignored) {}
+            }
+            deleteFileSilent(lowerCase);
+            deleteFileSilent(upperCase);
+            caseInsensitiveFs = i;
+        }
+    }
+    private static void deleteFileSilent(File file) {
+        try {
+            if (file != null && file.exists()) {
+                file.delete();
+            }
+        } catch (Throwable ignored) {}
+    }
 
     public static List<File> listClassesDex(File dir) {
         List<File> results = new ArrayCollection<>();
@@ -44,7 +89,7 @@ public class FileUtil {
                 }
             }
         }
-        Collections.sort(results, ((file1, file2) -> CompareUtil.compare(
+        java.util.Collections.sort(results, ((file1, file2) -> CompareUtil.compare(
                 getClassesDexNumber(file1),
                 getClassesDexNumber(file2))));
         return results;

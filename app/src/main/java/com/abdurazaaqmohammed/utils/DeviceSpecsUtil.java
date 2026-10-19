@@ -17,6 +17,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 public class DeviceSpecsUtil {
 
@@ -33,134 +34,153 @@ public class DeviceSpecsUtil {
 
     public List<String> getSplitsForDevice(Uri uri) throws IOException {
         List<String> splits = getListOfSplits(uri);
-        switch (splits.size()) {
-            case 4:
-            case 3:
-            case 2:
-                splits.clear();
-                break;
-            default:
-                List<String> copy = List.copyOf(splits);
-                List<String> toRemove = new ArrayList<>();
-                boolean splitApkContainsArch = false;
-                for (int i = 0; i < splits.size(); i++) {
-                    final String thisSplit = splits.get(i);
-                    if (!splitApkContainsArch && DeviceSpecsUtil.isArch(thisSplit)) {
-                        splitApkContainsArch = true;
-                    }
-                    if (shouldIncludeSplit(thisSplit))
-                        toRemove.add(thisSplit);
-                }
-                if (splitApkContainsArch) {
-                    boolean selectedSplitsContainsArch = false;
-                    for (int i = 0; i < copy.size(); i++) {
-                        final String thisSplit = copy.get(i);
-                        if (DeviceSpecsUtil.isArch(thisSplit) && toRemove.contains(thisSplit)) {
-                            selectedSplitsContainsArch = true;
-                            break;
-                        }
-                    }
-                    if (!selectedSplitsContainsArch) {
-                        context.getLogger().logMessage("Could not find device architecture, selecting all architectures");
-                        for (int i = 0; i < splits.size(); i++) {
-                            final String thisSplit = splits.get(i);
-                            if (DeviceSpecsUtil.isArch(thisSplit)) toRemove.add(thisSplit); // select all to be sure
-                        }
-                    }
-                }
+        List<String> toExclude = new ArrayList<>();
+        if (splits.size() <= 4)
+            return toExclude;
 
-                boolean didNotFindDpi = true;
-                for (int i = 0; i < copy.size(); i++) {
-                    String thisSplit = copy.get(i);
-                    if (thisSplit.contains("dpi") && toRemove.contains(thisSplit)) {
-                        didNotFindDpi = false;
-                        break;
-                    }
-                }
-                if (didNotFindDpi) {
-                    for (int i = 0; i < splits.size(); i++) {
-                        String thisSplit = splits.get(i);
-                        if (thisSplit.contains("hdpi"))
-                            toRemove.add(thisSplit);
-                    }
-                }
-                splits.removeAll(toRemove);
+        boolean splitApkContainsArch = false;
+        boolean selectedSplitsContainsArch = false;
+        boolean selectedSplitsContainsDpi = false;
+
+        for (String split : splits) {
+            if (isArch(split))
+                splitApkContainsArch = true;
+            if (isBaseApk(split))
+                continue;
+            if (shouldIncludeSplit(split)) {
+                if (isArch(split))
+                    selectedSplitsContainsArch = true;
+                if (split.contains("dpi"))
+                    selectedSplitsContainsDpi = true;
+            } else {
+                toExclude.add(split);
+            }
         }
-        return splits;
+
+        if (splitApkContainsArch && !selectedSplitsContainsArch) {
+            context.getLogger().logMessage("Could not find device architecture, selecting all architectures");
+            for (String split : splits) {
+                if (isArch(split))
+                    toExclude.remove(split);
+            }
+        }
+
+        if (!selectedSplitsContainsDpi) {
+            for (String split : splits) {
+                if (hasDpi(split, "hdpi"))
+                    toExclude.remove(split);
+            }
+        }
+        return toExclude;
     }
 
     private List<String> getListOfSplitsFromFile(File file) throws IOException {
         List<String> splits = new ArrayList<>();
-
-        // Do not close this ZipFile it could be used later in merger
-        for(InputSource inputSource : (zipFile = new ArchiveFile(file)).getInputSources()) {
+        releaseZipFile();
+        // Do not close this ZipFile, it is used later by the merger
+        ArchiveFile archiveFile = new ArchiveFile(file);
+        zipFile = archiveFile;
+        for (InputSource inputSource : archiveFile.getInputSources()) {
             String name = inputSource.getName();
-            if (name.endsWith(".apk")) splits.add(name);
+            if (name.endsWith(".apk"))
+                splits.add(name);
         }
-
         return splits;
     }
 
     public List<String> getListOfSplits(Uri splitAPKUri) throws IOException {
-        List<String> splits = new ArrayList<>();
         File file;
         try {
             String path = FileUtils.getPath(splitAPKUri, context);
-            if(!TextUtils.isEmpty(path) && (file = new File(path)) != null && file.canRead()) return getListOfSplitsFromFile(file);
-        } catch (Exception ignored) {
-
-        }
-
-        //always copy zip file I checked this is faster
-        /*try (InputStream is = context.getContentResolver().openInputStream(splitAPKUri);
-              ZipFileInput zis = new ZipFileInput(is)) {
-            ZipFileHeader header;
-            while ((header = zis.readFileHeader()) != null) {
-                final String name = header.getFileName();
-                if (name.endsWith(".apk")) splits.add(name);
-            }
-        } catch (Exception e2) {
-            String uriString = splitAPKUri.toString();
-            try(InputStream is = context.getContentResolver().openInputStream(splitAPKUri)) {
-                com.abdurazaaqmohammed.utils.FileUtils.copyFile(is, file = new File(context.getCacheDir(), System.currentTimeMillis() + uriString));
+            if (!TextUtils.isEmpty(path) && (file = new File(path)).canRead())
                 return getListOfSplitsFromFile(file);
-            }
+        } catch (Exception ignored) {
         }
-        if(splits.size() > 1) return splits;*/
-        try(InputStream is = context.getContentResolver().openInputStream(splitAPKUri)) {
+
+        try (InputStream is = context.getContentResolver().openInputStream(splitAPKUri)) {
+            if (is == null)
+                throw new IOException("Unable to open " + splitAPKUri);
             String uriString = splitAPKUri.toString();
-            com.abdurazaaqmohammed.utils.FileUtils.copyFile(is, file = new File(context.getCacheDir(), System.currentTimeMillis()+"_checking_splits"));
+            com.abdurazaaqmohammed.utils.FileUtils.copyFile(is,
+                    file = new File(context.getCacheDir(), System.currentTimeMillis()
+                            + "_checking_splits_" + UUID.randomUUID()));
             return getListOfSplitsFromFile(file);
         }
     }
 
+    public static void releaseZipFile() {
+        ArchiveFile archiveFile = zipFile;
+        zipFile = null;
+        if (archiveFile != null) {
+            try {
+                archiveFile.close();
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
     public static boolean isArch(String thisSplit) {
-        return thisSplit.contains("armeabi") || thisSplit.contains("arm64") || thisSplit.contains("x86") || thisSplit.contains("mips");
+        String name = thisSplit.toLowerCase(Locale.ROOT);
+        return name.contains("armeabi") || name.contains("arm64")
+                || name.contains("x86") || name.contains("mips")
+                || name.contains("riscv");
     }
 
     public static boolean isBaseApk(String name) {
-        return name.equals("base.apk") || !name.startsWith("config") && !name.startsWith("split"); // this is base.apk hopefully
+        return name.equals("base.apk") || !name.startsWith("config") && !name.startsWith("split");
     }
 
     public boolean shouldIncludeSplit(String name) {
-        return isBaseApk(name) || shouldIncludeLang(name) || shouldIncludeArch(name) || shouldIncludeDpi(name);
+        return isBaseApk(name) || shouldIncludeLang(name) || shouldIncludeArch(name)
+                || shouldIncludeDpi(name);
     }
 
     public boolean shouldIncludeLang(String name) {
-        return name.contains(lang);
+        if (isArch(name) || name.toLowerCase(Locale.ROOT).contains("dpi"))
+            return false;
+        String language = lang.toLowerCase(Locale.ROOT);
+        for (String part : name.toLowerCase(Locale.ROOT).split("\\.")) {
+            if (part.equals(language) || part.startsWith(language + "_")
+                    || part.startsWith("b+" + language + "+"))
+                return true;
+        }
+        return false;
     }
 
     public boolean shouldIncludeArch(String name) {
-        return name.contains(Build.CPU_ABI) || name.replace('-', '_').contains(Build.CPU_ABI.replace('-', '_'));
+        String abi = Build.CPU_ABI;
+        if (TextUtils.isEmpty(abi))
+            return false;
+        String abiNormalized = abi.toLowerCase(Locale.ROOT).replace('-', '_');
+        for (String part : name.toLowerCase(Locale.ROOT).split("\\.")) {
+            if (part.replace('-', '_').equals(abiNormalized))
+                return true;
+        }
+        return false;
     }
 
     public boolean shouldIncludeDpi(String name) {
-        return (name.endsWith(densityType) && !name.replace(densityType, "").endsWith("x")); // ensure that it does not select xxhdpi for xhdpi etc
+        String density = densityType.endsWith(".apk")
+                ? densityType.substring(0, densityType.length() - 4) : densityType;
+        for (String part : name.toLowerCase(Locale.ROOT).split("\\.")) {
+            if (part.equals(density))
+                return true;
+        }
+        return false;
+    }
+
+    private static boolean hasDpi(String name, String density) {
+        for (String part : name.toLowerCase(Locale.ROOT).split("\\.")) {
+            if (part.equals(density))
+                return true;
+        }
+        return false;
     }
 
     public String getDeviceDpi() {
         String densityType;
-        if(TextUtils.isEmpty(densityType = context.getSharedPreferences("set", Context.MODE_PRIVATE).getString("deviceDpi", ""))) {
+        if (TextUtils.isEmpty(densityType = context.getSharedPreferences("set", Context.MODE_PRIVATE)
+                .getString("deviceDpi", ""))) {
             switch (context.getResources().getDisplayMetrics().densityDpi) {
                 case DisplayMetrics.DENSITY_LOW:
                     densityType = "ldpi";
@@ -203,7 +223,8 @@ public class DeviceSpecsUtil {
                     break;
             }
             densityType += ".apk";
-            context.getSharedPreferences("set", Context.MODE_PRIVATE).edit().putString("deviceDpi", densityType).apply();
+            context.getSharedPreferences("set", Context.MODE_PRIVATE).edit()
+                    .putString("deviceDpi", densityType).apply();
         }
         return densityType;
     }

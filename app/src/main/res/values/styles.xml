@@ -1,27 +1,130 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.MyApp.Black" parent="Theme.Material3.Dark.NoActionBar">
-        <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="backgroundColor">@android:color/transparent</item>
-        <item name="colorPrimary">@color/main_500</item>
-        <item name="colorPrimaryVariant">@color/main_dark_800</item>
-        <item name="colorOnPrimary">@color/white</item>
-        <item name="colorSecondary">@color/secondary_600</item>
-        <item name="colorAccent">@color/secondary_600</item>
+
+    <style name="ShapeAppearanceOverlay.MyApp.Dialog" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">28dp</item>
     </style>
-    <style name="Theme.MyApp.Dark" parent="Theme.Material3.Dark.NoActionBar">
-        <item name="colorPrimary">@color/main_500</item>
-        <item name="colorPrimaryVariant">@color/main_dark_800</item>
-        <item name="colorOnPrimary">@color/white</item>
-        <item name="colorSecondary">@color/secondary_600</item>
-        <item name="colorAccent">@color/secondary_600</item>
+
+    <style name="ThemeOverlay.MyApp.MaterialAlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="shapeAppearanceOverlay">@style/ShapeAppearanceOverlay.MyApp.Dialog</item>
+    </style>
+
+    <style name="Theme.MyApp.Starting" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowBackground">?attr/colorSurface</item>
     </style>
 
     <style name="Theme.MyApp.Light" parent="Theme.Material3.Light.NoActionBar">
-        <item name="colorPrimary">@color/main_500</item>
-        <item name="colorPrimaryVariant">@color/main_dark_800</item>
-        <item name="colorOnPrimary">@color/white</item>
-        <item name="colorSecondary">@color/secondary_600</item>
-        <item name="colorAccent">@color/secondary_600</item>
+        <item name="colorPrimary">@color/md_light_primary</item>
+        <item name="colorOnPrimary">@color/md_light_on_primary</item>
+        <item name="colorPrimaryContainer">@color/md_light_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/md_light_on_primary_container</item>
+        <item name="colorSecondary">@color/md_light_secondary</item>
+        <item name="colorOnSecondary">@color/md_light_on_secondary</item>
+        <item name="colorSecondaryContainer">@color/md_light_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/md_light_on_secondary_container</item>
+        <item name="colorTertiary">@color/md_light_tertiary</item>
+        <item name="colorOnTertiary">@color/md_light_on_tertiary</item>
+        <item name="colorTertiaryContainer">@color/md_light_tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/md_light_on_tertiary_container</item>
+        <item name="colorError">@color/md_light_error</item>
+        <item name="colorOnError">@color/md_light_on_error</item>
+        <item name="colorErrorContainer">@color/md_light_error_container</item>
+        <item name="colorOnErrorContainer">@color/md_light_on_error_container</item>
+        <item name="android:colorBackground">@color/md_light_background</item>
+        <item name="colorOnBackground">@color/md_light_on_background</item>
+        <item name="colorSurface">@color/md_light_surface</item>
+        <item name="colorOnSurface">@color/md_light_on_surface</item>
+        <item name="colorSurfaceVariant">@color/md_light_surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/md_light_on_surface_variant</item>
+        <item name="colorOutline">@color/md_light_outline</item>
+        <item name="colorOutlineVariant">@color/md_light_outline_variant</item>
+        <item name="colorSurfaceContainerLowest">@color/md_light_surface_container_lowest</item>
+        <item name="colorSurfaceContainerLow">@color/md_light_surface_container_low</item>
+        <item name="colorSurfaceContainer">@color/md_light_surface_container</item>
+        <item name="colorSurfaceContainerHigh">@color/md_light_surface_container_high</item>
+        <item name="colorSurfaceContainerHighest">@color/md_light_surface_container_highest</item>
+        <item name="colorSurfaceInverse">@color/md_light_inverse_surface</item>
+        <item name="colorOnSurfaceInverse">@color/md_light_inverse_on_surface</item>
+        <item name="colorPrimaryInverse">@color/md_light_inverse_primary</item>
+        <item name="colorAccent">@color/md_light_primary</item>
+        <item name="android:windowBackground">?attr/colorSurface</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.MyApp.MaterialAlertDialog</item>
+    </style>
+
+    <style name="Theme.MyApp.Dark" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/md_dark_primary</item>
+        <item name="colorOnPrimary">@color/md_dark_on_primary</item>
+        <item name="colorPrimaryContainer">@color/md_dark_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/md_dark_on_primary_container</item>
+        <item name="colorSecondary">@color/md_dark_secondary</item>
+        <item name="colorOnSecondary">@color/md_dark_on_secondary</item>
+        <item name="colorSecondaryContainer">@color/md_dark_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/md_dark_on_secondary_container</item>
+        <item name="colorTertiary">@color/md_dark_tertiary</item>
+        <item name="colorOnTertiary">@color/md_dark_on_tertiary</item>
+        <item name="colorTertiaryContainer">@color/md_dark_tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/md_dark_on_tertiary_container</item>
+        <item name="colorError">@color/md_dark_error</item>
+        <item name="colorOnError">@color/md_dark_on_error</item>
+        <item name="colorErrorContainer">@color/md_dark_error_container</item>
+        <item name="colorOnErrorContainer">@color/md_dark_on_error_container</item>
+        <item name="android:colorBackground">@color/md_dark_background</item>
+        <item name="colorOnBackground">@color/md_dark_on_background</item>
+        <item name="colorSurface">@color/md_dark_surface</item>
+        <item name="colorOnSurface">@color/md_dark_on_surface</item>
+        <item name="colorSurfaceVariant">@color/md_dark_surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/md_dark_on_surface_variant</item>
+        <item name="colorOutline">@color/md_dark_outline</item>
+        <item name="colorOutlineVariant">@color/md_dark_outline_variant</item>
+        <item name="colorSurfaceContainerLowest">@color/md_dark_surface_container_lowest</item>
+        <item name="colorSurfaceContainerLow">@color/md_dark_surface_container_low</item>
+        <item name="colorSurfaceContainer">@color/md_dark_surface_container</item>
+        <item name="colorSurfaceContainerHigh">@color/md_dark_surface_container_high</item>
+        <item name="colorSurfaceContainerHighest">@color/md_dark_surface_container_highest</item>
+        <item name="colorSurfaceInverse">@color/md_dark_inverse_surface</item>
+        <item name="colorOnSurfaceInverse">@color/md_dark_inverse_on_surface</item>
+        <item name="colorPrimaryInverse">@color/md_dark_inverse_primary</item>
+        <item name="colorAccent">@color/md_dark_primary</item>
+        <item name="android:windowBackground">?attr/colorSurface</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.MyApp.MaterialAlertDialog</item>
+    </style>
+
+    <style name="Theme.MyApp.Black" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/md_dark_primary</item>
+        <item name="colorOnPrimary">@color/md_dark_on_primary</item>
+        <item name="colorPrimaryContainer">@color/md_dark_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/md_dark_on_primary_container</item>
+        <item name="colorSecondary">@color/md_dark_secondary</item>
+        <item name="colorOnSecondary">@color/md_dark_on_secondary</item>
+        <item name="colorSecondaryContainer">@color/md_dark_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/md_dark_on_secondary_container</item>
+        <item name="colorTertiary">@color/md_dark_tertiary</item>
+        <item name="colorOnTertiary">@color/md_dark_on_tertiary</item>
+        <item name="colorTertiaryContainer">@color/md_dark_tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/md_dark_on_tertiary_container</item>
+        <item name="colorError">@color/md_dark_error</item>
+        <item name="colorOnError">@color/md_dark_on_error</item>
+        <item name="colorErrorContainer">@color/md_dark_error_container</item>
+        <item name="colorOnErrorContainer">@color/md_dark_on_error_container</item>
+        <item name="android:colorBackground">@color/md_black_surface</item>
+        <item name="colorOnBackground">@color/md_dark_on_background</item>
+        <item name="colorSurface">@color/md_black_surface</item>
+        <item name="colorOnSurface">@color/md_dark_on_surface</item>
+        <item name="colorSurfaceVariant">@color/md_dark_surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/md_dark_on_surface_variant</item>
+        <item name="colorOutline">@color/md_dark_outline</item>
+        <item name="colorOutlineVariant">@color/md_dark_outline_variant</item>
+        <item name="colorSurfaceContainerLowest">@color/md_black_surface_container_lowest</item>
+        <item name="colorSurfaceContainerLow">@color/md_black_surface_container_low</item>
+        <item name="colorSurfaceContainer">@color/md_black_surface_container</item>
+        <item name="colorSurfaceContainerHigh">@color/md_black_surface_container_high</item>
+        <item name="colorSurfaceContainerHighest">@color/md_black_surface_container_highest</item>
+        <item name="colorSurfaceInverse">@color/md_dark_inverse_surface</item>
+        <item name="colorOnSurfaceInverse">@color/md_dark_inverse_on_surface</item>
+        <item name="colorPrimaryInverse">@color/md_dark_inverse_primary</item>
+        <item name="colorAccent">@color/md_dark_primary</item>
+        <item name="android:windowBackground">?attr/colorSurface</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.MyApp.MaterialAlertDialog</item>
     </style>
 </resources>

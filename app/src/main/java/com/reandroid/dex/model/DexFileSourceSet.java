@@ -26,7 +26,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class DexFileSourceSet implements Iterable<DexSource<DexFile>>, Closeable {
 

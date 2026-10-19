@@ -19,7 +19,7 @@ import com.reandroid.utils.ObjectsUtil;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class FilterIterator<T> implements Iterator<T>, Predicate<T> {
 
@@ -37,7 +37,7 @@ public class FilterIterator<T> implements Iterator<T>, Predicate<T> {
     }
 
     @Override
-    public boolean evaluate(T item){
+    public boolean test(T item){
         return item != null;
     }
 
@@ -77,11 +77,11 @@ public class FilterIterator<T> implements Iterator<T>, Predicate<T> {
         return mNext;
     }
     private boolean testAll(T item){
-        if(item == null || !evaluate(item)){
+        if(item == null || !test(item)){
             return false;
         }
         return mFilter == null
-                || mFilter.evaluate(item);
+                || mFilter.test(item);
     }
 
     public static final class Except<T1> extends FilterIterator<T1>{
@@ -98,7 +98,7 @@ public class FilterIterator<T> implements Iterator<T>, Predicate<T> {
         }
 
         @Override
-        public boolean evaluate(T1 item){
+        public boolean test(T1 item){
             if(item == null || item == excludeItem){
                 return false;
             }

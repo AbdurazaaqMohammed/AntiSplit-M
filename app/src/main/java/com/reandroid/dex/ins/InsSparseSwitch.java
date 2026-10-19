@@ -40,8 +40,4 @@ public class InsSparseSwitch extends InsSwitch {
     public InstructionLabelType getLabelType() {
         return InstructionLabelType.S_SWITCH_DATA;
     }
-    @Override
-    String getLabelPrefix(){
-        return ":sswitch_data_";
-    }
 }

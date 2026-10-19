@@ -79,10 +79,6 @@ public class InsGoto extends SizeXIns implements InstructionLabel {
         return InstructionLabelType.GOTO;
     }
     @Override
-    public String getLabelName() {
-        return HexUtil.toHex(":goto_", getTargetAddress(), 1);
-    }
-    @Override
     public void appendCode(SmaliWriter writer) throws IOException {
         writer.append(getOpcode().getName());
         writer.append(' ');

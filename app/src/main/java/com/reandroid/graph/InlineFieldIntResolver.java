@@ -25,7 +25,7 @@ import com.reandroid.dex.key.TypeKey;
 import com.reandroid.dex.model.*;
 
 import java.util.Iterator;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class InlineFieldIntResolver extends BaseDexClassProcessor {
 
@@ -94,7 +94,7 @@ public class InlineFieldIntResolver extends BaseDexClassProcessor {
             return;
         }
         int id = ((PrimitiveKey.IntegerKey) value).value();
-        if(!resourceIdChecker.evaluate(id)) {
+        if(!resourceIdChecker.test(id)) {
             return;
         }
         Key key = instruction.getKey();

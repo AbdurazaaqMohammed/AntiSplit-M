@@ -16,6 +16,7 @@
 package com.reandroid.dex.smali.fix;
 
 import com.reandroid.dex.ins.Opcode;
+import com.reandroid.dex.smali.model.SmaliCodeSet;
 import com.reandroid.dex.smali.model.SmaliInstruction;
 import com.reandroid.dex.smali.model.SmaliMethod;
 import com.reandroid.utils.collection.CollectionUtil;
@@ -23,22 +24,23 @@ import com.reandroid.utils.collection.FilterIterator;
 
 import java.util.List;
 
-public class SmaliGotoFix {
+public class SmaliGotoFix extends SmaliMethodFix {
 
-    private final SmaliMethod smaliMethod;
+    public static final SmaliGotoFix INSTANCE = new SmaliGotoFix();
 
-    public SmaliGotoFix(SmaliMethod smaliMethod) {
-        this.smaliMethod = smaliMethod;
+    public SmaliGotoFix() {
+        super();
     }
 
-    public void apply() {
+    @Override
+    public Boolean apply(SmaliMethod smaliMethod) {
         List<SmaliInstruction> gotoList = CollectionUtil.toList(
                 FilterIterator.of(smaliMethod.getInstructions(), instruction -> {
             Opcode<?> opcode = instruction.getOpcode();
             return opcode == Opcode.GOTO || opcode == Opcode.GOTO_16;
         }));
         if (gotoList.isEmpty()) {
-            return;
+            return false;
         }
         boolean changed = false;
         for (SmaliInstruction instruction : gotoList) {
@@ -49,22 +51,33 @@ public class SmaliGotoFix {
         if (changed) {
             smaliMethod.getCodeSet().updateAddresses();
         }
+        return changed;
     }
     private boolean fix(SmaliInstruction instruction) {
         Opcode<?> opcode = getReplacement(instruction);
         if (opcode != null) {
-            instruction.replaceOpcode(opcode);
+            SmaliCodeSet codeSet = instruction.getCodeSet();
+            SmaliInstruction replacement = codeSet.newInstruction(
+                    instruction.getIndex(), opcode);
+            replacement.getAsSourceLabel().setLabelName(
+                    instruction.getAsSourceLabel().getLabelName());
+            codeSet.remove(instruction);
             return true;
         }
         return false;
     }
     private Opcode<?> getReplacement(SmaliInstruction instruction) {
-        long data = instruction.getDataAsLong();
         Opcode<?> replacement = null;
-        if (data < Byte.MIN_VALUE || data > Byte.MAX_VALUE) {
-            replacement = Opcode.GOTO_16;
-            if (data < Short.MIN_VALUE || data > Short.MAX_VALUE) {
-                replacement = Opcode.GOTO_32;
+        if (!instruction.is(Opcode.GOTO_32)) {
+            long data = instruction.getDataAsLong();
+            if (data < Byte.MIN_VALUE || data > Byte.MAX_VALUE) {
+                replacement = Opcode.GOTO_16;
+                if (data < Short.MIN_VALUE || data > Short.MAX_VALUE) {
+                    replacement = Opcode.GOTO_32;
+                }
+                if (instruction.is(replacement)) {
+                    replacement = null;
+                }
             }
         }
         return replacement;

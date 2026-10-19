@@ -20,7 +20,6 @@ import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.HexUtil;
 import com.reandroid.utils.collection.ArrayCollection;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -59,7 +58,7 @@ public class SequentialLabelFactory {
     private void build(String key, Set<String> group) {
         Map<String, String> labelMap = this.labelMap;
         List<String> list = new ArrayCollection<>(group);
-        Collections.sort(list, (s, t1) -> CompareUtil.compare(getLabelSuffix(s), getLabelSuffix(t1)));
+        java.util.Collections.sort(list, (s, t1) -> CompareUtil.compare(getLabelSuffix(s), getLabelSuffix(t1)));
         int size = list.size();
         for(int i = 0; i < size; i++) {
             labelMap.put(list.get(i), HexUtil.toHex(key, i, 1));

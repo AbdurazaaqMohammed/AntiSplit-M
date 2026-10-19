@@ -18,6 +18,7 @@ package com.reandroid.dex.smali.model;
 import com.reandroid.dex.common.Register;
 import com.reandroid.dex.common.RegisterFormat;
 import com.reandroid.dex.common.RegistersTable;
+import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -102,9 +103,9 @@ public class SmaliRegisterSet extends SmaliSet<SmaliRegister> implements
     }
 
     @Override
-    public SmaliRegister parseNext(SmaliReader reader) throws IOException {
+    public SmaliRegister parseAdd(int index, SmaliReader reader) throws IOException {
         SmaliRegister register = new SmaliRegister();
-        add(register);
+        add(index, register);
         register.parse(reader);
         reader.skipWhitespacesOrComment();
         return register;
@@ -157,6 +158,15 @@ public class SmaliRegisterSet extends SmaliSet<SmaliRegister> implements
         SmaliParseException.expect(reader, '}');
     }
 
+    public static SmaliRegisterSet registerSetFor(Opcode<?> opcode) {
+        RegisterFormat format = opcode.getRegisterFormat();
+        if (format == RegisterFormat.NONE) {
+            return SmaliRegisterSet.NO_REGISTER_SET;
+        } else {
+            return new SmaliRegisterSet(format);
+        }
+    }
+
     public static final SmaliRegisterSet NO_REGISTER_SET = new SmaliRegisterSet(RegisterFormat.NONE){
         @Override
         public boolean add(SmaliRegister smali) {
@@ -180,9 +190,10 @@ public class SmaliRegisterSet extends SmaliSet<SmaliRegister> implements
         public void parse(SmaliReader reader) {
         }
         @Override
-        public SmaliRegister parseNext(SmaliReader reader) {
+        public SmaliRegister parseAdd(int index, SmaliReader reader) {
             return null;
         }
+
         @Override
         public String toString() {
             return "";

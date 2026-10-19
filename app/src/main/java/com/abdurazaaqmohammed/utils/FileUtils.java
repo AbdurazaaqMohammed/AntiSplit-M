@@ -6,18 +6,16 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Environment;
 
-import org.apache.commons.io.FilenameUtils;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
 
 public class FileUtils {
+
+    private static final int COPY_BUFFER_SIZE = 64 * 1024;
 
     public static File copyFileFromAssetsAndGetFile(String fileName, Context context) throws IOException {
         File destinationFile = new File(context.getFilesDir(), fileName);
@@ -30,14 +28,19 @@ public class FileUtils {
 
     public static File getUnusedFile(File file) {
         int i = 0;
-        while (file.exists()) {
+        String fullName = file.getName();
+        int dot = fullName.lastIndexOf('.');
+        String name = dot > 0 ? fullName.substring(0, dot) : fullName;
+        String extension = dot > 0 ? fullName.substring(dot + 1) : "";
+        File parent = file.getParentFile();
+        File candidate = file;
+        while (candidate.exists()) {
             i++;
-            String fileName = file.getName();
-            String extension = FilenameUtils.getExtension(fileName);
-            file = new File(file.getParentFile(),
-                    fileName.replace('.' + extension, "").replaceFirst("_\\d+$", "") + '_' + i + '.' + extension);
+            String newName = name.replaceFirst("_\\d+$", "") + '_' + i
+                    + (extension.isEmpty() ? "" : '.' + extension);
+            candidate = parent == null ? new File(newName) : new File(parent, newName);
         }
-        return file;
+        return candidate;
     }
 
     public static File getUnusedFile(String file) {
@@ -50,28 +53,20 @@ public class FileUtils {
 
     public static void copyFile(File sourceFile, File destinationFile) throws IOException {
         try (InputStream is = getInputStream(sourceFile);
-                OutputStream os = getOutputStream(destinationFile)) {
+             OutputStream os = getOutputStream(destinationFile)) {
             copyFile(is, os);
         }
     }
 
     public static void copyFile(InputStream is, OutputStream os) throws IOException {
-        if (LegacyUtils.supportsWriteExternalStorage) {
-            byte[] buffer = new byte[1024];
-            int length;
-            while ((length = is.read(buffer)) > 0)
-                os.write(buffer, 0, length);
-        } else
-            android.os.FileUtils.copy(is, os);
+        byte[] buffer = new byte[COPY_BUFFER_SIZE];
+        int length;
+        while ((length = is.read(buffer)) != -1)
+            os.write(buffer, 0, length);
+        os.flush();
     }
 
     public static InputStream getInputStream(File file) throws IOException {
-        if (LegacyUtils.supportsFileChannel) {
-            try {
-                return Files.newInputStream(file.toPath(), StandardOpenOption.READ);
-            } catch (Exception ignored) {
-            }
-        }
         return new FileInputStream(file);
     }
 
@@ -80,6 +75,9 @@ public class FileUtils {
     }
 
     public static void copyFile(InputStream is, File destinationFile) throws IOException {
+        File parent = destinationFile.getParentFile();
+        if (parent != null && !parent.exists() && !parent.mkdirs())
+            throw new IOException("Unable to create directory: " + parent);
         try (OutputStream os = getOutputStream(destinationFile)) {
             copyFile(is, os);
         }
@@ -92,26 +90,37 @@ public class FileUtils {
     }
 
     public static OutputStream getOutputStream(File file) throws IOException {
-        if (LegacyUtils.supportsFileChannel) {
-            try {
-                return Files.newOutputStream(file.toPath(), java.nio.file.StandardOpenOption.CREATE,
-                        StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
-            } catch (Exception ignored) {
-            }
-        }
+        File parent = file.getParentFile();
+        if (parent != null && !parent.exists() && !parent.mkdirs())
+            throw new IOException("Unable to create directory: " + parent);
         return new FileOutputStream(file);
     }
 
     public static boolean doesNotHaveStoragePerm(Context context) {
-        return Build.VERSION.SDK_INT > 22 && (LegacyUtils.supportsWriteExternalStorage
-                ? context.checkSelfPermission(
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_DENIED
-                : !Environment.isExternalStorageManager());
+        if (Build.VERSION.SDK_INT <= 22)
+            return false;
+        if (LegacyUtils.supportsWriteExternalStorage)
+            return context.checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_DENIED;
+        return !Environment.isExternalStorageManager();
+    }
+
+    public static String sanitizeFileName(String name) {
+        if (name == null)
+            return "merged.apk";
+        String sanitized = name.replaceAll("[\\\\/:*?\"<>|\\p{Cntrl}]", "_")
+                .replaceAll("^\\.+", "_")
+                .trim();
+        return sanitized.isEmpty() ? "merged.apk" : sanitized;
     }
 
     public static File getAntisplitMFolder() {
-        final File antisplitMFolder = new File(Environment.getExternalStorageDirectory(), "AntiSplit-M");
-        return antisplitMFolder.exists() || antisplitMFolder.mkdir() ? antisplitMFolder
-                : new File(Environment.getExternalStorageDirectory(), "Download");
+        File folder = new File(Environment.getExternalStorageDirectory(), "AntiSplit-M");
+        if (folder.exists() || folder.mkdirs())
+            return folder;
+        File downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        if (downloads.exists() || downloads.mkdirs())
+            return downloads;
+        return Environment.getExternalStorageDirectory();
     }
 }

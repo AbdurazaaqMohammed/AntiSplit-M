@@ -150,7 +150,7 @@ public class AndroidManifestBlockMerger {
     }
     private boolean isExcluded(ResXmlElement element) {
         for (XMLPath xmlPath : this.excludePaths) {
-            if (xmlPath.evaluate(element)) {
+            if (xmlPath.test(element)) {
                 return true;
             }
         }

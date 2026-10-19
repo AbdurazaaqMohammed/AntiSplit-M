@@ -31,10 +31,9 @@ import com.reandroid.xml.base.Element;
 import com.reandroid.xml.base.NamedNode;
 import com.reandroid.xml.base.Node;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class XMLPath implements Predicate<NamedNode> {
 
@@ -299,7 +298,7 @@ public class XMLPath implements Predicate<NamedNode> {
         return false;
     }
     @Override
-    public boolean evaluate(NamedNode namedNode) {
+    public boolean test(NamedNode namedNode) {
         if (namedNode == null) {
             return false;
         }
@@ -310,7 +309,7 @@ public class XMLPath implements Predicate<NamedNode> {
             }
             NamedNode parentNode = namedNode;
             while (parentNode != null) {
-                if (parent.evaluate(parentNode)) {
+                if (parent.test(parentNode)) {
                     return true;
                 }
                 parentNode = getParentNode(parentNode);
@@ -322,7 +321,7 @@ public class XMLPath implements Predicate<NamedNode> {
         }
         XMLPath parent = getParent();
         if (parent != null) {
-            return parent.evaluate(getParentNode(namedNode));
+            return parent.test(getParentNode(namedNode));
         }
         return true;
     }
@@ -362,7 +361,8 @@ public class XMLPath implements Predicate<NamedNode> {
                 @Override
                 public Iterator<NamedNode> iterator(NamedNode node) {
                     if (node instanceof Element) {
-                        return RecursiveIterator.of(node, n -> ((Element<?>) n).iterator(Element.class));
+                        return RecursiveIterator.of(node, n ->
+                                        ((Element<?>) n).iterator(Element.class));
                     }
                     return SingleIterator.of(node);
                 }
@@ -678,9 +678,9 @@ public class XMLPath implements Predicate<NamedNode> {
         }
 
         @Override
-        public boolean evaluate(NamedNode namedNode) {
+        public boolean test(NamedNode namedNode) {
             for (XMLPath path : elements()) {
-                if (path.evaluate(namedNode)) {
+                if (path.test(namedNode)) {
                     return true;
                 }
             }
@@ -726,7 +726,7 @@ public class XMLPath implements Predicate<NamedNode> {
             for (int i = 0; i < length; i++) {
                 addIfAbsent(results, paths[i].getPath(depth));
             }
-            Collections.sort(results, XMLPath::compareName);
+            java.util.Collections.sort(results, XMLPath::compareName);
             length = results.size();
             return results.toArray(new XMLPath[length]);
         }

@@ -27,6 +27,7 @@ import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
+import com.reandroid.utils.exception.IOExceptionMessage;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -36,14 +37,14 @@ public class SmaliField extends SmaliMember implements FieldProgram {
     private TypeKey type;
     private SmaliValue value;
 
-    public SmaliField(){
+    public SmaliField() {
         super();
     }
 
     @Override
-    public FieldKey getKey(){
+    public FieldKey getKey() {
         TypeKey defining = getDefining();
-        if(defining != null){
+        if (defining != null) {
             return getKey(defining);
         }
         return null;
@@ -92,27 +93,27 @@ public class SmaliField extends SmaliMember implements FieldProgram {
         }
     }
     void fixUninitializedFinalValue() {
-        if(this.getValue() != null || !isStatic() || !isFinal()) {
+        if (this.getValue() != null || !isStatic() || !isFinal()) {
             return;
         }
         SmaliClass smaliClass = getSmaliClass();
         FieldKey fieldKey = getKey();
-        if(smaliClass == null || fieldKey == null) {
+        if (smaliClass == null || fieldKey == null) {
             return;
         }
-        if(!isInitializedInStaticConstructor(smaliClass, fieldKey)) {
+        if (!isInitializedInStaticConstructor(smaliClass, fieldKey)) {
             setStaticValue(SmaliValueFactory.createForField(fieldKey.getType()));
         }
     }
     private boolean isInitializedInStaticConstructor(SmaliClass smaliClass, FieldKey fieldKey) {
         SmaliMethod method = smaliClass.getStaticConstructor();
-        if(method == null) {
+        if (method == null) {
             return false;
         }
         Iterator<SmaliInstruction> iterator = method.getInstructions();
         while (iterator.hasNext()) {
             SmaliInstruction instruction = iterator.next();
-            if(fieldKey.equals(instruction.getKey())) {
+            if (fieldKey.equals(instruction.getKey())) {
                 return instruction.getOpcode().isFieldStaticPut();
             }
         }
@@ -132,12 +133,12 @@ public class SmaliField extends SmaliMember implements FieldProgram {
         writer.append(':');
         getType().append(writer);
         SmaliValue value = getValue();
-        if(value != null){
+        if (value != null) {
             writer.append(" = ");
             value.append(writer);
         }
         SmaliAnnotationSet annotationSet = getAnnotationSet();
-        if(annotationSet != null && !annotationSet.isEmpty()){
+        if (annotationSet != null && !annotationSet.isEmpty()) {
             writer.indentPlus();
             writer.newLine();
             annotationSet.append(writer);
@@ -155,18 +156,15 @@ public class SmaliField extends SmaliMember implements FieldProgram {
         reader.skip(1);
         setType(TypeKey.read(reader));
         if (reader.checkInterned(getKey())) {
-            throw new IOException(reader.getCurrentOrigin(false) + " Field "
-                    + getKey() + " has already been interned");
+            throw new IOExceptionMessage("Field "
+                    + getKey() + " has already been interned.\nat " + reader.getCurrentOrigin(false));
         }
         parseValue(reader);
         parseAnnotationSet(reader);
     }
     private void parseValue(SmaliReader reader) throws IOException {
         reader.skipWhitespaces();
-        if(reader.finished()) {
-            return;
-        }
-        if(reader.get() != '='){
+        if (reader.finished() || reader.get() != '=') {
             return;
         }
         reader.skip(1); // =
@@ -178,7 +176,7 @@ public class SmaliField extends SmaliMember implements FieldProgram {
     private void parseAnnotationSet(SmaliReader reader) throws IOException {
         reader.skipWhitespacesOrComment();
         SmaliDirective directive = SmaliDirective.parse(reader, false);
-        if(directive != SmaliDirective.ANNOTATION){
+        if (directive != SmaliDirective.ANNOTATION) {
             getSmaliDirective().skipEnd(reader);
             return;
         }
@@ -186,7 +184,7 @@ public class SmaliField extends SmaliMember implements FieldProgram {
         SmaliAnnotationSet annotationSet = new SmaliAnnotationSet();
         annotationSet.parse(reader);
         reader.skipWhitespacesOrComment();
-        if(getSmaliDirective().isEnd(reader)){
+        if (getSmaliDirective().isEnd(reader)) {
             setSmaliAnnotationSet(annotationSet);
             SmaliDirective.parse(reader);
         }else {
@@ -198,7 +196,7 @@ public class SmaliField extends SmaliMember implements FieldProgram {
     public String toDebugString() {
         StringBuilder builder = new StringBuilder();
         TypeKey typeKey = getDefining();
-        if(typeKey != null){
+        if (typeKey != null) {
             builder.append(typeKey);
             builder.append(", ");
         }
@@ -207,7 +205,7 @@ public class SmaliField extends SmaliMember implements FieldProgram {
         builder.append(':');
         builder.append(getType());
         SmaliValue value = getValue();
-        if(value != null){
+        if (value != null) {
             builder.append(" = ");
             builder.append(value.toDebugString());
         }

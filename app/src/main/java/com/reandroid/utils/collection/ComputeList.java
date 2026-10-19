@@ -16,12 +16,12 @@
 package com.reandroid.utils.collection;
 
 import java.util.*;
-import org.apache.commons.collections4.Transformer;
+import com.reandroid.utils.function.Function;
 
 public class ComputeList<T, E> extends ComputeCollection<T, E> implements List<T>{
 
-    public ComputeList(List<? extends E> list, org.apache.commons.collections4.Transformer<? super E, T> transformer) {
-        super(list, transformer);
+    public ComputeList(List<? extends E> list, Function<? super E, T> function) {
+        super(list, function);
     }
 
     @SuppressWarnings("unchecked")

@@ -18,19 +18,20 @@ package com.reandroid.utils.collection;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Objects;
+import com.reandroid.utils.function.Function;
 
 public class ComputeCollection<T, E> implements Collection<T> {
 
     private final Collection<? extends E> source;
-    private final org.apache.commons.collections4.Transformer<? super E, T> transformer;
+    private final Function<? super E, T> function;
 
-    public ComputeCollection(Collection<? extends E> collection, org.apache.commons.collections4.Transformer<? super E, T> transformer){
+    public ComputeCollection(Collection<? extends E> collection, Function<? super E, T> function){
         this.source = collection;
-        this.transformer = transformer;
+        this.function = function;
     }
 
     public T apply(E input){
-        return transformer.transform(input);
+        return function.apply(input);
     }
     public Collection<? extends E> getSource() {
         return source;
@@ -54,7 +55,7 @@ public class ComputeCollection<T, E> implements Collection<T> {
     }
     @Override
     public Iterator<T> iterator() {
-        return ComputeIterator.of(source.iterator(), transformer);
+        return ComputeIterator.of(source.iterator(), function);
     }
     @Override
     public Object[] toArray() {
@@ -66,7 +67,7 @@ public class ComputeCollection<T, E> implements Collection<T> {
         Iterator<? extends E> iterator = source.iterator();
         int i = 0;
         while (iterator.hasNext()){
-            results[i] = transformer.transform(iterator.next());
+            results[i] = function.apply(iterator.next());
             i++;
         }
         return results;
@@ -88,7 +89,7 @@ public class ComputeCollection<T, E> implements Collection<T> {
         Iterator<? extends E> iterator = source.iterator();
         int i = 0;
         while (i < size && iterator.hasNext()){
-            out[i] = (T1) transformer.transform(iterator.next());
+            out[i] = (T1) function.apply(iterator.next());
             i++;
         }
         return out;

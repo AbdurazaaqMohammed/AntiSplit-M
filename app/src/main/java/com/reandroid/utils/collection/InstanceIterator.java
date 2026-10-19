@@ -17,7 +17,7 @@ package com.reandroid.utils.collection;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class InstanceIterator<T> implements Iterator<T> {
     private final Iterator<?> iterator;
@@ -65,7 +65,7 @@ public class InstanceIterator<T> implements Iterator<T> {
             }
             if(instance.isInstance(obj)){
                 current = (T)obj;
-                if(filter == null || filter.evaluate(current)){
+                if(filter == null || filter.test(current)){
                     mCurrent = current;
                     return current;
                 }

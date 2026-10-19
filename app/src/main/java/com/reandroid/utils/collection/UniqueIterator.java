@@ -20,7 +20,7 @@ import com.reandroid.utils.ObjectsUtil;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class UniqueIterator<T> extends FilterIterator<T> {
 
@@ -56,7 +56,7 @@ public class UniqueIterator<T> extends FilterIterator<T> {
     }
 
     @Override
-    public boolean evaluate(T item) {
+    public boolean test(T item) {
         if(item == null){
             return false;
         }

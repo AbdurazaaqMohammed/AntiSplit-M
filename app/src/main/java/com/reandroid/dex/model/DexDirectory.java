@@ -45,7 +45,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class DexDirectory implements Iterable<DexFile>, Closeable,
         DexClassRepository, FullRefresh {
@@ -679,7 +679,7 @@ public class DexDirectory implements Iterable<DexFile>, Closeable,
     public void writeSmali(SmaliWriterSetting writerSetting, File root,
                            Predicate<? super DexFile> predicate) throws IOException {
         for (DexFile dexFile : this) {
-            if (predicate == null || predicate.evaluate(dexFile)) {
+            if (predicate == null || predicate.test(dexFile)) {
                 File dir = new File(root, dexFile.buildSmaliDirectoryName());
                 dexFile.writeSmali(writerSetting, dir);
             }

@@ -25,7 +25,7 @@ import com.reandroid.dex.id.MethodId;
 import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.ins.SizeXIns;
-import com.reandroid.dex.ins.TryBlock;
+import com.reandroid.dex.ins.InsTryBlock;
 import com.reandroid.dex.key.FieldKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
@@ -46,7 +46,7 @@ import com.reandroid.utils.collection.MergingIterator;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class DexMethod extends DexDeclaration implements MethodProgram, BlockRefresh {
 
@@ -191,7 +191,7 @@ public class DexMethod extends DexDeclaration implements MethodProgram, BlockRef
         return getInstructionsIfIns(ins -> {
             if (ins instanceof SizeXIns) {
                 Key key = ((SizeXIns) ins).getKey();
-                return key != null && predicate.evaluate(key);
+                return key != null && predicate.test(key);
             }
             return false;
         });
@@ -201,7 +201,7 @@ public class DexMethod extends DexDeclaration implements MethodProgram, BlockRef
             if (ins instanceof SizeXIns) {
                 Key key = ((SizeXIns) ins).getKey();
                 if (key instanceof MethodKey) {
-                    return predicate.evaluate((MethodKey) key);
+                    return predicate.test((MethodKey) key);
                 }
                 return false;
             }
@@ -213,7 +213,7 @@ public class DexMethod extends DexDeclaration implements MethodProgram, BlockRef
             if (ins instanceof SizeXIns) {
                 Key key = ((SizeXIns) ins).getKey();
                 if (key instanceof FieldKey) {
-                    return predicate.evaluate((FieldKey) key);
+                    return predicate.test((FieldKey) key);
                 }
                 return false;
             }
@@ -225,7 +225,7 @@ public class DexMethod extends DexDeclaration implements MethodProgram, BlockRef
             if (ins instanceof SizeXIns) {
                 Key key = ((SizeXIns) ins).getKey();
                 if (key instanceof TypeKey) {
-                    return predicate.evaluate((TypeKey) key);
+                    return predicate.test((TypeKey) key);
                 }
                 return false;
             }
@@ -237,7 +237,7 @@ public class DexMethod extends DexDeclaration implements MethodProgram, BlockRef
             if (ins instanceof SizeXIns) {
                 Key key = ((SizeXIns) ins).getKey();
                 if (key instanceof StringKey) {
-                    return predicate.evaluate((StringKey) key);
+                    return predicate.test((StringKey) key);
                 }
                 return false;
             }
@@ -258,7 +258,7 @@ public class DexMethod extends DexDeclaration implements MethodProgram, BlockRef
         return getInstructionsIfOpcode(op -> op == opcode || op == alt);
     }
     public Iterator<DexInstruction> getInstructionsIfOpcode(Predicate<Opcode<?>> predicate) {
-        return getInstructionsIfIns(ins -> predicate.evaluate(ins.getOpcode()));
+        return getInstructionsIfIns(ins -> predicate.test(ins.getOpcode()));
     }
     /**
      * Use: getInstructionsIfIns
@@ -310,7 +310,7 @@ public class DexMethod extends DexDeclaration implements MethodProgram, BlockRef
         return getDexTry(-1);
     }
     public Iterator<DexTry> getDexTry(int address) {
-        TryBlock tryBlock = getDefinition().getTryBlock();
+        InsTryBlock tryBlock = getDefinition().getTryBlock();
         if (tryBlock == null) {
             return EmptyIterator.of();
         }
@@ -318,7 +318,7 @@ public class DexMethod extends DexDeclaration implements MethodProgram, BlockRef
                 tryBlock.getTriesForAddress(address));
     }
     public DexTry createDexTry() {
-        TryBlock tryBlock = getDefinition().getOrCreateTryBlock();
+        InsTryBlock tryBlock = getDefinition().getOrCreateTryBlock();
         return DexTry.create(this, tryBlock.createNext());
     }
     public DexInstruction getInstruction(int i) {
@@ -338,7 +338,7 @@ public class DexMethod extends DexDeclaration implements MethodProgram, BlockRef
         return parseInstruction(index, reader);
     }
     public DexInstruction parseInstruction(int index, SmaliReader reader) throws IOException {
-        SmaliInstruction smaliInstruction = new SmaliInstruction();
+        SmaliInstruction smaliInstruction = new SmaliInstruction(Opcode.parseSmali(reader, false));
         smaliInstruction.parse(reader);
         InstructionList instructionList = getDefinition().getOrCreateInstructionList();
         Ins ins = instructionList.createAt(index, smaliInstruction.getOpcode());

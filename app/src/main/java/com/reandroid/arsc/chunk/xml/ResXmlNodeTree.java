@@ -30,7 +30,7 @@ import java.util.AbstractList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public abstract class ResXmlNodeTree extends ResXmlNode implements NodeTree<ResXmlNode> {
 

@@ -43,7 +43,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class SectionList extends FixedBlockContainer
         implements SectionTool, OffsetSupplier, Iterable<Section<?>> ,
@@ -166,7 +166,7 @@ public class SectionList extends FixedBlockContainer
         for (int i = 0; i < length; i++) {
             MapItem mapItem = mapItemList[i];
             SectionType<SectionItem> sectionType = mapItem.getSectionType();
-            if (filter == null || filter.evaluate(sectionType)) {
+            if (filter == null || filter.test(sectionType)) {
                 loadSection(mapItem, reader);
             }
         }

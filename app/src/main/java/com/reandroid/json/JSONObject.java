@@ -183,7 +183,7 @@ public class JSONObject extends JSONItem {
         LinkedHashMap<String, Object> copy = new LinkedHashMap<>(map);
         map.clear();
         List<String> sortedKeys = new ArrayList<>(copy.keySet());
-        Collections.sort(sortedKeys, keyComparator);
+        java.util.Collections.sort(sortedKeys, keyComparator);
         for(String key : sortedKeys){
             map.put(key, copy.get(key));
         }

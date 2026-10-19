@@ -15,6 +15,7 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.program.InstructionLabelType;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
@@ -26,7 +27,7 @@ public class SmaliSparseSwitchEntry extends SmaliSwitchEntry {
     private final SmaliValueInteger smaliValue;
 
     public SmaliSparseSwitchEntry() {
-        super();
+        super(InstructionLabelType.S_SWITCH_DATA);
         this.smaliValue = new SmaliValueInteger();
         this.smaliValue.setParent(this);
     }
@@ -46,7 +47,7 @@ public class SmaliSparseSwitchEntry extends SmaliSwitchEntry {
     public void append(SmaliWriter writer) throws IOException {
         writer.appendOptional(getSmaliValue());
         writer.append(" -> ");
-        getLabel().append(writer);
+        super.append(writer);
     }
 
     @Override
@@ -57,6 +58,20 @@ public class SmaliSparseSwitchEntry extends SmaliSwitchEntry {
         SmaliParseException.expect(reader, '-');
         SmaliParseException.expect(reader, '>');
         reader.skipSpaces();
-        getLabel().parse(reader);
+        super.parse(reader);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (!(obj instanceof SmaliSparseSwitchEntry)) {
+            return true;
+        }
+        return getSmaliValue().equals(((SmaliSparseSwitchEntry) obj).getSmaliValue());
     }
 }

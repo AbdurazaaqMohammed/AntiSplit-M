@@ -24,7 +24,7 @@ import com.reandroid.utils.collection.ArrayCollection;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Comparator;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class ArrayKey<T extends Key> extends KeyList<T> {
 

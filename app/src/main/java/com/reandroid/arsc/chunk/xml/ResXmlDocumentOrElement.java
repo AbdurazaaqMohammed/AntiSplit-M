@@ -24,7 +24,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 abstract class ResXmlDocumentOrElement extends ResXmlNodeTree {
 
@@ -92,7 +92,7 @@ abstract class ResXmlDocumentOrElement extends ResXmlNodeTree {
     }
     public boolean removeElementsIf(Predicate<? super ResXmlElement> predicate) {
         return removeIf(xmlNode -> (xmlNode instanceof ResXmlElement)
-                && predicate.evaluate((ResXmlElement) xmlNode));
+                && predicate.test((ResXmlElement) xmlNode));
     }
     public void setAttributesUnitSize(int size, boolean recursive) {
         Iterator<ResXmlElement> iterator = getElements();

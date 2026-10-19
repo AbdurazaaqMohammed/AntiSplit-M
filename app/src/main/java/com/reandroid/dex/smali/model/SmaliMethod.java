@@ -34,7 +34,9 @@ import com.reandroid.dex.smali.SmaliRegion;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.SmaliWriterSetting;
 import com.reandroid.dex.smali.fix.SmaliGotoFix;
+import com.reandroid.dex.smali.fix.SmaliOverlappingTryFix;
 import com.reandroid.utils.ObjectsUtil;
+import com.reandroid.utils.exception.IOExceptionMessage;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -128,7 +130,7 @@ public class SmaliMethod extends SmaliMember implements MethodProgram, Registers
     public SmaliCodeSet getCodeSet() {
         return codeSet;
     }
-    public Iterator<SmaliCodeTryItem> getTryItems() {
+    public Iterator<SmaliTryItem> getTryItems() {
         return getCodeSet().getTryItems();
     }
 
@@ -206,8 +208,8 @@ public class SmaliMethod extends SmaliMember implements MethodProgram, Registers
         setName(StringKey.readSimpleName(reader, '('));
         parseProto(reader);
         if (reader.checkInterned(getKey())) {
-            throw new IOException(reader.getCurrentOrigin(false) + " Method "
-                    + getKey() + " has already been interned");
+            throw new IOExceptionMessage("Method "
+                    + getKey() + " has already been interned.\nat " + reader.getCurrentOrigin(false));
         }
         reader.skipWhitespacesOrComment();
         while (parseNoneCode(reader)) {
@@ -215,12 +217,15 @@ public class SmaliMethod extends SmaliMember implements MethodProgram, Registers
         }
         getCodeSet().parse(reader);
         SmaliParseException.expect(reader, getSmaliDirective(), true);
+        validate();
         runFixes(reader);
     }
     private void runFixes(SmaliReader reader) {
         if (reader.isFixGoto()) {
-            new SmaliGotoFix(this).apply();
+            SmaliGotoFix.INSTANCE.apply(this);
         }
+        // TODO: implement reader.isFixOverlappingTryItem
+        SmaliOverlappingTryFix.INSTANCE.apply(this);
     }
     private boolean parseNoneCode(SmaliReader reader) throws IOException {
         SmaliDirective directive = SmaliDirective.parse(reader, false);
@@ -272,6 +277,14 @@ public class SmaliMethod extends SmaliMember implements MethodProgram, Registers
     @Override
     public int getLocalRegistersCount() {
         return getSmaliRegistersCount().getLocals();
+    }
+
+    @Override
+    public void validate() throws IOException {
+        super.validate();
+        getParamSet().validate();
+        getSmaliRegistersCount().validate();
+        getCodeSet().validate();
     }
 
     @Override

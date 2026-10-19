@@ -17,7 +17,7 @@ package com.reandroid.utils.collection;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class ArrayIterator<T> implements Iterator<T>, SizedItem, SizedIterator{
 
@@ -85,7 +85,7 @@ public class ArrayIterator<T> implements Iterator<T>, SizedItem, SizedIterator{
         if(item == null){
             return false;
         }
-        return mFilter == null || mFilter.evaluate(item);
+        return mFilter == null || mFilter.test(item);
     }
     public static<T1> Iterator<T1> of(Object[] elements){
         if(isEmpty(elements)){

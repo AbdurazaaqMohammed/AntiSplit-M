@@ -32,7 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class RenameBatch implements SmaliFormat, SmaliParser, Iterable<Rename<?>> {
 

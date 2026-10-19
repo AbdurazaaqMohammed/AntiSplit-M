@@ -33,11 +33,11 @@ import com.reandroid.dex.key.KeyReference;
 import com.reandroid.dex.program.InstructionLabel;
 import com.reandroid.dex.reference.DataItemIndirectReference;
 import com.reandroid.dex.common.RegistersTable;
-import com.reandroid.dex.ins.TryBlock;
+import com.reandroid.dex.ins.InsTryBlock;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliDirective;
 import com.reandroid.dex.smali.SmaliWriter;
-import com.reandroid.dex.smali.model.SmaliCodeTryItem;
+import com.reandroid.dex.smali.model.SmaliTryItem;
 import com.reandroid.dex.smali.model.SmaliMethod;
 import com.reandroid.utils.ObjectsUtil;
 import com.reandroid.utils.collection.CombiningIterator;
@@ -51,7 +51,7 @@ public class CodeItem extends DataItem implements RegistersTable,
 
     private final Header header;
     private final InstructionList instructionList;
-    private TryBlock tryBlock;
+    private InsTryBlock tryBlock;
 
     private final DataKey<CodeItem> codeItemKey;
 
@@ -158,21 +158,21 @@ public class CodeItem extends DataItem implements RegistersTable,
                 CodeItem.this.getDebugLabels());
     }
     public Iterator<InstructionLabel> getTryBlockLabels() {
-        TryBlock tryBlock = this.getTryBlock();
+        InsTryBlock tryBlock = this.getTryBlock();
         if (tryBlock == null || tryBlock.isNull()) {
             return EmptyIterator.of();
         }
         return tryBlock.getLabels();
     }
-    public TryBlock getTryBlock() {
+    public InsTryBlock getTryBlock() {
         return tryBlock;
     }
-    public TryBlock getOrCreateTryBlock() {
+    public InsTryBlock getOrCreateTryBlock() {
         initTryBlock();
         return tryBlock;
     }
     public void removeTryBlock() {
-        TryBlock tryBlock = this.tryBlock;
+        InsTryBlock tryBlock = this.tryBlock;
         if (tryBlock == null) {
             return;
         }
@@ -181,28 +181,28 @@ public class CodeItem extends DataItem implements RegistersTable,
         tryBlock.setParent(null);
     }
     public boolean compactSimilarCatches() {
-        TryBlock tryBlock = this.getTryBlock();
+        InsTryBlock tryBlock = this.getTryBlock();
         if (tryBlock != null) {
             return tryBlock.compactSimilarCatches();
         }
         return false;
     }
     public boolean flattenTryItems() {
-        TryBlock tryBlock = this.getTryBlock();
+        InsTryBlock tryBlock = this.getTryBlock();
         if (tryBlock != null) {
             return tryBlock.flattenCompactCatches();
         }
         return false;
     }
     public boolean splitTryHandlers() {
-        TryBlock tryBlock = this.getTryBlock();
+        InsTryBlock tryBlock = this.getTryBlock();
         if (tryBlock != null) {
             return tryBlock.splitTryHandlers();
         }
         return false;
     }
     public boolean combineTries() {
-        TryBlock tryBlock = this.getTryBlock();
+        InsTryBlock tryBlock = this.getTryBlock();
         if (tryBlock != null) {
             return tryBlock.combineTries();
         }
@@ -223,7 +223,7 @@ public class CodeItem extends DataItem implements RegistersTable,
     }
     void initTryBlock() {
         if (this.tryBlock == null) {
-            this.tryBlock = new TryBlock(this);
+            this.tryBlock = new InsTryBlock(this);
             addChildBlock(2, this.tryBlock);
         }
     }
@@ -262,7 +262,7 @@ public class CodeItem extends DataItem implements RegistersTable,
     @Override
     protected void onRefreshed() {
         super.onRefreshed();
-        TryBlock tryBlock = this.getTryBlock();
+        InsTryBlock tryBlock = this.getTryBlock();
         if (tryBlock != null && tryBlock.isEmpty()) {
             removeTryBlock();
         }
@@ -270,7 +270,7 @@ public class CodeItem extends DataItem implements RegistersTable,
 
     @Override
     public boolean uses(Key key) {
-        TryBlock tryBlock = getTryBlock();
+        InsTryBlock tryBlock = getTryBlock();
         if (tryBlock != null && tryBlock.uses(key)) {
             return true;
         }
@@ -287,7 +287,7 @@ public class CodeItem extends DataItem implements RegistersTable,
             iterator1 = debugInfo.usedIds();
         }
         Iterator<IdItem> iterator2;
-        TryBlock tryBlock = getTryBlock();
+        InsTryBlock tryBlock = getTryBlock();
         if (tryBlock == null) {
             iterator2 = EmptyIterator.of();
         } else {
@@ -302,9 +302,9 @@ public class CodeItem extends DataItem implements RegistersTable,
         }
         this.header.merge(codeItem.header);
         getInstructionList().merge(codeItem.getInstructionList());
-        TryBlock comingTry = codeItem.getTryBlock();
+        InsTryBlock comingTry = codeItem.getTryBlock();
         if (comingTry != null) {
-            TryBlock tryBlock = getOrCreateTryBlock();
+            InsTryBlock tryBlock = getOrCreateTryBlock();
             tryBlock.merge(comingTry);
         }
     }
@@ -312,13 +312,13 @@ public class CodeItem extends DataItem implements RegistersTable,
         setRegistersCount(smaliMethod.getRegistersCount());
         setParameterRegistersCount(smaliMethod.getParameterRegistersCount());
         getInstructionList().fromSmali(smaliMethod.getCodeSet());
-        Iterator<SmaliCodeTryItem> iterator = smaliMethod.getTryItems();
-        TryBlock tryBlock = null;
+        Iterator<SmaliTryItem> iterator = smaliMethod.getTryItems();
+        InsTryBlock tryBlock = null;
         if (iterator.hasNext()) {
             tryBlock = getOrCreateTryBlock();
         }
         while (iterator.hasNext()) {
-            tryBlock.fromSmali(iterator.next());
+            tryBlock.fromProgram(iterator.next());
         }
         if (smaliMethod.hasDebugElements()) {
             DebugInfo debugInfo = getOrCreateDebugInfo();
@@ -368,7 +368,7 @@ public class CodeItem extends DataItem implements RegistersTable,
         int hash = header.hashCode();
         hash = hash * 31 + instructionList.hashCode();
         hash = hash * 31;
-        TryBlock tryBlock = this.tryBlock;
+        InsTryBlock tryBlock = this.tryBlock;
         if (tryBlock != null) {
             hash = hash + tryBlock.hashCode();
         }

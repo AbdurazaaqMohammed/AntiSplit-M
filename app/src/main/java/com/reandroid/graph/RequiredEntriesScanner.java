@@ -31,7 +31,7 @@ import com.reandroid.utils.collection.FilterIterator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class RequiredEntriesScanner extends BaseApkModuleProcessor{
 
@@ -75,7 +75,7 @@ public class RequiredEntriesScanner extends BaseApkModuleProcessor{
         Iterator<ResourceEntry> iterator = FilterIterator.of(getTableBlock().getResources(),
                 resourceEntry -> {
                     ResourceName resourceName = resourceEntry.toResourceName();
-                    return resourceName != null && filter.evaluate(resourceName);
+                    return resourceName != null && filter.test(resourceName);
                 });
         while (iterator.hasNext()) {
             add(iterator.next());

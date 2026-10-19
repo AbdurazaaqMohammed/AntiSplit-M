@@ -160,12 +160,16 @@ public class SizeXIns extends Ins {
     public void setSectionId(IdItem item){
         sectionReference.setItem(item);
     }
-    public Key getKey() {
+    @Override
+    public Key getAsKey() {
         InsIdSectionReference sectionReference = this.sectionReference;
         if(sectionReference != null) {
             return sectionReference.getKey();
         }
         return null;
+    }
+    public Key getKey() {
+        return getAsKey();
     }
     public void setKey(Key key) {
         sectionReference.setKey(key);
@@ -423,7 +427,7 @@ public class SizeXIns extends Ins {
             ((SmaliInstructionOperand.SmaliKeyOperand)operand).setKey(getKey());
         } else if (operandType == OperandType.LABEL) {
             SmaliLabel smaliLabel = ((SmaliInstructionOperand.SmaliLabelOperand) operand)
-                    .getLabel();
+                    .getAsLabel();
             InstructionLabel label = (InstructionLabel) this;
             smaliLabel.setLabelName(label.getLabelName());
         }

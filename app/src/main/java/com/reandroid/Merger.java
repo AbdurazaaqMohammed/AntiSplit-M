@@ -18,7 +18,7 @@ package com.reandroid;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.net.Uri;
-import android.support.v4.content.FileProvider;
+import androidx.core.content.FileProvider;
 import android.text.TextUtils;
 
 import com.abdurazaaqmohammed.AntiSplit.R;
@@ -51,6 +51,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class Merger {
 
@@ -90,20 +91,28 @@ public class Merger {
             }
 
             if (cantReadFile) {
-                try(InputStream is = context.getContentResolver().openInputStream(splitAPKUri)) {
-                    //File parentFile = cacheDir.getParentFile();
-                    // com.abdurazaaqmohammed.utils.FileUtils.copyFile(is, input = new File(parentFile != null && parentFile.canRead() ? parentFile : cacheDir, input == null ? context.getOriginalFileName(in) :  input.getName()));
-                    inputZipFile = new File(workingDirectory, System.currentTimeMillis() + '_' + context.getOriginalFileName(splitAPKUri));
-                    com.abdurazaaqmohammed.utils.FileUtils.copyFile(is, inputZipFile);
+                File copiedFile = new File(workingDirectory, System.currentTimeMillis() + '_'
+                        + context.getOriginalFileName(splitAPKUri));
+                try (InputStream is = context.getContentResolver().openInputStream(splitAPKUri)) {
+                    if (is == null)
+                        throw new IOException("Unable to open " + splitAPKUri);
+                    com.abdurazaaqmohammed.utils.FileUtils.copyFile(is, copiedFile);
                 }
+                inputZipFile = copiedFile;
             }
+            if (inputZipFile == null)
+                throw new IOException("Unable to read " + splitAPKUri);
             size = inputZipFile.length();
-            ArchiveFile zf = new ArchiveFile(inputZipFile);
-            extractZipFile(zf, checkSplits, splitsToNotInclude);
-            if (cantReadFile) inputZipFile.delete();
+            try {
+                extractZipFile(new ArchiveFile(inputZipFile), checkSplits, splitsToNotInclude);
+            } finally {
+                if (cantReadFile) inputZipFile.delete();
+            }
         } else {
-            extractZipFile(DeviceSpecsUtil.zipFile, checkSplits, splitsToNotInclude);
-            size = DeviceSpecsUtil.zipFile.size();
+            ArchiveFile archiveFile = DeviceSpecsUtil.zipFile;
+            long entryCount = archiveFile == null ? 0 : archiveFile.size();
+            extractZipFile(archiveFile, checkSplits, splitsToNotInclude);
+            size = entryCount;
         }
         try {
             bundle.loadApkDirectory(workingDirectory);
@@ -119,27 +128,34 @@ public class Merger {
     }
 
     private void extractZipFile(ArchiveFile zf, boolean checkSplits, List<String> splitsToNotInclude) throws IOException {
-        for(InputSource archiveEntry : zf.getInputSources()) {
-            String name = archiveEntry.getName();
-            if (name.endsWith(".apk")) {
-                if ((checkSplits && splitsToNotInclude.contains(name)))
-                    logger.logMessage(rss.getString(R.string.skipping) + name + rss.getString(R.string.unselected));
-                else try (InputStream is = archiveEntry.openStream()) {
-                   // com.abdurazaaqmohammed.utils.FileUtils.copyFile(is, new File(cacheDir, name));
-                    File outputFile = new File(workingDirectory, name);
-                    if (outputFile.getCanonicalPath().startsWith(workingDirectory.getCanonicalPath() + File.separator)) {
-                        File parentDir = outputFile.getParentFile();
-                        if (parentDir != null && !parentDir.exists()) {
-                            parentDir.mkdirs();
+        if (zf == null)
+            throw new IOException("No input archive available");
+        try {
+            for(InputSource archiveEntry : zf.getInputSources()) {
+                String name = archiveEntry.getName();
+                if (name.endsWith(".apk")) {
+                    if ((checkSplits && splitsToNotInclude.contains(name)))
+                        logger.logMessage(rss.getString(R.string.skipping) + name + rss.getString(R.string.unselected));
+                    else try (InputStream is = archiveEntry.openStream()) {
+                        File outputFile = new File(workingDirectory, name);
+                        String canonicalPath = outputFile.getCanonicalPath();
+                        if (canonicalPath.startsWith(workingDirectory.getCanonicalPath() + File.separator)) {
+                            File parentDir = outputFile.getParentFile();
+                            if (parentDir != null && !parentDir.exists()) {
+                                parentDir.mkdirs();
+                            }
+                            com.abdurazaaqmohammed.utils.FileUtils.copyFile(is, outputFile);
+                        } else {
+                            logger.logMessage("Skipped invalid path: " + name);
                         }
-                        com.abdurazaaqmohammed.utils.FileUtils.copyFile(is, outputFile);
-                    } else {
-                        logger.logMessage("Skipped invalid path: " + name);
                     }
-                }
-            } else logger.logMessage(rss.getString(R.string.skipping) + name + rss.getString(R.string.not_apk));
+                } else logger.logMessage(rss.getString(R.string.skipping) + name + rss.getString(R.string.not_apk));
+            }
+        } finally {
+            zf.close();
+            if (DeviceSpecsUtil.zipFile == zf)
+                DeviceSpecsUtil.zipFile = null;
         }
-        zf.close();
     }
 
     public File run(ApkBundle bundle, boolean signApk, boolean force) throws Exception {
@@ -148,7 +164,9 @@ public class Merger {
         //final boolean[] saveToCacheDir = {true}; // I found writeApk(OutputStream) is really slow and writing to file and copying is actually faster
         final boolean[] sign = {signApk};
         File[] splits = workingDirectory.listFiles();
-        for(File split : splits) {
+        if (splits != null) for(File split : splits) {
+            if (!split.isFile() || !split.getName().endsWith(".apk"))
+                continue;
             String splitName = split.getName();
             String arch = null;
             String var = "x86";
@@ -159,18 +177,30 @@ public class Merger {
             if(arch != null) try (ApkModule zf = ApkModule.loadApkFile(split, splitName)) {
                 if (zf.containsFile("lib" + File.separator + arch + File.separator + "libpairipcore.so")) {
                     final CountDownLatch latch = new CountDownLatch(1);
-                    context.getHandler().post(() ->
-                        context.runOnUiThread(new MaterialAlertDialogBuilder(context).setTitle(rss.getString(R.string.warning)).setMessage(R.string.pairip_warning)
-                        .setPositiveButton("OK", (dialog, which) -> {
-                            //saveToCacheDir[0] = true;
-                            sign[0] = false;
+                    context.getHandler().post(() -> {
+                        if (context.isFinishing() || context.isDestroyed()) {
                             latch.countDown();
-                        }).setNegativeButton(rss.getString(R.string.cancel), (dialog, which) -> {
-                            context.startActivity(new Intent(context, MainActivity.class));
-                            context.finishAffinity();
-                            latch.countDown();
-                        }).create()::show));
-                    latch.await();
+                            return;
+                        }
+                        new MaterialAlertDialogBuilder(context)
+                                .setTitle(rss.getString(R.string.warning))
+                                .setMessage(R.string.pairip_warning)
+                                .setCancelable(false)
+                                .setPositiveButton(rss.getString(android.R.string.ok),
+                                        (dialog, which) -> {
+                                            sign[0] = false;
+                                            latch.countDown();
+                                        })
+                                .setNegativeButton(rss.getString(R.string.cancel),
+                                        (dialog, which) -> {
+                                            context.startActivity(new Intent(context, MainActivity.class));
+                                            context.finishAffinity();
+                                            latch.countDown();
+                                        })
+                                .show();
+                    });
+                    if (!latch.await(10, TimeUnit.MINUTES))
+                        throw new IOException("Timed out waiting for the Pairip warning dialog");
                     break;
                 }
             }
@@ -230,15 +260,20 @@ public class Merger {
                                                     continue;
                                                 }
                                                 String path = resValue.getValueAsString();
-                                                logger.logMessage((R.string.removed_table_entry) + " " + path);
-                                                //Remove file entry
-                                                zipEntryMap.remove(path);
+                                                if (path != null) {
+                                                    logger.logMessage((R.string.removed_table_entry) + " " + path);
+                                                    //Remove file entry
+                                                    zipEntryMap.remove(path);
+                                                }
                                                 // It's not safe to destroy entry, resource id might be used in dex code.
                                                 // Better replace it with boolean value.
                                                 entry.setNull(true);
-                                                SpecTypePair specTypePair = entry.getTypeBlock()
-                                                        .getParentSpecTypePair();
-                                                specTypePair.removeNullEntries(entry.getId());
+                                                if (entry.getTypeBlock() != null) {
+                                                    SpecTypePair specTypePair = entry.getTypeBlock()
+                                                            .getParentSpecTypePair();
+                                                    if (specTypePair != null)
+                                                        specTypePair.removeNullEntries(entry.getId());
+                                                }
                                             }
                                             result = true;
                                         }
@@ -256,23 +291,24 @@ public class Merger {
             logger.logMessage((R.string.saving));
 
             File mergedAPK = new File(workingDirectory, "merged_" + System.currentTimeMillis() + ".apk");
-            mergedModule.writeApk(mergedAPK);
-            if (sign[0]) {
+            mergedModule.writeApk(mergedAPK);            if (sign[0]) {
                 logger.logMessage((R.string.signing));
                 File outputSigned = new File(workingDirectory, System.currentTimeMillis() + "signed.apk");
-               // try {
-                SignUtil.signDebugKey(context, mergedAPK, outputSigned);
-                signedApk = FileProvider.getUriForFile(context, "com.abdurazaaqmohammed.AntiSplit.fileprovider", outputSigned);
-                return outputSigned;
-              //  } catch (Exception e) {
-                //    SignUtil.signPseudoApkSigner(mergedAPK, context, out, e); // Just forget about this because I never figure out how to solve any of the error from it and it probably does not help
-              //  }
-            } else {
-                return mergedAPK;
+                try {
+                    SignUtil.signDebugKey(context, mergedAPK, outputSigned);
+                    mergedAPK.delete();
+                    signedApk = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", outputSigned);
+                    return outputSigned;
+                } catch (Exception e) {
+                    context.getLogger().logError("Signing failed", e);
+                    if (mergedAPK.delete())
+                        logger.logMessage("Deleted unsigned merged file after signing failure");
+                    return mergedAPK;
+                }
             }
+            return mergedAPK;
         }
     }
-
 
     public File run(Uri splitAPKUri, List<String> splitsToNotInclude, boolean signApk, boolean force) throws Exception {
         MyAPKLogger logger = context.getLogger();

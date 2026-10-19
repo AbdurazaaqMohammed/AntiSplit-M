@@ -33,7 +33,7 @@ import com.reandroid.dex.smali.SmaliFormat;
 import com.reandroid.dex.smali.SmaliWriter;
 import com.reandroid.dex.smali.model.SmaliCodeSet;
 import com.reandroid.dex.smali.model.SmaliInstruction;
-import com.reandroid.dex.smali.model.SmaliLabel;
+import com.reandroid.dex.smali.model.SmaliLabelDestination;
 import com.reandroid.utils.ObjectsStore;
 import com.reandroid.utils.collection.EmptyIterator;
 import com.reandroid.utils.collection.InstanceIterator;
@@ -159,14 +159,15 @@ public class Ins extends FixedDexContainerWithTool implements Instruction, Smali
         instructionList.moveTo(this, index);
     }
 
-    public boolean is(Opcode<?> opcode) {
-        return opcode == getOpcode();
-    }
-
     @Override
     public Opcode<?> getOpcode() {
         return opcode;
     }
+    @Override
+    public Key getAsKey() {
+        return null;
+    }
+
     public InstructionLabelType getLabelType() {
         return InstructionLabelType.INSTRUCTION;
     }
@@ -378,7 +379,8 @@ public class Ins extends FixedDexContainerWithTool implements Instruction, Smali
             if (label.equalsLabel(previous)) {
                 continue;
             }
-            SmaliLabel smaliLabel = new SmaliLabel();
+            SmaliLabelDestination smaliLabel = new SmaliLabelDestination(
+                    SmaliLabelDestination.of(getOpcode()));
             smaliCodeSet.add(index, smaliLabel);
             smaliLabel.setLabelName(label.getLabelName());
             index ++;

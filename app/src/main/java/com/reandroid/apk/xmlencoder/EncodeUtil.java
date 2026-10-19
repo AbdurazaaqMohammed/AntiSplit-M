@@ -16,7 +16,6 @@
 package com.reandroid.apk.xmlencoder;
 
 import java.io.File;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -27,10 +26,10 @@ public class EncodeUtil {
             String n2=getValuesXmlCompare(f2);
             return n1.compareTo(n2);
         };
-        Collections.sort(fileList, cmp);
+        java.util.Collections.sort(fileList, cmp);
     }
     private static String getValuesXmlCompare(File file){
-        String name=file.getName().toLowerCase();
+        String name=file.getName().toLowerCase(java.util.Locale.ROOT);
         if(name.equals("public.xml")){
             return "0";
         }

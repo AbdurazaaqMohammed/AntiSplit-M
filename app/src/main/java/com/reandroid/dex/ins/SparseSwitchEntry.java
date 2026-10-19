@@ -117,11 +117,6 @@ public class SparseSwitchEntry implements SwitchEntry {
     }
 
     @Override
-    public String getLabelName() {
-        return HexUtil.toHex(":sswitch_", getTargetAddress(), 1);
-    }
-
-    @Override
     public boolean equalsLabel(Object obj) {
         if (obj == this) {
             return true;
@@ -176,7 +171,7 @@ public class SparseSwitchEntry implements SwitchEntry {
 
     public SmaliSparseSwitchEntry toSmali() {
         SmaliSparseSwitchEntry entry = new SmaliSparseSwitchEntry();
-        entry.getLabel().setLabelName(getLabelName());
+        entry.setLabelName(getLabelName());
         entry.setValue(get());
         return entry;
     }

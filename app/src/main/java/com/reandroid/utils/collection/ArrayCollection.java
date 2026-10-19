@@ -19,7 +19,7 @@ import com.reandroid.common.ArraySupplier;
 import com.reandroid.utils.NumbersUtil;
 
 import java.util.*;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 @SuppressWarnings("unchecked")
 public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Swappable {
@@ -114,7 +114,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
             if(result >= limit){
                 break;
             }
-            if(filter.evaluate(get(i))){
+            if(filter.test(get(i))){
                 result ++;
             }
         }
@@ -147,7 +147,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         }
         int result = 0;
         int i = this.size() - 1;
-        while (i >= end && predicate.evaluate(get(i))) {
+        while (i >= end && predicate.test(get(i))) {
             result ++;
             i --;
         }
@@ -237,7 +237,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         }
         Object[] elements = this.mElements;
         for(int i = start; i < size; i++){
-            if(predicate.evaluate((T)elements[i])){
+            if(predicate.test((T)elements[i])){
                 return true;
             }
         }
@@ -627,7 +627,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         }
         Object[] elements = this.mElements;
         for(int i = start; i < size; i++){
-            if(predicate.evaluate((T)elements[i])){
+            if(predicate.test((T)elements[i])){
                 return i;
             }
         }
@@ -759,7 +759,6 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         this.mElements = update;
         return true;
     }
-
     public boolean removeIf(Predicate<? super T> filter){
         Object[] elements = this.mElements;
         if(elements == null){
@@ -772,7 +771,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         int result = 0;
         for(int i = 0; i < length; i++){
             T item = (T)elements[i];
-            if(filter.evaluate(item)) {
+            if(filter.test(item)) {
                 elements[i] = null;
                 notifyRemoved(i, item);
                 result ++;
@@ -905,6 +904,9 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         }
         boolean locked = mLocked;
         this.mLocked = true;
+        if (availableCapacity() == 0) {
+            ensureCapacity(calculateGrow());
+        }
         slideRight(i, 1);
         this.mElements[i] = item;
         notifyAdd(i, item);
@@ -976,6 +978,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         }
         boolean locked = mLocked;
         this.mLocked = true;
+        ensureCapacity(length);
         slideRight(index, length);
         Object[] elements = this.mElements;
         int i = index;
@@ -1080,6 +1083,11 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         }
         return new Object[length];
     }
+    public void ensureMinCapacity(int capacity) {
+        if (capacity > availableCapacity()) {
+            ensureCapacity(calculateGrow(capacity));
+        }
+    }
     private void ensureCapacity(){
         if(availableCapacity() > 0){
             return;
@@ -1090,8 +1098,7 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         if(capacity <= 0){
             return;
         }
-        capacity = capacity - availableCapacity();
-        if(capacity <= 0){
+        if(capacity - availableCapacity() <= 0){
             return;
         }
         int size = this.size;
@@ -1108,14 +1115,16 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
     public int availableCapacity(){
         return this.mElements.length - size;
     }
-
-    private int calculateGrow(){
-        if(this.size == 0){
-            return 1;
+    private int calculateGrow() {
+        return calculateGrow(0);
+    }
+    private int calculateGrow(int min) {
+        if (this.size == 0) {
+            return NumbersUtil.max(min, 1);
         }
         int amount = this.mLastGrow;
         if(amount >= GROW_LIMIT){
-            return amount;
+            return NumbersUtil.max(min, amount);
         }
         if(amount == 0){
             amount = 1;
@@ -1129,6 +1138,9 @@ public class ArrayCollection<T> implements ArraySupplier<T>, List<T>, Set<T>, Sw
         }
         if(amount > GROW_LIMIT){
             amount = GROW_LIMIT;
+        }
+        if (min > amount) {
+            return min;
         }
         this.mLastGrow = amount;
         if(this.size < 4){

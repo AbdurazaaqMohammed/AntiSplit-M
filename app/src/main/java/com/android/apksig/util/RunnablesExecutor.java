@@ -19,8 +19,8 @@ package com.android.apksig.util;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Phaser;
 import java.util.concurrent.ThreadPoolExecutor;
 
 public interface RunnablesExecutor {
@@ -38,21 +38,27 @@ public interface RunnablesExecutor {
                             new ArrayBlockingQueue<>(QUEUE_SIZE),
                             new ThreadPoolExecutor.CallerRunsPolicy());
 
-            //not used
-            Phaser tasks = new Phaser(1);
+            CountDownLatch tasks = new CountDownLatch(PARALLELISM);
 
             for (int i = 0; i < PARALLELISM; ++i) {
                 Runnable task = () -> {
-                    Runnable r = provider.createRunnable();
-                    r.run();
-                    tasks.arriveAndDeregister();
+                    try {
+                        Runnable r = provider.createRunnable();
+                        r.run();
+                    } finally {
+                        tasks.countDown();
+                    }
                 };
-                tasks.register();
                 mExecutor.execute(task);
             }
 
-            // Waiting for the tasks to complete.
-            tasks.arriveAndAwaitAdvance();
+            try {
+                tasks.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                mExecutor.shutdownNow();
+                return;
+            }
 
             mExecutor.shutdownNow();
         }

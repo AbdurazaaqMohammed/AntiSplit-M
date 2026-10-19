@@ -22,8 +22,8 @@ import com.reandroid.dex.smali.*;
 
 public class SmaliPayloadSparseSwitch extends SmaliSwitchPayload<SmaliSparseSwitchEntry> {
 
-    public SmaliPayloadSparseSwitch(){
-        super(SmaliInstructionOperand.NO_OPERAND);
+    public SmaliPayloadSparseSwitch() {
+        super(Opcode.SPARSE_SWITCH_PAYLOAD);
     }
 
     @Override

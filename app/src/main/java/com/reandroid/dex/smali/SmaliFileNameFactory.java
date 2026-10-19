@@ -197,7 +197,7 @@ public class SmaliFileNameFactory {
     }
 
     private static boolean isWindows() {
-        return System.getProperty("os.name", "").toLowerCase().contains("windows");
+        return System.getProperty("os.name", "").toLowerCase(java.util.Locale.ROOT).contains("windows");
     }
 
     private static final Pattern reservedFileNameRegex = Pattern.compile(
@@ -245,14 +245,14 @@ public class SmaliFileNameFactory {
             File f;
             File f2;
             do {
-                f = new File(path, "evaluate." + num);
+                f = new File(path, "test." + num);
                 f2 = new File(path, "TEST." + num++);
             } while(f.exists() || f2.exists());
 
             try {
                 try {
                     FileWriter writer = new FileWriter(f);
-                    writer.write("evaluate");
+                    writer.write("test");
                     writer.flush();
                     writer.close();
                 } catch (IOException ex) {
@@ -274,7 +274,7 @@ public class SmaliFileNameFactory {
 
                     while (reader.read(buf) != -1 && buf.length() < 4);
 
-                    if (buf.length() == 4 && buf.toString().equals("evaluate")) {
+                    if (buf.length() == 4 && buf.toString().equals("test")) {
                         return false;
                     }
                     return false;
@@ -309,7 +309,7 @@ public class SmaliFileNameFactory {
         public String getNormalizedName(boolean preserveCase) {
             String elementName = logicalName;
             if (!preserveCase && parent != null && !parent.isCaseSensitive()) {
-                elementName = elementName.toLowerCase();
+                elementName = elementName.toLowerCase(java.util.Locale.ROOT);
             }
 
             if (caseSensitivity.isModifyWindowsReservedFilenames() && isReservedFileName(elementName)) {

@@ -15,6 +15,8 @@
  */
 package com.reandroid.identifiers;
 
+import com.reandroid.utils.io.FileUtil;
+
 import java.util.*;
 
 class IdentifierMap<CHILD extends Identifier> extends Identifier
@@ -29,7 +31,7 @@ class IdentifierMap<CHILD extends Identifier> extends Identifier
         super(id, name);
         this.idMap = new HashMap<>();
         this.nameMap = new HashMap<>();
-        this.mCaseInsensitive = CASE_INSENSITIVE_FS;
+        this.mCaseInsensitive = FileUtil.isCaseInsensitiveFileSystem();
     }
 
     public int getMaxId(){
@@ -41,7 +43,7 @@ class IdentifierMap<CHILD extends Identifier> extends Identifier
         for(CHILD item : getItems()){
             String name = item.getName();
             if(isCaseInsensitive()){
-                name = name.toLowerCase();
+                name = name.toLowerCase(java.util.Locale.ROOT);
             }
             if(uniques.containsKey(name)){
                 results.add(item);
@@ -50,7 +52,7 @@ class IdentifierMap<CHILD extends Identifier> extends Identifier
                 uniques.put(name, item);
             }
         }
-        Collections.sort(results, this);
+        java.util.Collections.sort(results, this);
         return results;
     }
     public boolean hasDuplicates(){
@@ -74,7 +76,7 @@ class IdentifierMap<CHILD extends Identifier> extends Identifier
     }
     public List<CHILD> list(){
         List<CHILD> childList = new ArrayList<>(getItems());
-        Collections.sort(childList, this);
+        java.util.Collections.sort(childList, this);
         return childList;
     }
     public Collection<CHILD> getItems(){

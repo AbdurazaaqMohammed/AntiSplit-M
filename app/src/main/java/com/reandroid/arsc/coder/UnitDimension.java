@@ -62,7 +62,7 @@ public class UnitDimension extends ComplexUnit{
         if(symbol == null){
             return null;
         }
-        symbol = symbol.toLowerCase();
+        symbol = symbol.toLowerCase(java.util.Locale.ROOT);
         for (UnitDimension unit : VALUES) {
             if (symbol.equals(unit.getSymbol())) {
                 return unit;

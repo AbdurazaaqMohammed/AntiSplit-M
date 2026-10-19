@@ -125,7 +125,7 @@ public class ApkSignatureBlock extends LengthPrefixedList<SignatureInfo>
                 if(!file.isFile()){
                     return false;
                 }
-                String name = file.getName().toLowerCase();
+                String name = file.getName().toLowerCase(java.util.Locale.ROOT);
                 return name.endsWith(SignatureId.FILE_EXT_RAW);
             }
         };

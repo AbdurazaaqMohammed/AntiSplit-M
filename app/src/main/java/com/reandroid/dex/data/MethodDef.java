@@ -25,7 +25,7 @@ import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.id.MethodId;
 import com.reandroid.dex.id.ProtoId;
 import com.reandroid.dex.ins.Ins;
-import com.reandroid.dex.ins.TryBlock;
+import com.reandroid.dex.ins.InsTryBlock;
 import com.reandroid.dex.key.AnnotationGroupKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.MethodKey;
@@ -269,14 +269,14 @@ public class MethodDef extends Def<MethodId> implements MethodProgram {
         }
         return null;
     }
-    public TryBlock getTryBlock() {
+    public InsTryBlock getTryBlock() {
         CodeItem codeItem = getCodeItem();
         if (codeItem != null) {
             return codeItem.getTryBlock();
         }
         return null;
     }
-    public TryBlock getOrCreateTryBlock() {
+    public InsTryBlock getOrCreateTryBlock() {
         return getOrCreateCodeItem().getOrCreateTryBlock();
     }
     public CodeItem getOrCreateCodeItem() {

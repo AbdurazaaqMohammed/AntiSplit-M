@@ -16,10 +16,11 @@
 package com.reandroid.dex.smali;
 
 import com.reandroid.common.Origin;
+import com.reandroid.utils.exception.ExceptionMessage;
 
 import java.io.IOException;
 
-public class SmaliParseException extends IOException {
+public class SmaliParseException extends IOException implements ExceptionMessage {
 
     private final SmaliReader reader;
 

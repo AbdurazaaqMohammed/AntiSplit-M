@@ -2,7 +2,6 @@ package com.starry;
 
 import static com.abdurazaaqmohammed.utils.FileUtils.doesNotHaveStoragePerm;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
@@ -88,13 +87,22 @@ public class FileUtils {
             }
         }
 
-        fullPath = System.getenv("SECONDARY_STORAGE") + relativePath;
-        if (fileExists(fullPath)) {
-            return fullPath;
+        String secondaryStorage = System.getenv("SECONDARY_STORAGE");
+        if (secondaryStorage != null) {
+            fullPath = secondaryStorage + relativePath;
+            if (fileExists(fullPath)) {
+                return fullPath;
+            }
         }
 
-        fullPath = System.getenv("EXTERNAL_STORAGE") + relativePath;
-        return fileExists(fullPath) ? fullPath : null;
+        String externalStorage = System.getenv("EXTERNAL_STORAGE");
+        if (externalStorage != null) {
+            fullPath = externalStorage + relativePath;
+            if (fileExists(fullPath)) {
+                return fullPath;
+            }
+        }
+        return null;
     }
 
     private static boolean isExternalStorageDocument(Uri uri) {
@@ -129,7 +137,6 @@ public class FileUtils {
         }
     }
 
-    @SuppressLint("NewApi")
     public static String getPath(Uri uri, MainActivity context) throws IOException {
         String selection;
         String[] selectionArgs;
@@ -150,7 +157,7 @@ public class FileUtils {
                 final String[] split = docId.split(":");
                 selection = "_id=?";
                 selectionArgs = new String[] { split[1] };
-                String relativePath = getDataColumn(context, MediaStore.Downloads.EXTERNAL_CONTENT_URI, selection, selectionArgs);
+                String relativePath = getDataColumn(context, MediaStore.Files.getContentUri("external"), selection, selectionArgs);
                 if(TextUtils.isEmpty(relativePath)) try (Cursor cursor = context.getContentResolver().query(uri, new String[]{MediaStore.MediaColumns.DISPLAY_NAME}, null, null, null)) {
                     if (cursor != null && cursor.moveToFirst()) {
                         String fileName = cursor.getString(0);
@@ -197,7 +204,7 @@ public class FileUtils {
             } else if ("audio".equals(type)) {
                 contentUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
             } else if ("document".equals(type)) {
-                contentUri = MediaStore.Files.getContentUri(MediaStore.getVolumeName(uri));
+                contentUri = MediaStore.Files.getContentUri("external");
             }
 
             selection = "_id=?";
@@ -229,9 +236,13 @@ public class FileUtils {
     public static File copyFileToInternalStorage(Uri uri, MainActivity context) throws IOException {
         File output = new File(context.getCacheDir(), context.getOriginalFileName(uri));
         if(output.exists() && output.length() > 999) return output;
-        try (OutputStream outputStream = com.abdurazaaqmohammed.utils.FileUtils.getOutputStream(output); InputStream cursor = context.getContentResolver().openInputStream(uri)) {
+        InputStream inputStream = context.getContentResolver().openInputStream(uri);
+        if (inputStream == null)
+            throw new IOException("Unable to open " + uri);
+        try (InputStream cursor = inputStream;
+             OutputStream outputStream = com.abdurazaaqmohammed.utils.FileUtils.getOutputStream(output)) {
             int read;
-            byte[] buffers = new byte[1024];
+            byte[] buffers = new byte[8192];
             while ((read = cursor.read(buffers)) != -1) {
                 outputStream.write(buffers, 0, read);
             }

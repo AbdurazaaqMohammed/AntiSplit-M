@@ -24,7 +24,6 @@ import com.reandroid.utils.collection.CollectionUtil;
 import com.reandroid.utils.collection.ComputeIterator;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -37,7 +36,7 @@ public interface SmaliComment {
         List<TypeKey> typeKeyList = CollectionUtil.toList(
                 ComputeIterator.of(iterator, DexDeclaration::getDefining));
 
-        Collections.sort(typeKeyList, CompareUtil.getComparableComparator());
+        java.util.Collections.sort(typeKeyList, CompareUtil.getComparableComparator());
 
         int size = typeKeyList.size();
         int remaining = 0;

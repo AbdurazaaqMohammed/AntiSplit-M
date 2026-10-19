@@ -23,6 +23,7 @@ import com.reandroid.arsc.value.ValueType;
 import java.io.IOException;
 
 public class ReferenceString {
+
     public final String prefix;
     public final String packageName;
     public final String type;
@@ -34,30 +35,37 @@ public class ReferenceString {
         this.type = type;
         this.name = name;
     }
-    public EncodeResult encode(TableBlock tableBlock){
+    public EncodeResult encode(TableBlock tableBlock) {
         return encode(tableBlock, null);
     }
-    public EncodeResult encode(TableBlock tableBlock, EncodeResult notFound){
+    public EncodeResult encode(TableBlock tableBlock, EncodeResult notFound) {
         ResourceEntry resourceEntry = tableBlock.getResource(packageName, type, name);
-        if(resourceEntry != null){
+        if (resourceEntry != null) {
             return new EncodeResult(getValueType(), resourceEntry.getResourceId());
         }
         return notFound;
     }
-    public EncodeResult encode(PackageBlock packageBlock){
+    public EncodeResult encode(PackageBlock packageBlock) {
         return encode(packageBlock, null);
     }
-    public EncodeResult encode(PackageBlock packageBlock, EncodeResult notFound){
+    public EncodeResult encode(PackageBlock packageBlock, EncodeResult notFound) {
         ResourceEntry resourceEntry = packageBlock.getTableBlock()
                 .getResource(packageBlock, packageName, type, name);
-        if(resourceEntry != null){
+        if (resourceEntry != null) {
             return new EncodeResult(getValueType(), resourceEntry.getResourceId());
         }
         return notFound;
     }
-    public ValueType getValueType(){
-        if("?".equals(prefix)){
+    public ValueType getValueType() {
+        String prefix = this.prefix;
+        if ("?".equals(prefix)) {
             return ValueType.ATTRIBUTE;
+        }
+        if ("??".equals(prefix)) {
+            return ValueType.DYNAMIC_ATTRIBUTE;
+        }
+        if ("@@".equals(prefix)) {
+            return ValueType.DYNAMIC_REFERENCE;
         }
         return ValueType.REFERENCE;
     }
@@ -86,16 +94,16 @@ public class ReferenceString {
 
     public static EncodeResult encodeReference(PackageBlock packageBlock, String text, EncodeResult errorResult) throws IOException {
         EncodeResult encodeResult = ValueCoder.encodeUnknownResourceId(text);
-        if(encodeResult != null){
+        if (encodeResult != null) {
             return encodeResult;
         }
         ReferenceString referenceString = ReferenceString.parseReference(text);
-        if(referenceString == null){
+        if (referenceString == null) {
             return null;
         }
         encodeResult = referenceString.encode(packageBlock.getTableBlock());
-        if(encodeResult == null){
-            if(errorResult != null){
+        if (encodeResult == null) {
+            if (errorResult != null) {
                 return errorResult;
             }
             throw new IOException("Unknown reference: " + text);
@@ -103,55 +111,57 @@ public class ReferenceString {
         return encodeResult;
     }
 
-    public static ReferenceString parseReference(String ref){
-        if(ref == null || ref.length() < 2 || ref.indexOf('/') < 0 || ref.indexOf(' ') > 0){
+    public static ReferenceString parseReference(String ref) {
+        if (ref == null || ref.length() < 2 || ref.indexOf('/') < 0 || ref.indexOf(' ') > 0) {
             return null;
         }
-        char first = ref.charAt(0);
-        if(first != '@' && first != '?'){
+        int i = 0;
+        char first = ref.charAt(i);
+        if (first != '@' && first != '?') {
             return null;
         }
+        i = 1;
         String prefix;
-        int i = 1;
-        if(ref.charAt(1) == '+'){
+        char second = ref.charAt(i);
+        if (second == '+' || second == '@' || second == '?') {
             i = 2;
         }
         prefix = ref.substring(0, i);
         ref = ref.substring(i);
         String packageName = null;
         i = ref.indexOf(':');
-        if(i > 0){
+        if (i > 0) {
             packageName = ref.substring(0, i);
             i++;
             ref = ref.substring(i);
         }
         i = ref.indexOf('/');
-        if(i < 0){
+        if (i < 0) {
             return null;
         }
         String type = ref.substring(0, i);
         i++;
         String name = ref.substring(i);
-        if(!isValidResourceName(name)){
+        if (!isValidResourceName(name)) {
             return null;
         }
         return new ReferenceString(prefix, packageName, type, name);
     }
-    private static boolean isValidResourceName(String text){
+    private static boolean isValidResourceName(String text) {
         char[] chars = text.toCharArray();
         int length = chars.length;
-        if(length == 0){
+        if (length == 0) {
             return false;
         }
-        for(int i = 0; i < length; i++){
-            if(!isValidResourceName(chars[i])){
+        for (int i = 0; i < length; i++) {
+            if (!isValidResourceName(chars[i])) {
                 return false;
             }
         }
         return true;
     }
-    private static boolean isValidResourceName(char ch){
-        switch (ch){
+    private static boolean isValidResourceName(char ch) {
+        switch (ch) {
             case ':':
             case '/':
             case '@':

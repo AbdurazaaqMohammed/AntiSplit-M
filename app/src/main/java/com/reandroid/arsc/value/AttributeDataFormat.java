@@ -95,7 +95,7 @@ public enum AttributeDataFormat {
         return false;
     }
     public String getName(){
-        return name().toLowerCase();
+        return name().toLowerCase(java.util.Locale.ROOT);
     }
     @Override
     public String toString(){

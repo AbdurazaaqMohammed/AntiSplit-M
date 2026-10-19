@@ -20,7 +20,7 @@ import com.reandroid.dex.key.AnnotationSetKey;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
 
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public interface AnnotatedProgram {
 

@@ -91,6 +91,10 @@ public class InstructionLabelType implements Comparable<InstructionLabelType> {
     public boolean isHandler() {
         return CATCH_HANDLER == this || CATCH_ALL_HANDLER == this;
     }
+    public boolean isLocation() {
+        String prefix = prefix();
+        return prefix.length() != 0 && prefix.charAt(0) == ':';
+    }
 
     public String buildLabelName(int address) {
         return buildLabelName(address, true);

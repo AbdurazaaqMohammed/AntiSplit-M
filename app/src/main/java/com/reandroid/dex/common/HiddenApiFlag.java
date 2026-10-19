@@ -26,7 +26,7 @@ import com.reandroid.utils.collection.SingleIterator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class HiddenApiFlag extends Modifier implements SmaliFormat {
 
@@ -60,7 +60,7 @@ public class HiddenApiFlag extends Modifier implements SmaliFormat {
         GREYLIST_MAX_R = new HiddenApiFlag(6, "greylist-max-r");
 
         CORE_PLATFORM_API = new HiddenApiFlag(8, "core-platform-api", true);
-        TEST_API = new HiddenApiFlag(16, "evaluate-api", true);
+        TEST_API = new HiddenApiFlag(16, "test-api", true);
 
         NO_RESTRICTION = ObjectsUtil.of(0x7);
 

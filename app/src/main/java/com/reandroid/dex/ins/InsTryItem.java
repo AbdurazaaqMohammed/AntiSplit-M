@@ -26,30 +26,32 @@ import com.reandroid.dex.data.InstructionList;
 import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.key.TypeKey;
-import com.reandroid.dex.program.InstructionLabel;
-import com.reandroid.dex.smali.model.SmaliCodeCatch;
-import com.reandroid.dex.smali.model.SmaliCodeCatchAll;
-import com.reandroid.dex.smali.model.SmaliCodeTryItem;
-import com.reandroid.dex.smali.model.SmaliSet;
+import com.reandroid.dex.program.ExceptionHandler;
+import com.reandroid.dex.program.ProgramType;
+import com.reandroid.dex.program.TryItem;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.ObjectsUtil;
-import com.reandroid.utils.collection.*;
+import com.reandroid.utils.collection.CombiningIterator;
+import com.reandroid.utils.collection.ComputeIterator;
+import com.reandroid.utils.collection.FilterIterator;
+import com.reandroid.utils.collection.SingleIterator;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Iterator;
 
-public class TryItem extends FixedDexContainerWithTool implements
-        Iterable<InstructionLabel>, IdUsageIterator {
+public class InsTryItem extends FixedDexContainerWithTool implements TryItem,
+        Comparable<InsTryItem>, IdUsageIterator {
 
     private final HandlerOffsetArray handlerOffsetArray;
 
     final Sle128Item handlersCount;
-    private final BlockList<CatchTypedHandler> catchTypedHandlerList;
-    private CatchAllHandler catchAllHandler;
+    private final BlockList<InsCatchTypedHandler> catchTypedHandlerList;
+    private InsCatchAllHandler catchAllHandler;
 
     private HandlerOffset mHandlerOffset;
 
-    public TryItem(HandlerOffsetArray handlerOffsetArray) {
+    public InsTryItem(HandlerOffsetArray handlerOffsetArray) {
         super(3);
 
         this.handlerOffsetArray = handlerOffsetArray;
@@ -59,7 +61,7 @@ public class TryItem extends FixedDexContainerWithTool implements
         addChild(0, handlersCount);
         addChild(1, catchTypedHandlerList);
     }
-    private TryItem() {
+    private InsTryItem() {
         super(0);
         this.handlerOffsetArray = null;
 
@@ -67,40 +69,40 @@ public class TryItem extends FixedDexContainerWithTool implements
         this.catchTypedHandlerList = null;
     }
 
-    public boolean isCompact(){
+    public boolean isCompact() {
         return false;
     }
-    InstructionList getInstructionList(){
+    InstructionList getInstructionList() {
         return getTryBlock().getInstructionList();
     }
-    TryBlock getTryBlock(){
-        return getParent(TryBlock.class);
+    InsTryBlock getTryBlock() {
+        return getParent(InsTryBlock.class);
     }
 
-    TryItem newCompact(){
+    InsTryItem newCompact() {
         return new Compact(this);
     }
 
-    public boolean compactWith(TryItem similar) {
+    public boolean compactWith(InsTryItem similar) {
         if (!isSimilarTo(similar)) {
             return false;
         }
         int index = similar.getIndex();
-        TryBlock tryBlock = this.getTryBlock();
-        TryItem replace = tryBlock.createNextCopy(this);
+        InsTryBlock tryBlock = this.getTryBlock();
+        InsTryItem replace = tryBlock.createNextCopy(this);
         replace.merge(similar);
         tryBlock.remove(similar);
         tryBlock.moveTo(replace, index);
         return true;
     }
-    private boolean isSimilarTo(TryItem tryItem) {
+    private boolean isSimilarTo(InsTryItem tryItem) {
         if (tryItem == this || this.isCompact() || tryItem.isCompact()) {
             return false;
         }
         if (getParent() != tryItem.getParent()) {
             return false;
         }
-        if (!ExceptionHandler.areSimilar(
+        if (!InsExceptionHandler.areSimilar(
                 this.getCatchAllHandler(),
                 tryItem.getCatchAllHandler())) {
             return false;
@@ -110,7 +112,7 @@ public class TryItem extends FixedDexContainerWithTool implements
             return false;
         }
         for (int i = 0; i < count; i++) {
-            if (!ExceptionHandler.areSimilar(this.getCatchTypedHandler(i),
+            if (!InsExceptionHandler.areSimilar(this.getCatchTypedHandler(i),
                     tryItem.getCatchTypedHandler(i))) {
                 return false;
             }
@@ -127,19 +129,19 @@ public class TryItem extends FixedDexContainerWithTool implements
         int index = getIndex() + 1;
         int count = getCatchTypedHandlersCount();
         for (int i = 1; i < count; i++) {
-            CatchTypedHandler handler = getCatchTypedHandler(1);
+            InsCatchTypedHandler handler = getCatchTypedHandler(1);
             index = transferHandlerToNewTryItem(handler, index);
         }
         transferHandlerToNewTryItem(getCatchAllHandler(), index);
         refresh();
         return true;
     }
-    private int transferHandlerToNewTryItem(ExceptionHandler handler, int index) {
+    private int transferHandlerToNewTryItem(InsExceptionHandler handler, int index) {
         if (handler == null) {
             return index;
         }
-        TryBlock tryBlock = getTryBlock();
-        TryItem destination = tryBlock.createNext();
+        InsTryBlock tryBlock = getTryBlock();
+        InsTryItem destination = tryBlock.createNext();
         destination.mergeOffset(this);
         destination.mergeHandler(handler);
         remove(handler);
@@ -147,17 +149,17 @@ public class TryItem extends FixedDexContainerWithTool implements
         destination.refresh();
         return index + 1;
     }
-    public boolean combineWith(TryItem tryItem) {
+    public boolean combineWith(InsTryItem tryItem) {
         if (!equalsOffsetAndCodeUnit(tryItem)) {
             return false;
         }
-        Iterator<ExceptionHandler> iterator = tryItem.getExceptionHandlers();
+        Iterator<InsExceptionHandler> iterator = tryItem.handlers();
         while (iterator.hasNext()) {
             mergeHandler(iterator.next());
         }
         return true;
     }
-    private boolean equalsOffsetAndCodeUnit(TryItem tryItem) {
+    private boolean equalsOffsetAndCodeUnit(InsTryItem tryItem) {
         if (tryItem == this || this.isCompact() || tryItem.isCompact()) {
             return false;
         }
@@ -171,49 +173,47 @@ public class TryItem extends FixedDexContainerWithTool implements
     }
     HandlerOffset getHandlerOffset() {
         HandlerOffset handlerOffset = this.mHandlerOffset;
-        if(handlerOffset == null){
+        if (handlerOffset == null) {
             handlerOffset = getHandlerOffsetArray().getOrCreate(getIndex());
             this.mHandlerOffset = handlerOffset;
             handlerOffset.setTryItem(this);
         }
         return handlerOffset;
     }
-    HandlerOffsetArray getHandlerOffsetArray(){
+    HandlerOffsetArray getHandlerOffsetArray() {
         return handlerOffsetArray;
     }
-    BlockList<CatchTypedHandler> getCatchTypedHandlerBlockList(){
+    BlockList<InsCatchTypedHandler> getCatchTypedHandlerBlockList() {
         return catchTypedHandlerList;
     }
-    Iterator<CatchTypedHandler> getCatchTypedHandlers(){
+    Iterator<InsCatchTypedHandler> getCatchTypedHandlers() {
         return catchTypedHandlerList.iterator();
     }
-    TryItem getTryItem(){
+    InsTryItem getTryItem() {
         return this;
     }
-    void updateCount(){
+    void updateCount() {
         Sle128Item handlersCount = this.handlersCount;
-        if(handlersCount == null){
+        if (handlersCount == null) {
             return;
         }
         int count = catchTypedHandlerList.size();
-        if(hasCatchAllHandler()){
+        if (hasCatchAllHandler()) {
             count = -count;
         }
         handlersCount.set(count);
     }
 
-    @Override
-    public Iterator<InstructionLabel> iterator(){
-        return new ExpandIterator<>(getExceptionHandlers());
-    }
     public boolean isEmpty() {
         return getCatchAllHandler() == null &&
                 getCatchTypedHandlersCount() == 0;
     }
+    @Override
     public int getCatchTypedHandlersCount() {
         return getCatchTypedHandlerBlockList().size();
     }
-    public CatchTypedHandler getCatchTypedHandler(int i) {
+    @Override
+    public InsCatchTypedHandler getCatchTypedHandler(int i) {
         return getCatchTypedHandlerBlockList().get(i);
     }
     public boolean traps(TypeKey typeKey) {
@@ -225,80 +225,73 @@ public class TryItem extends FixedDexContainerWithTool implements
     public boolean hasExceptionHandlersForAddress(int address) {
         return getExceptionHandlersForAddress(address).hasNext();
     }
-    public Iterator<ExceptionHandler> getExceptionHandlersForAddress(int address) {
-        return FilterIterator.of(getExceptionHandlers(),
+    public Iterator<InsExceptionHandler> getExceptionHandlersForAddress(int address) {
+        return FilterIterator.of(handlers(),
                 handler -> handler.isAddressBounded(address));
     }
-    public Iterator<ExceptionHandler> getExceptionHandlersForCatchAddress(int address) {
-        return FilterIterator.of(getExceptionHandlers(),
+    public Iterator<InsExceptionHandler> getExceptionHandlersForCatchAddress(int address) {
+        return FilterIterator.of(handlers(),
                 handler -> handler.getCatchAddress() == address);
     }
-    public Iterator<ExceptionHandler> getExceptionHandlers(){
-        Iterator<ExceptionHandler> iterator1 = EmptyIterator.of();
-        ExceptionHandler handler = getCatchAllHandler();
-        if(handler != null){
-            iterator1 = SingleIterator.of(handler);
-        }
-        return new CombiningIterator<>(getCatchTypedHandlers(), iterator1);
+    @Override
+    public Iterator<InsExceptionHandler> handlers() {
+        return CombiningIterator.two(getCatchTypedHandlers(),
+                SingleIterator.of(getCatchAllHandler()));
     }
-    public ExceptionHandler getExceptionHandler(TypeKey typeKey) {
-        Iterator<ExceptionHandler> iterator = getExceptionHandlers();
+    public InsExceptionHandler getExceptionHandler(TypeKey typeKey) {
+        Iterator<InsExceptionHandler> iterator = handlers();
         while (iterator.hasNext()) {
-            ExceptionHandler handler = iterator.next();
-            if(handler.traps(typeKey)){
+            InsExceptionHandler handler = iterator.next();
+            if (handler.traps(typeKey)) {
                 return handler;
             }
         }
         return null;
     }
-    public ExceptionHandler getExceptionHandler(TypeKey typeKey, int address) {
-        Iterator<ExceptionHandler> iterator = getExceptionHandlers();
+    public InsExceptionHandler getExceptionHandler(TypeKey typeKey, int address) {
+        Iterator<InsExceptionHandler> iterator = handlers();
         while (iterator.hasNext()) {
-            ExceptionHandler handler = iterator.next();
-            if(handler.traps(typeKey) && handler.isAddressBounded(address)){
+            InsExceptionHandler handler = iterator.next();
+            if (handler.traps(typeKey) && handler.isAddressBounded(address)) {
                 return handler;
             }
         }
         return null;
     }
-    public int getStartAddress(){
+    public int getStartAddress() {
         return getHandlerOffset().getStartAddress();
     }
-    public void setStartAddress(int address){
+    public void setStartAddress(int address) {
         getHandlerOffset().setStartAddress(address);
     }
-    public int getCatchCodeUnit(){
+    public int getCatchCodeUnit() {
         return getHandlerOffset().getCatchCodeUnit();
     }
-    public void setCatchCodeUnit(int codeUnit){
+    public void setCatchCodeUnit(int codeUnit) {
         getHandlerOffset().setCatchCodeUnit(codeUnit);
     }
 
-    public boolean hasMultipleHandlers() {
-        int typed = getCatchTypedHandlersCount();
-        if (typed == 1) {
-            return getCatchAllHandler() != null;
-        }
-        return typed != 0;
-    }
-    public boolean hasCatchAllHandler(){
-        return getCatchAllHandler() != null;
-    }
-    public CatchAllHandler getCatchAllHandler(){
+    @Override
+    public InsCatchAllHandler getCatchAllHandler() {
         return catchAllHandler;
     }
-    public CatchAllHandler getOrCreateCatchAll(){
-        CatchAllHandler handler = getCatchAllHandler();
-        if(handler == null){
+    @Override
+    public ProgramType programType() {
+        return ProgramType.DEX;
+    }
+
+    public InsCatchAllHandler getOrCreateCatchAll() {
+        InsCatchAllHandler handler = getCatchAllHandler();
+        if (handler == null) {
             initCatchAllHandler();
             handler = getCatchAllHandler();
         }
         return handler;
     }
-    private CatchAllHandler initCatchAllHandler(){
-        CatchAllHandler catchAllHandler = this.getCatchAllHandler();
-        if(catchAllHandler == null){
-            catchAllHandler = new CatchAllHandler();
+    private InsCatchAllHandler initCatchAllHandler() {
+        InsCatchAllHandler catchAllHandler = this.getCatchAllHandler();
+        if (catchAllHandler == null) {
+            catchAllHandler = new InsCatchAllHandler();
             addChild(2, catchAllHandler);
             this.catchAllHandler = catchAllHandler;
         }
@@ -321,43 +314,43 @@ public class TryItem extends FixedDexContainerWithTool implements
         this.handlersCount.readBytes(reader);
         int count = this.handlersCount.get();
         boolean hasCatchAll = false;
-        if(count <= 0){
+        if (count <= 0) {
             count = -count;
             hasCatchAll = true;
         }
-        BlockList<CatchTypedHandler> handlerList = this.getCatchTypedHandlerBlockList();
+        BlockList<InsCatchTypedHandler> handlerList = this.getCatchTypedHandlerBlockList();
         handlerList.ensureCapacity(count);
-        for(int i = 0; i < count; i++){
-            CatchTypedHandler handler = new CatchTypedHandler();
+        for (int i = 0; i < count; i++) {
+            InsCatchTypedHandler handler = new InsCatchTypedHandler();
             handlerList.add(handler);
             handler.readBytes(reader);
         }
-        if(hasCatchAll){
+        if (hasCatchAll) {
             initCatchAllHandler().readBytes(reader);
         }
-        if(maxPosition > reader.getPosition()){
+        if (maxPosition > reader.getPosition()) {
             // Should never reach here
             reader.seek(maxPosition);
         }
     }
     @Override
     public void onCountUpTo(BlockCounter counter) {
-        if(counter.FOUND){
+        if (counter.FOUND) {
             return;
         }
         Block end = counter.END;
-        if(end instanceof Compact){
-            TryItem tryItem = ((Compact) end).getTryItem();
-            if(tryItem == this){
+        if (end instanceof Compact) {
+            InsTryItem tryItem = ((Compact) end).getTryItem();
+            if (tryItem == this) {
                 counter.FOUND = true;
                 return;
             }
         }
         super.onCountUpTo(counter);
     }
-    public void removeSelf(){
-        TryBlock tryBlock = getTryBlock();
-        if(tryBlock != null){
+    public void removeSelf() {
+        InsTryBlock tryBlock = getTryBlock();
+        if (tryBlock != null) {
             tryBlock.remove(this);
         }
     }
@@ -365,79 +358,79 @@ public class TryItem extends FixedDexContainerWithTool implements
         if (getParent() == null) {
             return true;
         }
-        TryBlock tryBlock = getTryBlock();
+        InsTryBlock tryBlock = getTryBlock();
         return tryBlock == null || tryBlock.getParent() == null;
     }
-    public void remove(ExceptionHandler handler){
-        if(handler == null){
+    public void remove(InsExceptionHandler handler) {
+        if (handler == null) {
             return;
         }
-        if(handler == this.catchAllHandler){
+        if (handler == this.catchAllHandler) {
             handler.onRemove();
             this.catchAllHandler = null;
-        }else if(handler instanceof CatchTypedHandler && this.catchTypedHandlerList != null){
-            if(catchTypedHandlerList.contains(handler)){
-                catchTypedHandlerList.remove((CatchTypedHandler) handler);
+        }else if (handler instanceof InsCatchTypedHandler && this.catchTypedHandlerList != null) {
+            if (catchTypedHandlerList.contains(handler)) {
+                catchTypedHandlerList.remove((InsCatchTypedHandler) handler);
                 handler.onRemove();
             }
         }
     }
-    public void onRemove(){
+    public void onRemove() {
         HandlerOffset handlerOffset = this.mHandlerOffset;
-        BlockList<CatchTypedHandler> list = this.catchTypedHandlerList;
-        if(list != null){
+        BlockList<InsCatchTypedHandler> list = this.catchTypedHandlerList;
+        if (list != null) {
             int size = list.size();
-            for(int i = 0; i < size; i++){
-                CatchTypedHandler handler = list.get(i);
+            for (int i = 0; i < size; i++) {
+                InsCatchTypedHandler handler = list.get(i);
                 handler.onRemove();
                 handler.setParent(null);
             }
             list.destroy();
         }
         remove(this.catchAllHandler);
-        if(handlerOffset != null){
+        if (handlerOffset != null) {
             this.mHandlerOffset = null;
             handlerOffset.removeSelf();
         }
         setParent(null);
     }
-    public void merge(TryItem tryItem){
+    public void merge(InsTryItem tryItem) {
         mergeOffset(tryItem);
         mergeHandlers(tryItem);
     }
-    public CatchTypedHandler createNext() {
-        BlockList<CatchTypedHandler> handlerList = this.getCatchTypedHandlerBlockList();
-        CatchTypedHandler handler = new CatchTypedHandler();
+    public InsCatchTypedHandler createNext() {
+        BlockList<InsCatchTypedHandler> handlerList = this.getCatchTypedHandlerBlockList();
+        InsCatchTypedHandler handler = new InsCatchTypedHandler();
         handlerList.add(handler);
         updateCount();
         return handler;
     }
-    void mergeHandlers(TryItem tryItem){
-        BlockList<CatchTypedHandler> comingList = tryItem.getCatchTypedHandlerBlockList();
+    void mergeHandlers(InsTryItem tryItem) {
+        BlockList<InsCatchTypedHandler> comingList = tryItem.getCatchTypedHandlerBlockList();
         int size = comingList.size();
-        BlockList<CatchTypedHandler> handlerList = this.getCatchTypedHandlerBlockList();
+        BlockList<InsCatchTypedHandler> handlerList = this.getCatchTypedHandlerBlockList();
         handlerList.ensureCapacity(size);
-        for (int i = 0; i < size; i++){
-            CatchTypedHandler coming = comingList.get(i);
-            CatchTypedHandler handler = new CatchTypedHandler();
+        for (int i = 0; i < size; i++) {
+            InsCatchTypedHandler coming = comingList.get(i);
+            InsCatchTypedHandler handler = new InsCatchTypedHandler();
             handlerList.add(handler);
             handler.merge(coming);
         }
-        if(tryItem.hasCatchAllHandler()){
+        if (tryItem.hasCatchAllHandler()) {
             initCatchAllHandler().merge(tryItem.getCatchAllHandler());
         }
         updateCount();
     }
-    void mergeHandler(ExceptionHandler handler) {
-        ExceptionHandler newHandler;
-        if (handler instanceof CatchTypedHandler) {
+    void mergeHandler(InsExceptionHandler handler) {
+        InsExceptionHandler newHandler;
+        if (handler instanceof InsCatchTypedHandler) {
             newHandler = createNext();
         } else {
             newHandler = getOrCreateCatchAll();
         }
         newHandler.merge(handler);
     }
-    void mergeOffset(TryItem tryItem){
+    void mergeOffset(InsTryItem tryItem) {
 
         HandlerOffset coming = tryItem.getHandlerOffset();
         HandlerOffset handlerOffset = getHandlerOffset();
@@ -445,29 +438,25 @@ public class TryItem extends FixedDexContainerWithTool implements
         handlerOffset.setCatchCodeUnit(coming.getCatchCodeUnit());
         handlerOffset.setStartAddress(coming.getStartAddress());
     }
-    public void fromSmali(SmaliCodeTryItem smaliCodeTryItem){
-        setStartAddress(smaliCodeTryItem.getStartAddress());
-        SmaliSet<SmaliCodeCatch> smaliCodeCatchSet = smaliCodeTryItem.getCatchSet();
-
-        BlockList<CatchTypedHandler> handlerList = this.getCatchTypedHandlerBlockList();
-        int size = smaliCodeCatchSet.size();
-        for(int i = 0; i < size; i++){
-            SmaliCodeCatch smaliCodeCatch = smaliCodeCatchSet.get(i);
-            CatchTypedHandler handler = new CatchTypedHandler();
+    public void fromProgram(TryItem tryItem) {
+        setStartAddress(tryItem.getStartAddress());
+        BlockList<InsCatchTypedHandler> handlerList = this.getCatchTypedHandlerBlockList();
+        int count = tryItem.getCatchTypedHandlersCount();
+        for (int i = 0; i < count; i++) {
+            InsCatchTypedHandler handler = new InsCatchTypedHandler();
             handlerList.add(handler);
-            handler.fromSmali(smaliCodeCatch);
+            handler.fromProgram(tryItem.getCatchTypedHandler(i));
         }
-        SmaliCodeCatchAll smaliCodeCatchAll = smaliCodeTryItem.getCatchAll();
-        if(smaliCodeCatchAll != null){
-            CatchAllHandler catchAllHandler = initCatchAllHandler();
-            catchAllHandler.fromSmali(smaliCodeCatchAll);
+        ExceptionHandler handler = tryItem.getCatchAllHandler();
+        if (handler != null) {
+            initCatchAllHandler().fromProgram(handler);
         }
         updateCount();
     }
 
     @Override
     public boolean uses(Key key) {
-        Iterator<CatchTypedHandler> iterator = getCatchTypedHandlers();
+        Iterator<InsCatchTypedHandler> iterator = getCatchTypedHandlers();
         while (iterator.hasNext()) {
             TypeKey handler = iterator.next().getKey();
             if (handler != null && handler.uses(key)) {
@@ -480,7 +469,28 @@ public class TryItem extends FixedDexContainerWithTool implements
     @Override
     public Iterator<IdItem> usedIds() {
         return ComputeIterator.of(getCatchTypedHandlers(),
-                CatchTypedHandler::getTypeId);
+                InsCatchTypedHandler::getTypeId);
+    }
+
+    @Override
+    public int compareTo(InsTryItem tryItem) {
+        if (tryItem == this) {
+            return 0;
+        }
+        int i = CompareUtil.compare(getStartAddress(), tryItem.getStartAddress());
+        if (i != 0) {
+            return i;
+        }
+        boolean compact = this.isCompact();
+        boolean compactOther = tryItem.isCompact();
+        i = CompareUtil.compare(compact, compactOther);
+        if (i != 0) {
+            return i;
+        }
+        if (compact) {
+            return this.getTryItem().compareTo(tryItem.getTryItem());
+        }
+        return 0;
     }
 
     @Override
@@ -491,7 +501,7 @@ public class TryItem extends FixedDexContainerWithTool implements
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        TryItem tryItem = (TryItem) obj;
+        InsTryItem tryItem = (InsTryItem) obj;
         return ObjectsUtil.equals(getCatchTypedHandlerBlockList(),
                 tryItem.getCatchTypedHandlerBlockList()) &&
                 ObjectsUtil.equals(getCatchAllHandler(), tryItem.getCatchAllHandler());
@@ -506,49 +516,49 @@ public class TryItem extends FixedDexContainerWithTool implements
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
-        Iterator<ExceptionHandler> handlers = getExceptionHandlers();
+        Iterator<InsExceptionHandler> handlers = handlers();
         while (handlers.hasNext()) {
-            if(builder.length() != 0){
+            if (builder.length() != 0) {
                 builder.append('\n');
             }
             builder.append(handlers.next());
         }
         return builder.toString();
     }
-    static class Compact extends TryItem {
+    static class Compact extends InsTryItem {
 
-        private final TryItem tryItem;
+        private final InsTryItem tryItem;
 
-        public Compact(TryItem tryItem) {
+        public Compact(InsTryItem tryItem) {
             super();
             this.tryItem = tryItem;
         }
 
         @Override
-        public boolean isCompact(){
+        public boolean isCompact() {
             return true;
         }
         @Override
-        TryBlock getTryBlock() {
+        InsTryBlock getTryBlock() {
             return tryItem.getTryBlock();
         }
 
         @Override
-        TryItem newCompact() {
+        InsTryItem newCompact() {
             return tryItem.newCompact();
         }
 
         @Override
-        public boolean compactWith(TryItem similar) {
+        public boolean compactWith(InsTryItem similar) {
             return false;
         }
         @Override
         public boolean flatten() {
-            TryBlock tryBlock = getTryBlock();
+            InsTryBlock tryBlock = getTryBlock();
             if (tryBlock != null) {
-                TryItem self = this;
+                InsTryItem self = this;
                 int index = self.getIndex();
-                TryItem replace = tryBlock.createNext();
+                InsTryItem replace = tryBlock.createNext();
                 replace.merge(self);
                 tryBlock.remove(self);
                 tryBlock.moveTo(replace, index);
@@ -558,32 +568,32 @@ public class TryItem extends FixedDexContainerWithTool implements
             return false;
         }
         @Override
-        HandlerOffsetArray getHandlerOffsetArray(){
+        HandlerOffsetArray getHandlerOffsetArray() {
             return tryItem.getHandlerOffsetArray();
         }
         @Override
-        Iterator<CatchTypedHandler> getCatchTypedHandlers() {
-            Iterator<CatchTypedHandler> iterator = getCatchTypedHandlerBlockList()
+        Iterator<InsCatchTypedHandler> getCatchTypedHandlers() {
+            Iterator<InsCatchTypedHandler> iterator = getCatchTypedHandlerBlockList()
                     .iterator();
-            final TryItem parent = this;
+            final InsTryItem parent = this;
             return ComputeIterator.of(iterator, handler -> handler.newCompact(parent));
         }
         @Override
-        public CatchTypedHandler getCatchTypedHandler(int i) {
+        public InsCatchTypedHandler getCatchTypedHandler(int i) {
             return super.getCatchTypedHandler(i).newCompact(this);
         }
 
         @Override
-        BlockList<CatchTypedHandler> getCatchTypedHandlerBlockList() {
+        BlockList<InsCatchTypedHandler> getCatchTypedHandlerBlockList() {
             return tryItem.getCatchTypedHandlerBlockList();
         }
         @Override
-        TryItem getTryItem(){
+        InsTryItem getTryItem() {
             return tryItem.getTryItem();
         }
         @Override
-        public CatchAllHandler getCatchAllHandler() {
-            CatchAllHandler catchAllHandler = tryItem.getCatchAllHandler();
+        public InsCatchAllHandler getCatchAllHandler() {
+            InsCatchAllHandler catchAllHandler = tryItem.getCatchAllHandler();
             if (catchAllHandler != null) {
                 catchAllHandler = catchAllHandler.newCompact(this);
             }
@@ -591,7 +601,7 @@ public class TryItem extends FixedDexContainerWithTool implements
         }
 
         @Override
-        public CatchAllHandler getOrCreateCatchAll() {
+        public InsCatchAllHandler getOrCreateCatchAll() {
             tryItem.getOrCreateCatchAll();
             return getCatchAllHandler();
         }
@@ -618,13 +628,13 @@ public class TryItem extends FixedDexContainerWithTool implements
         public void onReadBytes(BlockReader reader) throws IOException {
         }
         @Override
-        void updateCount(){
+        void updateCount() {
         }
         @Override
-        void mergeHandlers(TryItem tryItem) {
+        void mergeHandlers(InsTryItem tryItem) {
         }
         @Override
-        void mergeHandler(ExceptionHandler handler) {
+        void mergeHandler(InsExceptionHandler handler) {
         }
 
         @Override

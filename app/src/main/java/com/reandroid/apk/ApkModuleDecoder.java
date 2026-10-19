@@ -42,15 +42,20 @@ public abstract class ApkModuleDecoder extends ApkModuleCoder{
     private DexProfileDecoder mDexProfileDecoder;
     private boolean mLogErrors;
     private DecodeFilter mDecodeFilter;
+    private boolean mSanitizePaths;
+    private boolean mInitialized;
 
     public ApkModuleDecoder(ApkModule apkModule){
         super();
         this.apkModule = apkModule;
         this.mDecodedPaths = new HashSet<>();
+        this.mSanitizePaths = true;
         setApkLogger(apkModule.getApkLogger());
     }
+
     public final void decode(File mainDirectory) throws IOException{
         initialize();
+        sanitizeFilePaths();
         decodeArchiveInfo(mainDirectory);
         decodeUncompressedFiles(mainDirectory);
 
@@ -146,9 +151,16 @@ public abstract class ApkModuleDecoder extends ApkModuleCoder{
         this.mDexProfileDecoder = dexProfileDecoder;
     }
 
-    public void sanitizeFilePaths(){
-        PathSanitizer sanitizer = PathSanitizer.create(getApkModule());
-        sanitizer.sanitize();
+    public void setSanitizePaths(boolean sanitizePaths) {
+        this.mSanitizePaths = sanitizePaths;
+    }
+
+    public void sanitizeFilePaths() {
+        if (mInitialized && mSanitizePaths) {
+            PathSanitizer sanitizer = PathSanitizer.create(getApkModule());
+            sanitizer.setApkLogger(getApkLogger());
+            sanitizer.sanitize();
+        }
     }
     public void dumpSignatures(File mainDirectory) throws IOException {
         ApkModule apkModule = getApkModule();
@@ -241,6 +253,7 @@ public abstract class ApkModuleDecoder extends ApkModuleCoder{
     void initialize(){
         mDecodedPaths.clear();
         ensureTableBlock();
+        mInitialized = true;
     }
     private void ensureTableBlock(){
         ApkModule apkModule = getApkModule();

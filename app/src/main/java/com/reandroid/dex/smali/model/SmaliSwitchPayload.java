@@ -16,22 +16,29 @@
 package com.reandroid.dex.smali.model;
 
 import com.reandroid.dex.ins.Opcode;
+import com.reandroid.dex.program.InstructionLabelSet;
 
 import java.util.Iterator;
 
-public abstract class SmaliSwitchPayload<T extends SmaliSwitchEntry> extends SmaliInstructionPayload<T> {
+public abstract class SmaliSwitchPayload<T extends SmaliSwitchEntry> extends SmaliInstructionPayload<T>
+        implements InstructionLabelSet {
 
     private SmaliInstruction switchInstruction;
 
-    public SmaliSwitchPayload(SmaliInstructionOperand operand) {
-        super(operand);
+    public SmaliSwitchPayload(Opcode<?> opcode) {
+        super(opcode);
+    }
+
+    @Override
+    public Iterator<T> getLabels() {
+        return entries();
     }
 
     public abstract Opcode<?> getSwitchOpcode();
 
     public SmaliInstruction getSwitch() {
         SmaliInstruction switchInstruction = this.switchInstruction;
-        if(switchInstruction == null) {
+        if (switchInstruction == null) {
             switchInstruction = findSwitch();
             this.switchInstruction = switchInstruction;
         }
@@ -41,25 +48,18 @@ public abstract class SmaliSwitchPayload<T extends SmaliSwitchEntry> extends Sma
         this.switchInstruction = switchInstruction;
     }
     private SmaliInstruction findSwitch() {
-        Opcode<?> switchOpcode = getSwitchOpcode();
         SmaliCodeSet codeSet = getCodeSet();
-        if(codeSet != null) {
-            int address = getAddress();
-            int index = codeSet.indexOf(this) - 1;
-            Iterator<SmaliCode> iterator = codeSet.reversedIterator(index);
+        if (codeSet != null) {
+            Opcode<?> switchOpcode = getSwitchOpcode();
+            Iterator<SmaliLabelDestination> iterator = getSmaliLabelSet()
+                    .iterator(SmaliLabelDestination.class);
             while (iterator.hasNext()) {
-                SmaliCode smaliCode = iterator.next();
-                if(!(smaliCode instanceof SmaliLabel)) {
-                    return null;
-                }
-                SmaliLabel label = (SmaliLabel) smaliCode;
-                if(address == label.getAddress()) {
-                    Iterator<SmaliInstruction> instructions = codeSet.getInstructions(label);
-                    while (instructions.hasNext()) {
-                        SmaliInstruction instruction = instructions.next();
-                        if(switchOpcode == instruction.getOpcode()) {
-                            return instruction;
-                        }
+                Iterator<SmaliInstruction> instructions = codeSet.getSourcingInstructions(
+                        iterator.next());
+                while (instructions.hasNext()) {
+                    SmaliInstruction instruction = instructions.next();
+                    if (switchOpcode == instruction.getOpcode()) {
+                        return instruction;
                     }
                 }
             }

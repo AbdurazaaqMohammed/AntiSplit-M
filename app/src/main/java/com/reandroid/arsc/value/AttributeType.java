@@ -69,7 +69,7 @@ public enum AttributeType {
         if(name == null){
             return null;
         }
-        name = name.toUpperCase();
+        name = name.toUpperCase(java.util.Locale.ROOT);
         if("FORMAT".equals(name)){
             return FORMATS;
         }

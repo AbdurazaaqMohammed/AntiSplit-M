@@ -106,7 +106,7 @@ public class HexBytesWriter {
         }
     }
     private void writeHex(Writer writer, byte b) throws IOException {
-        String hex = HexUtil.toHex(null, (0xff & b), 2).toUpperCase();
+        String hex = HexUtil.toHex(null, (0xff & b), 2).toUpperCase(java.util.Locale.ROOT);
         writer.write(hex);
     }
     private void writeString(Writer writer, int width, int position) throws IOException {
@@ -174,7 +174,7 @@ public class HexBytesWriter {
         }
         String line = String.format(lineNumberFormat, this.lineNumber);
         if(!decimalLineNumber){
-            line = line.toUpperCase();
+            line = line.toUpperCase(java.util.Locale.ROOT);
         }
         writer.write(line);
         writer.write(": ");

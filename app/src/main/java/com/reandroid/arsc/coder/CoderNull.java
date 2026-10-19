@@ -18,12 +18,20 @@ package com.reandroid.arsc.coder;
 import com.reandroid.arsc.value.ValueType;
 
 public class CoderNull extends Coder {
+
+    public CoderNull() {
+        super();
+    }
+
     @Override
     public EncodeResult encode(String text) {
-        if(text.equals("@null")){
+        if (text.equals("@null")) {
             return new EncodeResult(ValueType.REFERENCE, 0);
         }
-        if(text.equals("@empty")){
+        if (text.equals("@@null")) {
+            return new EncodeResult(ValueType.DYNAMIC_REFERENCE, 0);
+        }
+        if (text.equals("@empty")) {
             return new EncodeResult(ValueType.NULL, 1);
         }
         return null;

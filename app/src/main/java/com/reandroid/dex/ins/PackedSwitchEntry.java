@@ -112,11 +112,6 @@ public class PackedSwitchEntry extends IntegerItem implements SwitchEntry {
     }
 
     @Override
-    public String getLabelName() {
-        return HexUtil.toHex(":pswitch_", getTargetAddress(), 1);
-    }
-
-    @Override
     public boolean equalsLabel(Object obj) {
         if (obj == this) {
             return true;
@@ -142,7 +137,7 @@ public class PackedSwitchEntry extends IntegerItem implements SwitchEntry {
 
     public SmaliPackedSwitchEntry toSmali() {
         SmaliPackedSwitchEntry entry = new SmaliPackedSwitchEntry();
-        entry.getLabel().setLabelName(getLabelName());
+        entry.setLabelName(getLabelName());
         return entry;
     }
 

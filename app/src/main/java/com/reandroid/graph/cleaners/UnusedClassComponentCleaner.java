@@ -25,7 +25,7 @@ import com.reandroid.graph.ApkBuildOption;
 
 import java.util.Iterator;
 import java.util.List;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public abstract class UnusedClassComponentCleaner<T extends Dex> extends UnusedCleaner<T> {
 
@@ -74,7 +74,7 @@ public abstract class UnusedClassComponentCleaner<T extends Dex> extends UnusedC
             return false;
         }
         Predicate<? super TypeKey> filter = getBuildOption().getKeepClasses();
-        if(filter != null && filter.evaluate(dexClass.getKey())) {
+        if(filter != null && filter.test(dexClass.getKey())) {
             return false;
         }
         // TODO: add user rules here

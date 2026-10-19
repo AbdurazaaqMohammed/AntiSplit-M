@@ -17,7 +17,7 @@ package com.reandroid.utils.collection;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class IndexIterator<T> implements Iterator<T> {
     private final Predicate<? super T> mFilter;
@@ -63,7 +63,7 @@ public class IndexIterator<T> implements Iterator<T> {
             return false;
         }
         return mFilter == null
-                || mFilter.evaluate(item);
+                || mFilter.test(item);
     }
 
     public static<T1> Iterator<T1> of(SizedSupplier<T1> supplier){

@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <lint>
 	<issue id="ExtraTranslation">
-		<ignore regexp="*" />
+		<ignore regexp=".*" />
+	</issue>
+	<issue id="MissingTranslation">
+		<ignore regexp=".*" />
 	</issue>
 </lint>

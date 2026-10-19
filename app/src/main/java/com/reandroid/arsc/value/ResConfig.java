@@ -267,7 +267,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
     }
     public void setLocaleVariant(String variant){
         if(variant!= null){
-            variant = variant.toLowerCase();
+            variant = variant.toLowerCase(java.util.Locale.ROOT);
         }
         setLocaleVariantInternal(variant);
     }
@@ -295,7 +295,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             return null;
         }
         variant = ensureLength(variant, 5, POSTFIX_locale);
-        return variant.toUpperCase();
+        return variant.toUpperCase(java.util.Locale.ROOT);
     }
     public ScreenLayoutRound getScreenLayoutRound(){
         return ScreenLayoutRound.valueOf(getScreenLayout2());
@@ -780,7 +780,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             if(name == null || name.length() < 4){
                 return null;
             }
-            name = name.toLowerCase();
+            name = name.toLowerCase(java.util.Locale.ROOT);
             if(name.charAt(0) == '-'){
                 name = name.substring(1);
             }
@@ -1282,7 +1282,7 @@ public class ResConfig extends ResConfigBase implements JSONConvert<JSONObject>,
             if(name.charAt(0) == '-'){
                 name = name.substring(1);
             }
-            name = name.toLowerCase();
+            name = name.toLowerCase(java.util.Locale.ROOT);
             for(T flag:values){
                 if(name.equals(flag.toString())){
                     return flag;

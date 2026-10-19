@@ -13,18 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.reandroid.dex.smali.model;
+package com.reandroid.dex.smali.fix;
 
-import com.reandroid.dex.smali.SmaliDirective;
+import com.reandroid.dex.smali.model.SmaliMethod;
 
-public class SmaliCodeCatchAll extends SmaliCodeExceptionHandler{
+public abstract class SmaliMethodFix {
 
-    public SmaliCodeCatchAll(){
-        super();
+    public SmaliMethodFix() {
     }
 
-    @Override
-    public SmaliDirective getSmaliDirective() {
-        return SmaliDirective.CATCH_ALL;
-    }
+    public abstract Object apply(SmaliMethod smaliMethod);
 }

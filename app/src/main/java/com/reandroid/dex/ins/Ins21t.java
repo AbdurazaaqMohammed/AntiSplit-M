@@ -64,10 +64,6 @@ public class Ins21t extends Size4Ins implements RegistersSet, InstructionLabel {
     public InstructionLabelType getLabelType() {
         return InstructionLabelType.COND;
     }
-    @Override
-    public String getLabelName() {
-        return HexUtil.toHex(":cond_", getTargetAddress(), 1);
-    }
 
     @Override
     public void appendCode(SmaliWriter writer) throws IOException {

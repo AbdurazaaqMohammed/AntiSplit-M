@@ -37,7 +37,6 @@ import org.xmlpull.v1.XmlSerializer;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -186,7 +185,7 @@ public class RClass extends DexClass {
 
         List<RField> fieldList = new ArrayCollection<>();
         fieldList.addAll(rFields);
-        Collections.sort(fieldList, CompareUtil.getComparableComparator());
+        java.util.Collections.sort(fieldList, CompareUtil.getComparableComparator());
         for(RField rField : fieldList) {
             rField.serializePublicXml(serializer);
         }

@@ -123,7 +123,7 @@ public class RClassParent extends DexClass {
 
         List<RField> fieldList = new ArrayCollection<>();
         fieldList.addAll(rFields);
-        Collections.sort(fieldList, CompareUtil.getComparableComparator());
+        java.util.Collections.sort(fieldList, CompareUtil.getComparableComparator());
         for(RField rField : fieldList) {
             rField.serializePublicXml(serializer);
         }

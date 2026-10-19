@@ -29,9 +29,9 @@ public class PseudoApkSigner {
             if (zipEntry.isDirectory())
                 continue;
 
-            if(zipEntry.getName().toLowerCase().startsWith("meta-inf/")) {
+            if(zipEntry.getName().toLowerCase(java.util.Locale.ROOT).startsWith("meta-inf/")) {
                 for(String fileToSkipEnding: META_INF_FILES_TO_SKIP_ENDINGS) {
-                    if(zipEntry.getName().toLowerCase().endsWith(fileToSkipEnding))
+                    if(zipEntry.getName().toLowerCase(java.util.Locale.ROOT).endsWith(fileToSkipEnding))
                         continue OUTER;
                 }
             }

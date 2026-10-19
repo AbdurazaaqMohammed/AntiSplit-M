@@ -33,7 +33,7 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class BlockList<T extends Block> extends Block implements BlockRefresh, Swappable {
     
@@ -61,6 +61,8 @@ public class BlockList<T extends Block> extends Block implements BlockRefresh, S
     }
     public void ensureSize(int size) {
         if (size > this.size()) {
+            unlockList();
+            mItems.ensureMinCapacity(size);
             setSize(size);
         }
     }

@@ -1,162 +1,171 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    xmlns:card_view="http://schemas.android.com/tools"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    android:background="?android:attr/windowBackground"
-    android:id="@+id/main"
+    android:background="?attr/colorSurface"
+    android:orientation="vertical"
     tools:context=".main.MainActivity">
 
-    <LinearLayout
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:layout_marginTop="50dp">
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorSurface"
+        app:title="@string/app_name"
+        app:titleTextAppearance="?attr/textAppearanceTitleLarge"
+        app:titleTextColor="?attr/colorOnSurface" />
 
-        <com.google.android.material.card.MaterialCardView
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:outlineSpotShadowColor="@android:color/transparent"
-            card_view:cardElevation="0dp"
-            app:cardElevation="0dp"
-            android:layout_marginBottom="16dp">
+            android:orientation="vertical"
+            android:padding="16dp">
 
-            <LinearLayout
-                android:id="@+id/processButtons"
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                style="@style/Widget.Material3.CardView.Elevated">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/decodeButton"
+                <LinearLayout
+                    android:id="@+id/processButtons"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/merge"
-                    android:layout_marginBottom="8dp"
-                    style="@style/Widget.Material3.Button" />
+                    android:orientation="vertical"
+                    android:padding="20dp">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/fromAppsButton"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/select_from_installed_apps"
-                    style="@style/Widget.Material3.Button.OutlinedButton" />
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/merge"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
+                        android:textColor="?attr/colorOnSurfaceVariant" />
 
-                <com.google.android.material.progressindicator.LinearProgressIndicator
-                    android:id="@+id/progressIndicator"
-                    android:layout_marginTop="5dp"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:indeterminate="true"
-                    android:visibility="gone" />
-            </LinearLayout>
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/decodeButton"
+                        style="@style/Widget.Material3.Button"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:minHeight="56dp"
+                        android:text="@string/merge_action" />
 
-        </com.google.android.material.card.MaterialCardView>
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/fromAppsButton"
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:minHeight="56dp"
+                        android:text="@string/select_from_installed_apps" />
 
-        <androidx.core.widget.NestedScrollView
-            android:id="@+id/scrollView"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1">
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/progressIndicator"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:indeterminate="true"
+                        android:visibility="gone" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
-            <LinearLayout
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/logCard"
+                style="@style/Widget.Material3.CardView.Outlined"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:layout_marginTop="16dp">
 
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/errorField"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:textIsSelectable="true"
-                    android:textAppearance="?attr/textAppearanceBody1"
-                    android:textColor="?attr/colorError"
-                    android:visibility="gone" />
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/logField"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:textAppearance="?attr/textAppearanceBody2"
-                    android:textIsSelectable="true" />
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/errorField"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
+                        android:textColor="?attr/colorError"
+                        android:textIsSelectable="true"
+                        android:visibility="gone" />
 
-            </LinearLayout>
-
-        </androidx.core.widget.NestedScrollView>
-
-    </LinearLayout>
+                    <com.google.android.material.textview.MaterialTextView
+                        android:id="@+id/logField"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="monospace"
+                        android:minHeight="80dp"
+                        android:textAppearance="?attr/textAppearanceBodySmall"
+                        android:textColor="?attr/colorOnSurfaceVariant"
+                        android:textIsSelectable="true" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
 
     <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
         android:id="@+id/fabs"
-        android:orientation="vertical">
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorSurfaceContainer"
+        android:elevation="3dp"
+        android:gravity="end|center_vertical"
+        android:minHeight="64dp"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp">
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/copyButton"
+            style="@style/Widget.Material3.Button.IconButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:elevation="0dp"
-            app:elevation="0dp"
-            app:backgroundTint="@color/main_500"
             android:contentDescription="@string/copy_log"
-            android:src="@drawable/copy"
-            android:layout_marginBottom="5dp"
-            android:visibility="gone" />
+            android:visibility="gone"
+            app:icon="@drawable/copy"
+            app:iconTint="?attr/colorOnSurfaceVariant" />
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/installButton"
+            style="@style/Widget.Material3.Button.IconButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:elevation="0dp"
-            app:elevation="0dp"
-            app:backgroundTint="@color/main_500"
             android:contentDescription="@string/install"
-            android:src="@android:drawable/stat_sys_download"
-            android:layout_marginBottom="5dp"
-            android:visibility="gone" />
+            android:visibility="gone"
+            app:icon="@drawable/ic_download"
+            app:iconTint="?attr/colorPrimary" />
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/saveButton"
+            style="@style/Widget.Material3.Button.IconButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:elevation="0dp"
-            app:elevation="0dp"
-            app:backgroundTint="@color/main_500"
             android:contentDescription="@string/save"
-            android:src="@android:drawable/ic_menu_save"
-            android:layout_marginBottom="5dp"
-            android:visibility="gone" />
+            android:visibility="gone"
+            app:icon="@drawable/ic_save"
+            app:iconTint="?attr/colorPrimary" />
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/cancelButton"
+            style="@style/Widget.Material3.Button.IconButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:elevation="0dp"
-            app:elevation="0dp"
             android:contentDescription="@string/cancel"
-            app:backgroundTint="@color/main_500"
-            android:src="@android:drawable/ic_menu_close_clear_cancel"
-            android:layout_marginBottom="5dp"
-            android:visibility="gone" />
-
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/settingsButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:backgroundTint="@color/main_500"
-            android:elevation="0dp"
-            app:elevation="0dp"
-            android:contentDescription="@string/settings"
-            android:src="@drawable/settings" />
-
+            android:visibility="gone"
+            app:icon="@drawable/ic_close"
+            app:iconTint="?attr/colorError" />
     </LinearLayout>
-</FrameLayout>
+</LinearLayout>

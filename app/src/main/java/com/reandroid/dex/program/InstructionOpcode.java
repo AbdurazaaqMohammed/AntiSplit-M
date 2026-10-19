@@ -18,4 +18,37 @@ package com.reandroid.dex.program;
 public interface InstructionOpcode extends ProgramTypeDescriptor {
     int getValue();
     String getName();
+
+    boolean isArrayGet();
+    boolean isArrayOp();
+    boolean isArrayPut();
+    boolean isConst();
+    boolean isConstInteger();
+    boolean isConstNumber();
+    boolean isConstString();
+    boolean isConstWide();
+    boolean isFieldGet();
+    boolean isFieldInstanceGet();
+    boolean isFieldInstanceOp();
+    boolean isFieldInstancePut();
+    boolean isFieldOp();
+    boolean isFieldPut();
+    boolean isFieldStaticGet();
+    boolean isFieldStaticOp();
+    boolean isFieldStaticPut();
+    boolean isGoto();
+    boolean isIfTest();
+    boolean isMethodExit();
+    boolean isMethodInvoke();
+    boolean isMethodInvokeDirect();
+    boolean isMethodInvokeInterface();
+    boolean isMethodInvokeStatic();
+    boolean isMethodInvokeSuper();
+    boolean isMethodInvokeVirtual();
+    boolean isMove();
+    boolean isMoveResult();
+    boolean isPayload();
+    boolean isRange();
+    boolean isReturn();
+    boolean isSwitch();
 }

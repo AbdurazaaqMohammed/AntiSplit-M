@@ -29,7 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 
 public class DexContainerBlock extends BlockList<DexLayoutBlock> implements

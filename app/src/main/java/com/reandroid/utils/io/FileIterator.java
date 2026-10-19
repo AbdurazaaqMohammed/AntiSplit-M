@@ -22,7 +22,7 @@ import com.reandroid.utils.collection.CollectionUtil;
 import java.io.File;
 import java.util.Comparator;
 import java.util.Iterator;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class FileIterator implements Iterator<File> {
 
@@ -123,7 +123,7 @@ public class FileIterator implements Iterator<File> {
         if(!file.isFile()){
             return false;
         }
-        return filter == null || filter.evaluate(file);
+        return filter == null || filter.test(file);
     }
 
     public static final Comparator<File> NAME_COMPARATOR = (file1, file2) -> {

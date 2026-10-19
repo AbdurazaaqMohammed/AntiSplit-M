@@ -63,4 +63,20 @@
     <string name="check_file_valid">"Please check that file selected is a valid ZIP/split APK (Try opening in file manager or installing it). If you have it installed but still getting error please try the feature "</string> <!-- select_from_installed_apps -->
     <string name="select_compression_level">Select compression level</string><!-- lower = faster, higher = smaller file -->
     <string name="default_c">Default</string>
+    <string name="merge_action">Select split APK</string>
+    <string name="theme">Theme</string>
+    <string name="search">Search apps</string>
+    <string name="sort">Sort</string>
+    <string name="sort_name">Name</string>
+    <string name="sort_date_updated">Date updated</string>
+    <string name="sort_date_installed">Date installed</string>
+    <string name="changelog">Changelog</string>
+    <string name="github_release">Go to GitHub Release</string>
+    <string name="update_check_failed">Failed to check for update</string>
+    <string name="out_of_memory_title">Not enough memory</string>
+    <string name="out_of_memory_message">The selected app is too large to merge on this device. Close other apps, remove unnecessary splits, or try again with a device that has more free memory.</string>
+    <string name="install_failed">No app was found to install this APK</string>
+    <string name="invalid_file">The selected file is not a valid split APK</string>
+    <string name="no_file_manager">No file manager was found to save the APK. Grant storage permission to save it automatically.</string>
+    <string name="save_failed">Failed to save the merged APK</string>
 </resources>

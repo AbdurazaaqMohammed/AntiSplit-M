@@ -24,7 +24,7 @@ import com.reandroid.utils.collection.*;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.Iterator;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
 
@@ -180,7 +180,7 @@ public abstract class KeyList<T extends Key> implements Key, Iterable<T> {
         int j = 0;
         for (int i = 0; i < length; i++) {
             T item = (T) elements[i];
-            if (predicate.evaluate(item)) {
+            if (predicate.test(item)) {
                 if (filtered == null) {
                     filtered = elements.clone();
                     j = i;

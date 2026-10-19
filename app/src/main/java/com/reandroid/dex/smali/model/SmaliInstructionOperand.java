@@ -27,6 +27,8 @@ import com.reandroid.dex.key.MethodKey;
 import com.reandroid.dex.key.ProtoKey;
 import com.reandroid.dex.key.StringKey;
 import com.reandroid.dex.key.TypeKey;
+import com.reandroid.dex.program.InstructionLabel;
+import com.reandroid.dex.program.InstructionLabelType;
 import com.reandroid.dex.sections.SectionType;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
@@ -43,6 +45,15 @@ public abstract class SmaliInstructionOperand extends Smali {
 
     public abstract long getValueAsLong();
     public abstract OperandType getOperandType();
+    public SmaliLabel getAsLabel() {
+        return null;
+    }
+    public Key getAsKey() {
+        return null;
+    }
+    public boolean isSourceLabel(InstructionLabel label) {
+        return false;
+    }
     @Override
     public abstract void append(SmaliWriter writer) throws IOException;
 
@@ -50,23 +61,87 @@ public abstract class SmaliInstructionOperand extends Smali {
     public abstract void parse(SmaliReader reader) throws IOException;
     public abstract void parse(Opcode<?> opcode, SmaliReader reader) throws IOException;
 
-    public static class SmaliLabelOperand extends SmaliInstructionOperand {
+
+    public static SmaliInstructionOperand operandFor(Opcode<?> opcode) {
+        OperandType operandType = opcode.getOperandType();
+        SmaliInstructionOperand operand;
+        if (operandType == OperandType.NONE) {
+            operand = SmaliInstructionOperand.NO_OPERAND;
+        } else if (operandType == OperandType.HEX) {
+            operand = new SmaliInstructionOperand.SmaliHexOperand();
+        } else if (operandType.hasSectionId2()) {
+            operand = new SmaliInstructionOperand.SmaliDualKeyOperand(operandType);
+        } else if (operandType.hasSectionId()) {
+            operand = new SmaliInstructionOperand.SmaliKeyOperand(operandType);
+        } else if (operandType == OperandType.LABEL) {
+            operand = new SmaliInstructionOperand.SmaliLabelOperand();
+        } else if (operandType == OperandType.DECIMAL) {
+            operand = new SmaliInstructionOperand.SmaliDecimalOperand();
+        } else {
+            throw new IllegalArgumentException("Unknown operand type: " + operandType
+                    + ", opcode = " + opcode);
+        }
+        return operand;
+    }
+
+    public static class SmaliLabelOperand extends SmaliInstructionOperand
+            implements InstructionLabel {
 
         private final SmaliLabel label;
 
         public SmaliLabelOperand() {
             super();
-            this.label = new SmaliLabel();
+
+            this.label = new SmaliLabelSource() {
+                @Override
+                public InstructionLabelType getLabelType() {
+                    SmaliInstruction ins = getOwnerInstruction();
+                    if (ins != null) {
+                        return SmaliLabel.of(ins.getOpcode());
+                    }
+                    return null;
+                }
+            };
             this.label.setParent(this);
         }
 
-        public SmaliLabel getLabel() {
+        @Override
+        public SmaliLabel getAsLabel() {
             return label;
+        }
+        @Override
+        public boolean isSourceLabel(InstructionLabel label) {
+            return getAsLabel().equals(label);
         }
 
         @Override
+        public int getTargetAddress() {
+            return getAsLabel().getTargetAddress();
+        }
+        @Override
+        public void setTargetAddress(int address) {
+            getAsLabel().setTargetAddress(address);
+        }
+        @Override
+        public SmaliInstruction getTargetInstruction() {
+            return getAsLabel().getTargetInstruction();
+        }
+
+        @Override
+        public String getLabelName() {
+            return getAsLabel().getLabelName();
+        }
+        @Override
+        public InstructionLabelType getLabelType() {
+            return getAsLabel().getLabelType();
+        }
+        @Override
+        public SmaliInstruction getOwnerInstruction() {
+            return getParentInstance(SmaliInstruction.class);
+        }
+        @Override
         public long getValueAsLong() {
-            return getLabel().getIntegerData();
+            return getAsLabel().getIntegerData();
         }
 
         @Override
@@ -76,16 +151,21 @@ public abstract class SmaliInstructionOperand extends Smali {
 
         @Override
         public void append(SmaliWriter writer) throws IOException {
-            getLabel().append(writer);
+            getAsLabel().append(writer);
         }
 
         @Override
         public void parse(SmaliReader reader) throws IOException {
-            getLabel().parse(reader);
+            getAsLabel().parse(reader);
         }
         @Override
         public void parse(Opcode<?> opcode, SmaliReader reader) throws IOException {
-            getLabel().parse(reader);
+            getAsLabel().parse(reader);
+        }
+        @Override
+        public void validate() throws IOException {
+            super.validate();
+            getAsLabel().validate();
         }
     }
     public static class SmaliHexOperand extends SmaliInstructionOperand {
@@ -252,6 +332,12 @@ public abstract class SmaliInstructionOperand extends Smali {
             super();
             this.operandType = operandType;
         }
+
+        @Override
+        public Key getAsKey() {
+            return getKey();
+        }
+
         @Override
         public Key getKey() {
             return key;

@@ -20,7 +20,7 @@ import com.reandroid.utils.collection.InstanceIterator;
 
 import java.util.Comparator;
 import java.util.Iterator;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public interface NodeTree<T extends Node> extends Node {
 

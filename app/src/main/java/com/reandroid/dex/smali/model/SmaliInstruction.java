@@ -21,42 +21,57 @@ import com.reandroid.dex.common.RegisterFormat;
 import com.reandroid.dex.common.RegistersTable;
 import com.reandroid.dex.ins.Opcode;
 import com.reandroid.dex.key.Key;
-import com.reandroid.dex.key.MethodKey;
+import com.reandroid.dex.program.Instruction;
+import com.reandroid.dex.program.InstructionLabel;
 import com.reandroid.dex.smali.SmaliParseException;
 import com.reandroid.dex.smali.SmaliReader;
 import com.reandroid.dex.smali.SmaliWriter;
 
 import java.io.IOException;
 
-public class SmaliInstruction extends SmaliCode{
+public class SmaliInstruction extends SmaliCode implements Instruction {
 
-    private Opcode<?> opcode;
-    private SmaliRegisterSet registerSet;
-    private SmaliInstructionOperand operand;
+    private final Opcode<?> opcode;
+    private final SmaliRegisterSet registerSet;
+    private final SmaliInstructionOperand operand;
 
     private int address;
 
-    public SmaliInstruction() {
-        super();
-        this.opcode = Opcode.NOP;
-        this.registerSet = SmaliRegisterSet.NO_REGISTER_SET;
-        this.operand = SmaliInstructionOperand.NO_OPERAND;
-    }
     public SmaliInstruction(Opcode<?> opcode) {
         super();
         if (opcode == null) {
             throw new NullPointerException();
         }
+
         this.opcode = opcode;
-        initRegisterSet(opcode);
-        try {
-            initOperand(opcode);
-        } catch (IOException exception) {
-            // Will not happen
-            throw new RuntimeException(exception);
-        }
+        this.registerSet = SmaliRegisterSet.registerSetFor(opcode);
+        this.operand = SmaliInstructionOperand.operandFor(opcode);
+
+        registerSet.setParent(this);
+        operand.setParent(this);
     }
 
+    public SmaliInstruction getPrevious() {
+        SmaliCodeSet codeSet = getCodeSet();
+        if (codeSet != null) {
+            return codeSet.getPreviousInstruction(getIndex() - 1);
+        }
+        return null;
+    }
+    public SmaliInstruction getNext() {
+        SmaliCodeSet codeSet = getCodeSet();
+        if (codeSet != null) {
+            return codeSet.getNextInstruction(getIndex() + 1);
+        }
+        return null;
+    }
+    @Override
+    public Key getAsKey() {
+        return getOperand().getAsKey();
+    }
+    public SmaliLabel getAsSourceLabel() {
+        return getOperand().getAsLabel();
+    }
     public Key getKey() {
         SmaliInstructionOperand operand = getOperand();
         if (operand instanceof SmaliInstructionOperand.SmaliKeyOperand) {
@@ -86,6 +101,7 @@ public class SmaliInstruction extends SmaliCode{
         }
         return 0;
     }
+    @Override
     public int getAddress() {
         return address;
     }
@@ -93,9 +109,26 @@ public class SmaliInstruction extends SmaliCode{
         this.address = address;
     }
 
+    @Override
+    public Opcode<?> getOpcode() {
+        return opcode;
+    }
+    @Override
     public int getCodeUnits() {
         return getOpcode().size() / 2;
     }
+    @Override
+    public void addReferencingLabel(Object label) {
+        // TODO
+    }
+    @Override
+    public boolean isRemoved() {
+        return getParent() == null;
+    }
+    public SmaliLabelSet getSmaliLabelSet() {
+        return new SmaliLabelSet(this);
+    }
+
     public Register getRegister() {
         return getRegister(0);
     }
@@ -106,26 +139,13 @@ public class SmaliInstruction extends SmaliCode{
         return getRegisterSet().size();
     }
     public RegistersTable getRegistersTable() {
-        SmaliRegisterSet registerSet = getRegisterSet();
-        if (registerSet != null) {
-            return registerSet.getRegistersTable();
-        }
-        return null;
+        return getRegisterSet().getRegistersTable();
     }
     public void setRegistersTable(RegistersTable registersTable) {
-        SmaliRegisterSet registerSet = getRegisterSet();
-        if (registerSet != null) {
-            registerSet.setRegistersTable(registersTable);
-        }
+        getRegisterSet().setRegistersTable(registersTable);
     }
     public SmaliRegisterSet getRegisterSet() {
         return registerSet;
-    }
-    public void setRegisterSet(SmaliRegisterSet registerSet) {
-        this.registerSet = registerSet;
-        if (registerSet != null) {
-            registerSet.setParent(this);
-        }
     }
     public RegisterFormat getRegisterFormat() {
         return getOpcode().getRegisterFormat();
@@ -133,26 +153,11 @@ public class SmaliInstruction extends SmaliCode{
     public SmaliInstructionOperand getOperand() {
         return operand;
     }
-    public void setOperand(SmaliInstructionOperand operand) {
-        this.operand = operand;
-        if (operand != null) {
-            operand.setParent(this);
-        }
-    }
     public OperandType getOperandType() {
         return getOperand().getOperandType();
     }
-    public boolean hasLabelOperand(SmaliLabel label) {
-        SmaliInstructionOperand operand = getOperand();
-        if (!(operand instanceof SmaliInstructionOperand.SmaliLabelOperand)) {
-            return false;
-        }
-        SmaliInstructionOperand.SmaliLabelOperand smaliLabelOperand = (SmaliInstructionOperand.SmaliLabelOperand) operand;
-        return label.equals(smaliLabelOperand.getLabel());
-    }
-
-    public Opcode<?> getOpcode() {
-        return opcode;
+    public boolean hasLabelOperand(InstructionLabel label) {
+        return getOperand().isSourceLabel(label);
     }
     public SmaliMethod getParentMethod() {
         return getParentInstance(SmaliMethod.class);
@@ -160,53 +165,6 @@ public class SmaliInstruction extends SmaliCode{
     public SmaliClass getParentClass() {
         return getParentInstance(SmaliClass.class);
     }
-    public MethodKey getKeyAsMethod() {
-        Key key = getKey();
-        if (key instanceof MethodKey) {
-            return (MethodKey) key;
-        }
-        return null;
-    }
-    public void initializeOpcode(Opcode<?> opcode) throws IOException {
-        this.opcode = opcode;
-        initRegisterSet(opcode);
-        initOperand(opcode);
-    }
-    public void replaceOpcode(Opcode<?> opcode) {
-        this.opcode = opcode;
-    }
-    private void initRegisterSet(Opcode<?> opcode) {
-        RegisterFormat format = opcode.getRegisterFormat();
-        SmaliRegisterSet registerSet;
-        if (format == RegisterFormat.NONE) {
-            registerSet = SmaliRegisterSet.NO_REGISTER_SET;
-        } else {
-            registerSet = new SmaliRegisterSet(format);
-        }
-        setRegisterSet(registerSet);
-    }
-    private void initOperand(Opcode<?> opcode) throws IOException {
-        OperandType operandType = opcode.getOperandType();
-        SmaliInstructionOperand operand;
-        if (operandType == OperandType.NONE) {
-            operand = SmaliInstructionOperand.NO_OPERAND;
-        } else if (operandType == OperandType.HEX) {
-            operand = new SmaliInstructionOperand.SmaliHexOperand();
-        } else if (operandType.hasSectionId2()) {
-            operand = new SmaliInstructionOperand.SmaliDualKeyOperand(operandType);
-        } else if (operandType.hasSectionId()) {
-            operand = new SmaliInstructionOperand.SmaliKeyOperand(operandType);
-        } else if (operandType == OperandType.LABEL) {
-            operand = new SmaliInstructionOperand.SmaliLabelOperand();
-        } else if (operandType == OperandType.DECIMAL) {
-            operand = new SmaliInstructionOperand.SmaliDecimalOperand();
-        } else {
-            throw new IOException("Unknown operand type: " + operandType
-                    + ", opcode = " + opcode);
-        }
-        setOperand(operand);
-    }
-
     @Override
     public void append(SmaliWriter writer) throws IOException {
         Opcode<?> opcode = getOpcode();
@@ -215,10 +173,7 @@ public class SmaliInstruction extends SmaliCode{
         }
         writer.newLine();
         opcode.append(writer);
-        SmaliRegisterSet registerSet = getRegisterSet();
-        if (registerSet != null) {
-            registerSet.append(writer);
-        }
+        getRegisterSet().append(writer);
         if (opcode.getRegisterFormat() != RegisterFormat.NONE &&
                 opcode.getOperandType() != OperandType.NONE) {
             writer.append(", ");
@@ -242,10 +197,33 @@ public class SmaliInstruction extends SmaliCode{
         getOperand().parse(opcode, reader);
     }
     private Opcode<?> parseOpcode(SmaliReader reader) throws IOException {
-        reader.skipWhitespaces();
+        reader.skipWhitespacesOrComment();
         Opcode<?> opcode = Opcode.parseSmali(reader, true);
-        initializeOpcode(opcode);
-        reader.skipSpaces();
+        if (opcode != this.getOpcode()) {
+            throw new SmaliParseException("Expecting opcode: " + getOpcode()
+                    + ", but found: " + opcode, reader);
+        }
         return opcode;
+    }
+
+    @Override
+    public void validate() throws IOException {
+        super.validate();
+        getRegisterSet().validate();
+        getOperand().validate();
+    }
+
+    public static SmaliInstruction createInstruction(Opcode<?> opcode) {
+        SmaliInstruction instruction;
+        if (opcode == Opcode.ARRAY_PAYLOAD) {
+            instruction = new SmaliPayloadArray();
+        } else if (opcode == Opcode.PACKED_SWITCH_PAYLOAD) {
+            instruction = new SmaliPayloadPackedSwitch();
+        } else if (opcode == Opcode.SPARSE_SWITCH_PAYLOAD) {
+            instruction = new SmaliPayloadSparseSwitch();
+        } else {
+            instruction = new SmaliInstruction(opcode);
+        }
+        return instruction;
     }
 }

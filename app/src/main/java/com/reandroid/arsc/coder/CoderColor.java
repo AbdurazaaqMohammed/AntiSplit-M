@@ -80,7 +80,7 @@ public abstract class CoderColor extends Coder {
     }
 
     private static int[] hexToIntegers(String hexColor){
-        hexColor = hexColor.toUpperCase();
+        hexColor = hexColor.toUpperCase(java.util.Locale.ROOT);
         char[] chars = hexColor.toCharArray();
         if(chars[0] != '#'){
             return null;

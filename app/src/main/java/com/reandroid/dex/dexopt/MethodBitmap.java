@@ -29,7 +29,7 @@ import com.reandroid.utils.collection.ArraySupplierIterator;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Iterator;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 
 public class MethodBitmap extends FixedBlockContainer
@@ -109,7 +109,7 @@ public class MethodBitmap extends FixedBlockContainer
     public void removeIf(Predicate<? super MethodBitmapElement> predicate) {
         int size = size();
         for (int i = 0; i < size; i++) {
-            if (predicate.evaluate(get(i)) && remove(i)) {
+            if (predicate.test(get(i)) && remove(i)) {
                 i --;
                 size = size();
             }

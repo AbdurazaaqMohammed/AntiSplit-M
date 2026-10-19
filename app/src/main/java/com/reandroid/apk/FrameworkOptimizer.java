@@ -31,7 +31,7 @@ import com.reandroid.arsc.value.*;
 
 import java.io.IOException;
 import java.util.*;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 import java.util.zip.ZipEntry;
 
  public class FrameworkOptimizer {
@@ -135,7 +135,7 @@ import java.util.zip.ZipEntry;
         ResXmlElement manifest = manifestBlock.getDocumentElement();
         manifest.removeIf(new Predicate<ResXmlNode>() {
             @Override
-            public boolean evaluate(ResXmlNode xmlNode) {
+            public boolean test(ResXmlNode xmlNode) {
                 return !(xmlNode instanceof ResXmlElement) ||
                         !((ResXmlElement) xmlNode).equalsName(AndroidManifest.TAG_application);
             }

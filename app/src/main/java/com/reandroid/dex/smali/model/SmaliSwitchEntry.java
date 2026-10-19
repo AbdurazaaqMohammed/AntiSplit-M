@@ -15,39 +15,34 @@
  */
 package com.reandroid.dex.smali.model;
 
+import com.reandroid.dex.program.InstructionLabel;
+import com.reandroid.dex.program.InstructionLabelType;
 import com.reandroid.utils.ObjectsUtil;
 
-public abstract class SmaliSwitchEntry extends Smali {
+public abstract class SmaliSwitchEntry extends SmaliLabelSource implements InstructionLabel {
 
-    private final SmaliLabel label;
-
-    public SmaliSwitchEntry() {
-        super();
-        this.label = new SmaliLabel();
-        this.label.setParent(this);
+    public SmaliSwitchEntry(InstructionLabelType labelType) {
+        super(labelType);
     }
-
-    public SmaliLabel getLabel() {
-        return label;
-    }
-
 
     public Integer getRelativeOffset() {
         SmaliInstruction switchInstruction = getSwitch();
-        if(switchInstruction != null) {
+        if (switchInstruction != null) {
             SmaliInstruction target = getTargetInstruction();
-            if(target != null) {
+            if (target != null) {
                 return target.getAddress() - switchInstruction.getAddress();
             }
         }
         return null;
     }
-    public SmaliInstruction getTargetInstruction() {
-        return getLabel().getTargetInstruction();
+    @Override
+    public void setTargetAddress(int address) {
+        throw new RuntimeException("Method not implemented");
     }
+
     public SmaliInstruction getSwitch() {
         SmaliSwitchPayload<?> payload = getPayload();
-        if(payload != null) {
+        if (payload != null) {
             return payload.getSwitch();
         }
         return null;

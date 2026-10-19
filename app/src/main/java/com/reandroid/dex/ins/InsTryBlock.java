@@ -29,9 +29,10 @@ import com.reandroid.dex.id.IdItem;
 import com.reandroid.dex.key.Key;
 import com.reandroid.dex.program.InstructionLabel;
 import com.reandroid.dex.program.InstructionLabelSet;
-import com.reandroid.dex.smali.model.SmaliCodeTryItem;
+import com.reandroid.dex.program.TryItem;
+import com.reandroid.dex.smali.model.SmaliTryItem;
+import com.reandroid.utils.CompareUtil;
 import com.reandroid.utils.collection.EmptyIterator;
-import com.reandroid.utils.collection.ExpandIterator;
 import com.reandroid.utils.collection.FilterIterator;
 import com.reandroid.utils.collection.IterableIterator;
 
@@ -39,68 +40,69 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Objects;
 
-public class TryBlock extends FixedDexContainerWithTool implements
-        Creator<TryItem>, Iterable<TryItem>, InstructionLabelSet, IdUsageIterator {
+public class InsTryBlock extends FixedDexContainerWithTool implements
+        Creator<InsTryItem>, Iterable<InsTryItem>, InstructionLabelSet, IdUsageIterator {
 
     private final CodeItem codeItem;
     private HandlerOffsetArray handlerOffsetArray;
     private Ule128Item tryItemsCount;
     private ByteArray unknownBytes;
-    private BlockList<TryItem> tryItemArray;
+    private BlockList<InsTryItem> tryItemArray;
     private DexPositionAlign positionAlign;
 
-    public TryBlock(CodeItem codeItem) {
+    public InsTryBlock(CodeItem codeItem) {
         super(5);
         this.codeItem = codeItem;
     }
 
-    InstructionList getInstructionList(){
+    InstructionList getInstructionList() {
         return getCodeItem().getInstructionList();
     }
-    private CodeItem getCodeItem(){
+    private CodeItem getCodeItem() {
         return codeItem;
     }
     public int getTryItemCount() {
-        if(isNull()){
+        if (isNull()) {
             return 0;
         }
         return tryItemArray.getCount();
     }
+    
     @Override
     public Iterator<InstructionLabel> getLabels() {
-        return new ExpandIterator<>(iterator());
+        return IterableIterator.of(iterator(), TryItem::getLabels);
     }
 
-    public TryItem createNext(){
+    public InsTryItem createNext() {
         initialize();
-        TryItem tryItem = newInstance();
+        InsTryItem tryItem = newInstance();
         add(tryItem);
         return tryItem;
     }
-    public TryItem createNextCopy(TryItem base){
-        TryItem tryItem = base.newCompact();
+    public InsTryItem createNextCopy(InsTryItem base) {
+        InsTryItem tryItem = base.newCompact();
         add(tryItem);
         return tryItem;
     }
-    private void add(TryItem tryItem){
-        if(tryItemArray != null){
+    private void add(InsTryItem tryItem) {
+        if (tryItemArray != null) {
             tryItemArray.add(tryItem);
             handlerOffsetArray.ensureSize(tryItemArray.size());
         }
     }
-    public TryItem get(int i){
-        if(tryItemArray != null){
+    public InsTryItem get(int i) {
+        if (tryItemArray != null) {
             return tryItemArray.get(i);
         }
         return null;
     }
-    public Iterator<TryItem> getTriesForAddress(int address) {
+    public Iterator<InsTryItem> getTriesForAddress(int address) {
         return FilterIterator.of(iterator(),
                 tryItem -> tryItem.hasExceptionHandlersForAddress(address));
     }
     @Override
-    public Iterator<TryItem> iterator(){
-        if(isNull()){
+    public Iterator<InsTryItem> iterator() {
+        if (isNull()) {
             return EmptyIterator.of();
         }
         return tryItemArray.iterator();
@@ -111,8 +113,8 @@ public class TryBlock extends FixedDexContainerWithTool implements
         if (isNull()) {
             return;
         }
-        BlockList<TryItem> array = this.tryItemArray;
-        array.removeIf(TryItem::isEmpty);
+        BlockList<InsTryItem> array = this.tryItemArray;
+        array.removeIf(InsTryItem::isEmpty);
         updateHandlerOffsets();
         if (isEmpty()) {
             setNull(true);
@@ -122,14 +124,14 @@ public class TryBlock extends FixedDexContainerWithTool implements
     }
     private void updateHandlerOffsets() {
         Ule128Item tryItemsCount = this.tryItemsCount;
-        BlockList<TryItem> array = this.tryItemArray;
+        BlockList<InsTryItem> array = this.tryItemArray;
         if ( array == null || tryItemsCount == null) {
             return;
         }
         int size = array.size();
         int realTryItemCount = 0;
         for (int i = 0; i < size; i++) {
-            TryItem tryItem = array.get(i);
+            InsTryItem tryItem = array.get(i);
             if (!tryItem.isCompact()) {
                 realTryItemCount ++;
             }
@@ -141,7 +143,7 @@ public class TryBlock extends FixedDexContainerWithTool implements
         HandlerOffsetArray offsetArray = this.handlerOffsetArray;
         offsetArray.setSize(size);
         for (int i = 0; i < size; i++) {
-            TryItem tryItem = array.get(i);
+            InsTryItem tryItem = array.get(i);
             HandlerOffset handlerOffset = offsetArray.get(i);
             int offset = array.countUpTo(tryItem);
             offset += baseOffset;
@@ -149,14 +151,14 @@ public class TryBlock extends FixedDexContainerWithTool implements
         }
     }
     private HandlerOffsetArray initHandlersOffset() {
-        if(handlerOffsetArray == null){
+        if (handlerOffsetArray == null) {
             handlerOffsetArray = new HandlerOffsetArray(getCodeItem().getTryCountReference());
             addChild(INDEX_offsetArray, handlerOffsetArray);
         }
         return handlerOffsetArray;
     }
     private void initTryItemArray() {
-        if(tryItemArray != null){
+        if (tryItemArray != null) {
             return;
         }
         tryItemsCount = new Ule128Item();
@@ -165,50 +167,50 @@ public class TryBlock extends FixedDexContainerWithTool implements
         addChild(INDEX_itemArray, tryItemArray);
     }
     public boolean isEmpty() {
-        BlockList<TryItem> tryItemArray = this.tryItemArray;
+        BlockList<InsTryItem> tryItemArray = this.tryItemArray;
         return tryItemArray == null || tryItemArray.size() == 0;
     }
     @Override
-    public boolean isNull(){
+    public boolean isNull() {
         return tryItemArray == null;
     }
     @Override
-    public void setNull(boolean is_null){
-        if(is_null == this.isNull()){
+    public void setNull(boolean is_null) {
+        if (is_null == this.isNull()) {
             return;
         }
-        if(is_null){
+        if (is_null) {
             clear();
-        }else {
+        } else {
             initialize();
         }
     }
-    private void initialize(){
+    private void initialize() {
         initHandlersOffset();
         initTryItemArray();
-        if(positionAlign == null){
+        if (positionAlign == null) {
             positionAlign = new DexPositionAlign();
             addChild(INDEX_positionAlign, positionAlign);
         }
     }
-    private void clear(){
-        if(handlerOffsetArray != null){
+    private void clear() {
+        if (handlerOffsetArray != null) {
             handlerOffsetArray.setParent(null);
             handlerOffsetArray.setIndex(-1);
             handlerOffsetArray = null;
         }
-        if(tryItemsCount != null){
+        if (tryItemsCount != null) {
             tryItemsCount.setParent(null);
             tryItemsCount.setIndex(-1);
             tryItemArray = null;
         }
-        if(tryItemArray != null){
+        if (tryItemArray != null) {
             tryItemArray.clearChildes();
             tryItemArray.setParent(null);
             tryItemArray.setIndex(-1);
             tryItemArray = null;
         }
-        if(positionAlign != null){
+        if (positionAlign != null) {
             positionAlign.setParent(null);
             positionAlign.setIndex(-1);
             positionAlign = null;
@@ -220,39 +222,39 @@ public class TryBlock extends FixedDexContainerWithTool implements
         addChild(INDEX_positionAlign, null);
     }
 
-    public void remove(TryItem tryItem){
-        BlockList<TryItem> tryItemArray = this.tryItemArray;
-        if(tryItemArray != null) {
-            if(tryItemArray.remove(tryItem)){
+    public void remove(InsTryItem tryItem) {
+        BlockList<InsTryItem> tryItemArray = this.tryItemArray;
+        if (tryItemArray != null) {
+            if (tryItemArray.remove(tryItem)) {
                 tryItem.onRemove();
             }
         }
     }
-    public void moveTo(TryItem tryItem, int index){
-        BlockList<TryItem> tryItemArray = this.tryItemArray;
-        if(tryItemArray != null && tryItem.getIndex() != index) {
+    public void moveTo(InsTryItem tryItem, int index) {
+        BlockList<InsTryItem> tryItemArray = this.tryItemArray;
+        if (tryItemArray != null && tryItem.getIndex() != index) {
             tryItemArray.moveTo(tryItem, index);
             this.handlerOffsetArray.moveTo(tryItem.getHandlerOffset(), index);
         }
     }
-    public void onRemove(){
-        BlockList<TryItem> tryItemArray = this.tryItemArray;
-        if(tryItemArray != null){
+    public void onRemove() {
+        BlockList<InsTryItem> tryItemArray = this.tryItemArray;
+        if (tryItemArray != null) {
             this.tryItemArray = null;
             int count = tryItemArray.getCount();
-            for(int i = 0; i < count; i++){
-                TryItem tryItem = tryItemArray.getLast();
+            for (int i = 0; i < count; i++) {
+                InsTryItem tryItem = tryItemArray.getLast();
                 tryItem.onRemove();
             }
             tryItemArray.clearChildes();
         }
         HandlerOffsetArray array = this.handlerOffsetArray;
-        if(array != null){
+        if (array != null) {
             array.setSize(0);
             this.handlerOffsetArray = null;
         }
         DexPositionAlign positionAlign = this.positionAlign;
-        if(positionAlign != null){
+        if (positionAlign != null) {
             this.positionAlign = null;
         }
     }
@@ -261,7 +263,7 @@ public class TryBlock extends FixedDexContainerWithTool implements
     public void onReadBytes(BlockReader reader) throws IOException {
         boolean is_null = getCodeItem().getTryCountReference().get() == 0;
         setNull(is_null);
-        if(is_null){
+        if (is_null) {
             return;
         }
         this.handlerOffsetArray.onReadBytes(reader);
@@ -272,9 +274,9 @@ public class TryBlock extends FixedDexContainerWithTool implements
         this.positionAlign.onReadBytes(reader);
     }
     private void setUnknownBytes(int count) {
-        if(count <= 0 || isNull()) {
+        if (count <= 0 || isNull()) {
             ByteArray unknown = this.unknownBytes;
-            if(unknown != null) {
+            if (unknown != null) {
                 unknown.setParent(null);
                 unknown.setIndex(-1);
                 unknown.setSize(0);
@@ -283,12 +285,12 @@ public class TryBlock extends FixedDexContainerWithTool implements
             return;
         }
         ByteArray unknown = this.unknownBytes;
-        if(unknown == null) {
+        if (unknown == null) {
             unknown = new ByteArray(count);
             this.unknownBytes = unknown;
             unknown.setParent(this);
             addChild(INDEX_unknownBytes, unknown);
-        }else {
+        } else {
             unknown.setSize(count);
         }
     }
@@ -297,53 +299,53 @@ public class TryBlock extends FixedDexContainerWithTool implements
         minStart = minStart - this.tryItemsCount.countBytes();
         setUnknownBytes(minStart);
         ByteArray unknown = this.unknownBytes;
-        if(unknown != null){
+        if (unknown != null) {
             unknown.readBytes(reader);
         }
     }
 
-    public DexPositionAlign getPositionAlign(){
+    public DexPositionAlign getPositionAlign() {
         return positionAlign;
     }
 
     @Override
-    public TryItem newInstance() {
-        return new TryItem(initHandlersOffset());
+    public InsTryItem newInstance() {
+        return new InsTryItem(initHandlersOffset());
     }
 
     @Override
-    public TryItem newInstanceAt(int index) {
-        BlockList<TryItem> tryItemArray = this.tryItemArray;
+    public InsTryItem newInstanceAt(int index) {
+        BlockList<InsTryItem> tryItemArray = this.tryItemArray;
         HandlerOffsetArray offsetArray = initHandlersOffset();
-        if(tryItemArray.size() < 2){
-            return new TryItem(offsetArray);
+        if (tryItemArray.size() < 2) {
+            return new InsTryItem(offsetArray);
         }
         int i = offsetArray.indexOf(offsetArray.getOffset(index));
-        TryItem tryItem = null;
-        if(i >= 0 && i < index){
+        InsTryItem tryItem = null;
+        if (i >= 0 && i < index) {
             tryItem = tryItemArray.get(i);
-            if(tryItem != null){
+            if (tryItem != null) {
                 tryItem = tryItem.newCompact();
             }
         }
-        if(tryItem == null){
-            tryItem = new TryItem(offsetArray);
+        if (tryItem == null) {
+            tryItem = new InsTryItem(offsetArray);
         }
         return tryItem;
     }
 
     public boolean compactSimilarCatches() {
-        BlockList<TryItem> array = this.tryItemArray;
+        BlockList<InsTryItem> array = this.tryItemArray;
         if (array == null) {
             return false;
         }
         boolean result = false;
         int size = array.size();
         for (int i = 0; i < size; i++) {
-            TryItem base =  array.get(i);
+            InsTryItem base =  array.get(i);
             if (!base.isCompact()) {
                 for (int j = i + 1; j < size; j++) {
-                    TryItem tryItem = array.get(j);
+                    InsTryItem tryItem = array.get(j);
                     if (base.compactWith(tryItem)) {
                         result = true;
                     }
@@ -356,7 +358,7 @@ public class TryBlock extends FixedDexContainerWithTool implements
         return result;
     }
     public boolean flattenCompactCatches() {
-        BlockList<TryItem> array = this.tryItemArray;
+        BlockList<InsTryItem> array = this.tryItemArray;
         if (array == null) {
             return false;
         }
@@ -373,14 +375,14 @@ public class TryBlock extends FixedDexContainerWithTool implements
         return result;
     }
     public boolean splitTryHandlers() {
-        BlockList<TryItem> array = this.tryItemArray;
+        BlockList<InsTryItem> array = this.tryItemArray;
         if (array == null) {
             return false;
         }
         flattenCompactCatches();
         boolean result = false;
         for (int i = 0; i < array.size(); i++) {
-            TryItem tryItem = array.get(i);
+            InsTryItem tryItem = array.get(i);
             if (tryItem.splitHandlers()) {
                 result = true;
             }
@@ -391,16 +393,16 @@ public class TryBlock extends FixedDexContainerWithTool implements
         return result;
     }
     public boolean combineTries() {
-        BlockList<TryItem> array = this.tryItemArray;
+        BlockList<InsTryItem> array = this.tryItemArray;
         if (array == null) {
             return false;
         }
         boolean result = false;
         for (int i = 0; i < array.size(); i++) {
-            TryItem base = array.get(i);
+            InsTryItem base = array.get(i);
             if (!base.isCompact()) {
                 for (int j = i + 1; j < array.size(); j++) {
-                    TryItem tryItem = array.get(j);
+                    InsTryItem tryItem = array.get(j);
                     if (base.combineWith(tryItem)) {
                         tryItem.removeSelf();
                         result = true;
@@ -413,20 +415,20 @@ public class TryBlock extends FixedDexContainerWithTool implements
         }
         return result;
     }
-    public void merge(TryBlock tryBlock){
+    public void merge(InsTryBlock tryBlock) {
         boolean is_null = tryBlock.isNull();
         setNull(is_null);
-        if(is_null){
+        if (is_null) {
             return;
         }
         int count = tryBlock.getTryItemCount();
-        for(int i = 0; i < count; i++){
-            TryItem coming = tryBlock.get(i);
-            TryItem comingSource = coming.getTryItem();
-            TryItem tryItem;
-            if(coming != comingSource){
+        for (int i = 0; i < count; i++) {
+            InsTryItem coming = tryBlock.get(i);
+            InsTryItem comingSource = coming.getTryItem();
+            InsTryItem tryItem;
+            if (coming != comingSource) {
                 tryItem = get(comingSource.getIndex()).newCompact();
-            }else {
+            } else {
                 tryItem = newInstance();
             }
             add(tryItem);
@@ -434,14 +436,14 @@ public class TryBlock extends FixedDexContainerWithTool implements
         }
         updateHandlerOffsets();
     }
-    public void fromSmali(SmaliCodeTryItem smaliCodeTryItem) {
-        createNext().fromSmali(smaliCodeTryItem);
+    public void fromProgram(TryItem tryItem) {
+        createNext().fromProgram(tryItem);
         updateHandlerOffsets();
     }
 
     @Override
     public boolean uses(Key key) {
-        Iterator<TryItem> iterator = iterator();
+        Iterator<InsTryItem> iterator = iterator();
         while (iterator.hasNext()) {
             if (iterator.next().uses(key)) {
                 return true;
@@ -452,14 +454,19 @@ public class TryBlock extends FixedDexContainerWithTool implements
 
     @Override
     public Iterator<IdItem> usedIds() {
-        return new IterableIterator<TryItem, IdItem>(iterator()) {
-            @Override
-            public Iterator<IdItem> iterator(TryItem tryItem) {
-                return tryItem.usedIds();
-            }
-        };
+        return IterableIterator.of(iterator(), InsTryItem::usedIds);
     }
 
+    public boolean sortTryItems() {
+        BlockList<InsTryItem> tryItemArray = this.tryItemArray;
+        HandlerOffsetArray handlerOffsetArray = this.handlerOffsetArray;
+        if (tryItemArray == null || handlerOffsetArray == null
+                || handlerOffsetArray.size() < 2
+                || !tryItemArray.needsSort(CompareUtil.getComparableComparator())) {
+            return false;
+        }
+        return tryItemArray.sort(CompareUtil.getComparableComparator(), handlerOffsetArray);
+    }
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -468,8 +475,8 @@ public class TryBlock extends FixedDexContainerWithTool implements
         if (obj == null || getClass() != obj.getClass()) {
             return false;
         }
-        TryBlock tryBlock = (TryBlock) obj;
-        if(isNull()){
+        InsTryBlock tryBlock = (InsTryBlock) obj;
+        if (isNull()) {
             return tryBlock.isNull();
         }
         return Objects.equals(handlerOffsetArray, tryBlock.handlerOffsetArray) &&
@@ -481,12 +488,12 @@ public class TryBlock extends FixedDexContainerWithTool implements
         int hash = 1;
         Object obj = handlerOffsetArray;
         hash = hash * 31;
-        if(obj != null){
+        if (obj != null) {
             hash = hash + obj.hashCode();
         }
         obj = tryItemArray;
         hash = hash * 31;
-        if(obj != null){
+        if (obj != null) {
             hash = hash + obj.hashCode();
         }
         return hash;
@@ -494,7 +501,7 @@ public class TryBlock extends FixedDexContainerWithTool implements
 
     @Override
     public String toString() {
-        if(isNull()){
+        if (isNull()) {
             return "NULL";
         }
         return "tryItems = " + tryItemArray.toString() + ", bytes="+countBytes();

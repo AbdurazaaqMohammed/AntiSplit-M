@@ -7,7 +7,7 @@ package com.reandroid.json;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.Base64;
+import android.util.Base64;
 
 public class JsonUtil {
 
@@ -17,7 +17,7 @@ public class JsonUtil {
         }
         text = text.substring(JSONItem.MIME_BIN_BASE64.length());
         try{
-            return android.Base64.decode(text, 0);
+            return Base64.decode(text, Base64.URL_SAFE | Base64.NO_WRAP);
         }catch (Throwable throwable){
             throw new JSONException(throwable);
         }

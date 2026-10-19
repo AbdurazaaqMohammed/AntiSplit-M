@@ -20,7 +20,6 @@ import com.reandroid.utils.CompareUtil;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class ApkUtil {
@@ -104,7 +103,7 @@ public class ApkUtil {
                 results.add(dir);
             }
         }
-        Collections.sort(results, CompareUtil.getComparableComparator());
+        java.util.Collections.sort(results, CompareUtil.getComparableComparator());
         return results;
     }
     public static List<File> listPublicXmlFiles(File resourcesDirectory){
@@ -122,7 +121,7 @@ public class ApkUtil {
                 }
             }
         }
-        Collections.sort(results, CompareUtil.getComparableComparator());
+        java.util.Collections.sort(results, CompareUtil.getComparableComparator());
         return results;
     }
     private static File getPublicXmlFile(File resDir){
@@ -159,7 +158,7 @@ public class ApkUtil {
                 results.add(dir);
             }
         }
-        Collections.sort(results, CompareUtil.getComparableComparator());
+        java.util.Collections.sort(results, CompareUtil.getComparableComparator());
         return results;
     }
     public static boolean isValuesDirectoryName(String name, boolean checkVariant){
@@ -197,8 +196,8 @@ public class ApkUtil {
         if(ext==null){
             return true;
         }
-        String name=file.getName().toLowerCase();
-        ext=ext.toLowerCase();
+        String name=file.getName().toLowerCase(java.util.Locale.ROOT);
+        ext=ext.toLowerCase(java.util.Locale.ROOT);
         return name.endsWith(ext);
     }
     public static String toModuleName(File file){

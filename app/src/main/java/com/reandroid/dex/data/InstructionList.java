@@ -28,7 +28,7 @@ import com.reandroid.dex.id.StringId;
 import com.reandroid.dex.ins.ConstNumber;
 import com.reandroid.dex.ins.ConstNumberLong;
 import com.reandroid.dex.ins.ConstString;
-import com.reandroid.dex.ins.ExceptionHandler;
+import com.reandroid.dex.ins.InsExceptionHandler;
 import com.reandroid.dex.ins.Ins;
 import com.reandroid.dex.ins.InsBlockList;
 import com.reandroid.dex.ins.InsNop;
@@ -58,10 +58,9 @@ import com.reandroid.utils.collection.IterableIterator;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import org.apache.commons.collections4.Predicate;
+import com.reandroid.utils.function.Predicate;
 
 public class InstructionList extends FixedBlockContainer implements
         Iterable<Ins>, SmaliFormat {
@@ -180,7 +179,7 @@ public class InstructionList extends FixedBlockContainer implements
             return registerValue < count && isFreeRegister(registerValue, startIndex);
         });
         List<Register> list = CollectionUtil.toUniqueList(iterator);
-        Collections.sort(list, CompareUtil.getComparableComparator());
+        java.util.Collections.sort(list, CompareUtil.getComparableComparator());
         return list;
     }
     public boolean isFreeRegister(int registerValue, int startIndex) {
@@ -216,7 +215,7 @@ public class InstructionList extends FixedBlockContainer implements
             T1 result = null;
             if (ins != null && ins.getOpcode() == opcode) {
                 result = (T1) ins;
-                if (filter != null && !filter.evaluate(result)) {
+                if (filter != null && !filter.test(result)) {
                     result = null;
                 }
             }
@@ -379,8 +378,8 @@ public class InstructionList extends FixedBlockContainer implements
         return item;
     }
     public boolean isLonelyInTryCatch(Ins ins) {
-        Iterator<ExceptionHandler.TryStartLabel> iterator = ins.getReferencingLabels(
-                ExceptionHandler.TryStartLabel.class);
+        Iterator<InsExceptionHandler.TryStartLabel> iterator = ins.getReferencingLabels(
+                InsExceptionHandler.TryStartLabel.class);
         if (!iterator.hasNext()) {
             return false;
         }
@@ -389,7 +388,7 @@ public class InstructionList extends FixedBlockContainer implements
         int codeUnits = ins.getCodeUnits();
         boolean result = false;
         while (iterator.hasNext()) {
-            ExceptionHandler.TryStartLabel startLabel = iterator.next();
+            InsExceptionHandler.TryStartLabel startLabel = iterator.next();
             int handlerCodeUnits = startLabel.getHandler().getCodeUnit();
             if (handlerCodeUnits <= codeUnits) {
                 result = true;

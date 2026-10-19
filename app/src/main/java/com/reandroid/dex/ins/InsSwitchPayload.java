@@ -41,10 +41,13 @@ public abstract class InsSwitchPayload<T extends SwitchEntry> extends PayloadDat
     @Override
     public void updateTargetAddress() {
         super.updateTargetAddress();
-        getSwitch().setTargetInstruction(this);
-        getSwitch().updateTargetAddress();
-        for(SwitchEntry switchEntry : this) {
-            switchEntry.updateTargetAddress();
+        InsSwitch insSwitch = getSwitch();
+        if (insSwitch != null) {
+            insSwitch.setTargetInstruction(this);
+            insSwitch.updateTargetAddress();
+            for (SwitchEntry switchEntry : this) {
+                switchEntry.updateTargetAddress();
+            }
         }
     }
 

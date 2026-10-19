@@ -19,7 +19,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import org.apache.commons.collections4.Transformer;
+import com.reandroid.utils.function.Function;
 
 public class GroupMap<K, V> {
 
@@ -99,13 +99,13 @@ public class GroupMap<K, V> {
         return (V) obj;
     }
 
-    public void putAll(Collection<? extends V> collection, org.apache.commons.collections4.Transformer<? super V, K> transformer){
+    public void putAll(Collection<? extends V> collection, Function<? super V, K> function){
         if(collection.isEmpty()){
             return;
         }
         initializeEmpty(collection.size());
         for(V value : collection){
-            put(transformer.transform(value), value);
+            put(function.apply(value), value);
         }
     }
     @SuppressWarnings("unchecked")

@@ -18,7 +18,7 @@ package com.reandroid.dex.ins;
 import com.reandroid.dex.program.InstructionLabel;
 
 public interface ExceptionLabel extends InstructionLabel {
-    ExceptionHandler getHandler();
+    InsExceptionHandler getHandler();
 
     @Override
     default boolean isRemoved() {

@@ -104,9 +104,9 @@ public class Ins4rcc extends Size8Ins implements RegistersSet, DualKeyReference 
 
     @Override
     public void setRegister(int index, int value) {
-        if(index != 0) {
-            setShort(1, value + 1);
-        }else {
+        if (index != 0) {
+            setByte(1, value + 1 - getRegister(0));
+        } else {
             setShort(4, value);
         }
     }

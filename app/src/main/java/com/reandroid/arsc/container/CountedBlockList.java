@@ -23,6 +23,7 @@ import com.reandroid.arsc.item.IntegerReference;
 
 import java.io.IOException;
 import java.io.InputStream;
+import com.reandroid.utils.function.Predicate;
 
 public class CountedBlockList<T extends Block> extends BlockList<T> implements DirectStreamReader {
 

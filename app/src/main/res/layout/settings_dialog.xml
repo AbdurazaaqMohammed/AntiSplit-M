@@ -3,127 +3,161 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:card_view="http://schemas.android.com/tools"
-    android:layout_margin="16dp">
+    android:fillViewport="true"
+    android:clipToPadding="false">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="16dp">
 
-        <com.google.android.material.card.MaterialCardView
+        <com.google.android.material.textview.MaterialTextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="5dp"
-            android:outlineSpotShadowColor="@android:color/transparent"
-            card_view:cardElevation="0dp"
-            app:cardElevation="0dp"
-            app:cardCornerRadius="8dp">
+            android:paddingTop="8dp"
+            android:paddingBottom="8dp"
+            android:text="@string/theme"
+            android:textAppearance="?attr/textAppearanceTitleSmall"
+            android:textColor="?attr/colorPrimary" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/themeToggleGroup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            app:checkedButton="@id/systemThemeButton"
+            app:selectionRequired="true"
+            app:singleSelection="true">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/lightThemeButton"
+                style="@style/Widget.Material3.Button.IconButton"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
+                android:contentDescription="@string/light_theme"
+                app:icon="@drawable/light"
+                app:iconTint="?attr/colorOnSurface"
+                app:tooltipText="@string/light_theme" />
 
-                <com.google.android.material.button.MaterialButtonToggleGroup
-                    android:id="@+id/themeToggleGroup"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    app:checkedButton="@id/systemThemeButton"
-                    app:singleSelection="true"
-                    app:selectionRequired="true">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/darkThemeButton"
+                style="@style/Widget.Material3.Button.IconButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/dark_theme"
+                app:icon="@drawable/dark"
+                app:iconTint="?attr/colorOnSurface"
+                app:tooltipText="@string/dark_theme" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/lightThemeButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:icon="@drawable/light"
-                        app:tooltipText="@string/light_theme"
-                        android:contentDescription="@string/light_theme"
-                        style="@style/Widget.Material3.Button.IconButton"/>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/blackThemeButton"
+                style="@style/Widget.Material3.Button.IconButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/black_theme"
+                app:icon="@drawable/black"
+                app:iconTint="?attr/colorOnSurface"
+                app:tooltipText="@string/black_theme" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/darkThemeButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:icon="@drawable/dark"
-                        app:tooltipText="@string/dark_theme"
-                        android:contentDescription="@string/dark_theme"
-                        style="@style/Widget.Material3.Button.IconButton"/>
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/blackThemeButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:icon="@drawable/black"
-                        app:tooltipText="@string/black_theme"
-                        android:contentDescription="@string/black_theme"
-                        style="@style/Widget.Material3.Button.IconButton"/>
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/systemThemeButton"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        app:icon="@drawable/system_theme"
-                        app:tooltipText="@string/system_theme"
-                        android:contentDescription="@string/system_theme"
-                        style="@style/Widget.Material3.Button.IconButton"/>
-
-                </com.google.android.material.button.MaterialButtonToggleGroup>
-
-            </LinearLayout>
-
-        </com.google.android.material.card.MaterialCardView>
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/systemThemeButton"
+                style="@style/Widget.Material3.Button.IconButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/system_theme"
+                app:icon="@drawable/system_theme"
+                app:iconTint="?attr/colorOnSurface"
+                app:tooltipText="@string/system_theme" />
+        </com.google.android.material.button.MaterialButtonToggleGroup>
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="?android:attr/listDivider" />
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="?attr/colorOutlineVariant" />
 
         <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/logToggle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="18sp"
-            android:text="@string/enable_logs" />
+            android:minHeight="56dp"
+            android:text="@string/enable_logs"
+            android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/showDialogToggle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="56dp"
+            android:text="@string/show_dialog"
+            android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/selectSplitsForDeviceToggle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="56dp"
+            android:text="@string/automatically_select"
+            android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/signToggle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="56dp"
+            android:text="@string/sign_apk"
+            android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/forceToggle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="56dp"
+            android:text="@string/force"
+            android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/updateToggle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="56dp"
+            android:text="@string/auto_update"
+            android:textAppearance="?attr/textAppearanceBodyLarge" />
 
         <View
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="?android:attr/listDivider" />
-
-<!--        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/ask"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="18sp"
-            android:text="@string/ask" />!-->
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
+            android:background="?attr/colorOutlineVariant" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/dropdown_menu"
-            style="@style/Widget.Material3.TextInputLayout.FilledBox.ExposedDropdownMenu"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Select Item">
+            android:hint="@string/file_save_method">
 
             <AutoCompleteTextView
                 android:id="@+id/auto_complete_tv"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="none"
-                android:singleLine="false"
-                android:lines="2"
-                android:maxLines="3"/>
+                android:maxLines="3"
+                android:singleLine="false" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/dropdown_compress_level"
-            style="@style/Widget.Material3.TextInputLayout.FilledBox.ExposedDropdownMenu"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
             android:hint="@string/select_compression_level">
 
             <AutoCompleteTextView
@@ -131,110 +165,18 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="none"
-                android:singleLine="false"
-                android:lines="2"
-                android:maxLines="11"/>
+                android:maxLines="11"
+                android:singleLine="false" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="?android:attr/listDivider" />
-
-        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/showDialogToggle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="18sp"
-            android:text="@string/show_dialog" />
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="?android:attr/listDivider" />
-
-        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/selectSplitsForDeviceToggle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="18sp"
-            android:text="@string/automatically_select" />
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="?android:attr/listDivider" />
-
-        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/signToggle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="18sp"
-            android:text="@string/sign_apk" />
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="?android:attr/listDivider" />
-
-        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/forceToggle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="18sp"
-            android:text="@string/force" />
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="?android:attr/listDivider" />
-
-        <com.google.android.material.materialswitch.MaterialSwitch
-            android:id="@+id/updateToggle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="18sp"
-            android:text="@string/auto_update" />
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="?android:attr/listDivider" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/checkUpdateNow"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/check_update_now"
-            style="@style/Widget.Material3.Button.OutlinedButton" />
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="?android:attr/listDivider" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/langPicker"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/lang"
-            style="@style/Widget.Material3.Button.OutlinedButton" />
-
         <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
             android:id="@+id/suffixLayout"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
             android:hint="@string/suffix"
-            app:endIconMode="clear_text"
-            app:boxBackgroundMode="outline"
-            android:layout_marginTop="5dp"
-            app:boxCornerRadiusTopStart="24dp"
-            app:boxCornerRadiusTopEnd="24dp"
-            app:boxCornerRadiusBottomStart="24dp"
-            app:boxCornerRadiusBottomEnd="24dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/filter_button"
-            app:layout_constraintTop_toTopOf="parent">
+            app:endIconMode="clear_text">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/suffixInput"
@@ -244,7 +186,20 @@
                 android:inputType="text" />
         </com.google.android.material.textfield.TextInputLayout>
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/langPicker"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/lang" />
 
-
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/checkUpdateNow"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/check_update_now" />
     </LinearLayout>
 </ScrollView>

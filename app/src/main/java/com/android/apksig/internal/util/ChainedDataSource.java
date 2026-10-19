@@ -89,7 +89,7 @@ public class ChainedDataSource implements DataSource {
         ByteBuffer buffer = ByteBuffer.allocate(size);
         for (; i < mSources.length && buffer.hasRemaining(); i++) {
             long sizeToCopy = Math.min(mSources[i].size() - offset, buffer.remaining());
-            mSources[i].copyTo(offset, Math.toIntExact(sizeToCopy), buffer);
+            mSources[i].copyTo(offset, (int) sizeToCopy, buffer);
             offset = 0;  // may not be zero for the first source, but reset after that.
         }
         buffer.rewind();

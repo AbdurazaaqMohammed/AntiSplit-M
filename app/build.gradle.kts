@@ -7,7 +7,7 @@ android {
     compileSdk = 36
 
     lint {
-        baseline = file("lint.xml")
+        lintConfig = rootProject.file("lint.xml")
     }
 
     defaultConfig {

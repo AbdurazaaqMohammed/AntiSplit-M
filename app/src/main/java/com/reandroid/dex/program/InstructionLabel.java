@@ -61,9 +61,8 @@ public interface InstructionLabel extends InstructionStatement {
             setTargetAddress(target.getAddress());
         }
     }
-    // TODO: implement everywhere
     default String getLabelName() {
-        return null;
+        return getLabelType().buildLabelName(getTargetAddress());
     }
     InstructionLabelType getLabelType();
 
