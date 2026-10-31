@@ -79,4 +79,12 @@
     <string name="invalid_file">The selected file is not a valid split APK</string>
     <string name="no_file_manager">No file manager was found to save the APK. Grant storage permission to save it automatically.</string>
     <string name="save_failed">Failed to save the merged APK</string>
+    <string name="github">GitHub</string>
+    <string name="donate">Donate</string>
+    <string name="about_open_source_projects">Open Source Projects Used</string>
+    <string name="tap_for_license">Tap a project to view its license and source link\n</string>
+    <string name="desc">AntiSplit (Merge) Split APKs to APK</string>
+    <string name="about">About</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="by_x">by %1$s</string>
 </resources>

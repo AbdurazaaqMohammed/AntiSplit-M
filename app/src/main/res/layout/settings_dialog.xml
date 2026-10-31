@@ -195,6 +195,14 @@
             android:text="@string/lang" />
 
         <com.google.android.material.button.MaterialButton
+            android:id="@+id/abt"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:text="@string/about" />
+
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/checkUpdateNow"
             style="@style/Widget.Material3.Button.TextButton"
             android:layout_width="match_parent"

@@ -1,11 +1,12 @@
 package com.abdurazaaqmohammed.AntiSplit.main;
 
+import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.util.LruCache;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.ImageView;
@@ -17,79 +18,90 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-public class AppListArrayAdapter extends ArrayAdapter<AppInfo> implements Filterable {
-    private static final LruCache<String, Drawable> ICON_CACHE =
-            new LruCache<String, Drawable>(8 * 1024) {
-                @Override
-                protected int sizeOf(String key, Drawable value) {
-                    int width = Math.max(1, value.getIntrinsicWidth());
-                    int height = Math.max(1, value.getIntrinsicHeight());
-                    return Math.max(1, width * height * 4 / 1024);
-                }
-            };
+public class AppListArrayAdapter extends BaseAdapter implements Filterable {
 
-    private final MainActivity context;
-    private final List<AppInfo> originalAppInfoList = new ArrayList<>();
-    public final List<AppInfo> filteredAppInfoList = new ArrayList<>();
+    private static final int ICON_CACHE_SIZE_KB = 8 * 1024;
+
+    private final Context context;
     private final boolean showIcon;
+    private final LruCache<String, Drawable> iconCache = new LruCache<String, Drawable>(
+            ICON_CACHE_SIZE_KB) {
+        @Override
+        protected int sizeOf(String key, Drawable value) {
+            int width = Math.max(1, value.getIntrinsicWidth());
+            int height = Math.max(1, value.getIntrinsicHeight());
+            return Math.max(1, width * height * 4 / 1024);
+        }
+    };
+    private final List<AppInfo> allItems = new ArrayList<>();
+    private final List<AppInfo> visibleItems = new ArrayList<>();
     private AppInfoFilter filter;
 
-    public AppListArrayAdapter(MainActivity context, List<AppInfo> appInfoList, boolean showIcon) {
-        super(context, R.layout.list_item, appInfoList);
+    public AppListArrayAdapter(Context context, List<AppInfo> appInfoList, boolean showIcon) {
         this.context = context;
         this.showIcon = showIcon;
         setItems(appInfoList);
     }
 
     public void setItems(List<AppInfo> appInfoList) {
-        originalAppInfoList.clear();
-        originalAppInfoList.addAll(appInfoList);
-        filteredAppInfoList.clear();
-        filteredAppInfoList.addAll(appInfoList);
+        allItems.clear();
+        allItems.addAll(appInfoList);
+        visibleItems.clear();
+        visibleItems.addAll(appInfoList);
         notifyDataSetChanged();
     }
 
     @Override
     public int getCount() {
-        return filteredAppInfoList.size();
+        return visibleItems.size();
     }
 
     @Override
     public AppInfo getItem(int position) {
-        return filteredAppInfoList.get(position);
+        return visibleItems.get(position);
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return position;
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        if (convertView == null)
-            convertView = LayoutInflater.from(context).inflate(R.layout.list_item, parent, false);
+        View row = convertView;
+        if (row == null)
+            row = LayoutInflater.from(context).inflate(R.layout.list_item, parent, false);
 
-        TextView textView = convertView.findViewById(R.id.text_view);
-        TextView packageView = convertView.findViewById(R.id.package_view);
-        ImageView iconView = convertView.findViewById(R.id.icon_view);
+        TextView nameView = row.findViewById(R.id.text_view);
+        TextView packageView = row.findViewById(R.id.package_view);
+        ImageView iconView = row.findViewById(R.id.icon_view);
 
         AppInfo appInfo = getItem(position);
-        textView.setText(appInfo.name);
-        if (packageView != null)
-            packageView.setText(appInfo.packageName);
+        nameView.setText(appInfo.name);
+        packageView.setText(appInfo.packageName);
 
-        if (showIcon) {
-            iconView.setVisibility(View.VISIBLE);
-            Drawable icon = ICON_CACHE.get(appInfo.packageName);
-            if (icon == null) {
-                try {
-                    icon = context.getPackageManager().getApplicationIcon(appInfo.packageName);
-                    ICON_CACHE.put(appInfo.packageName, icon);
-                } catch (Exception ignored) {
-                }
-            }
-            iconView.setImageDrawable(icon);
-        } else {
-            iconView.setImageDrawable(null);
+        if (!showIcon) {
             iconView.setVisibility(View.GONE);
+            iconView.setImageDrawable(null);
+            return row;
         }
 
-        return convertView;
+        iconView.setVisibility(View.VISIBLE);
+        iconView.setImageDrawable(loadIcon(appInfo.packageName));
+        return row;
+    }
+
+    private Drawable loadIcon(String packageName) {
+        Drawable icon = iconCache.get(packageName);
+        if (icon != null)
+            return icon;
+        try {
+            icon = context.getPackageManager().getApplicationIcon(packageName);
+            iconCache.put(packageName, icon);
+        } catch (Exception ignored) {
+            icon = null;
+        }
+        return icon;
     }
 
     @Override
@@ -103,29 +115,27 @@ public class AppListArrayAdapter extends ArrayAdapter<AppInfo> implements Filter
     private class AppInfoFilter extends Filter {
         @Override
         protected FilterResults performFiltering(CharSequence constraint) {
-            FilterResults results = new FilterResults();
+            List<AppInfo> matches = new ArrayList<>();
             if (constraint == null || constraint.length() == 0) {
-                results.values = new ArrayList<>(originalAppInfoList);
-                results.count = originalAppInfoList.size();
+                matches.addAll(allItems);
             } else {
-                List<AppInfo> filteredItems = new ArrayList<>();
-                String filterPattern = constraint.toString().toLowerCase(Locale.ROOT).trim();
-                for (AppInfo appInfo : originalAppInfoList) {
-                    if (appInfo.name.toLowerCase(Locale.ROOT).contains(filterPattern)
-                            || appInfo.packageName.toLowerCase(Locale.ROOT).contains(filterPattern)) {
-                        filteredItems.add(appInfo);
-                    }
+                String pattern = constraint.toString().toLowerCase(Locale.ROOT).trim();
+                for (AppInfo appInfo : allItems) {
+                    if (appInfo.name.toLowerCase(Locale.ROOT).contains(pattern)
+                            || appInfo.packageName.toLowerCase(Locale.ROOT).contains(pattern))
+                        matches.add(appInfo);
                 }
-                results.values = filteredItems;
-                results.count = filteredItems.size();
             }
+            FilterResults results = new FilterResults();
+            results.values = matches;
+            results.count = matches.size();
             return results;
         }
 
         @Override
         protected void publishResults(CharSequence constraint, FilterResults results) {
-            filteredAppInfoList.clear();
-            filteredAppInfoList.addAll((List<AppInfo>) results.values);
+            visibleItems.clear();
+            visibleItems.addAll((List<AppInfo>) results.values);
             notifyDataSetChanged();
         }
     }

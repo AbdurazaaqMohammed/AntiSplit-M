@@ -27,7 +27,7 @@ public class FileUtils {
     }
 
     public static File getUnusedFile(File file) {
-        int i = 0;
+        int index = 0;
         String fullName = file.getName();
         int dot = fullName.lastIndexOf('.');
         String name = dot > 0 ? fullName.substring(0, dot) : fullName;
@@ -35,8 +35,8 @@ public class FileUtils {
         File parent = file.getParentFile();
         File candidate = file;
         while (candidate.exists()) {
-            i++;
-            String newName = name.replaceFirst("_\\d+$", "") + '_' + i
+            index++;
+            String newName = name.replaceFirst("_\\d+$", "") + '_' + index
                     + (extension.isEmpty() ? "" : '.' + extension);
             candidate = parent == null ? new File(newName) : new File(parent, newName);
         }
@@ -75,9 +75,6 @@ public class FileUtils {
     }
 
     public static void copyFile(InputStream is, File destinationFile) throws IOException {
-        File parent = destinationFile.getParentFile();
-        if (parent != null && !parent.exists() && !parent.mkdirs())
-            throw new IOException("Unable to create directory: " + parent);
         try (OutputStream os = getOutputStream(destinationFile)) {
             copyFile(is, os);
         }
@@ -94,6 +91,10 @@ public class FileUtils {
         if (parent != null && !parent.exists() && !parent.mkdirs())
             throw new IOException("Unable to create directory: " + parent);
         return new FileOutputStream(file);
+    }
+
+    public static boolean hasStoragePermission(Context context) {
+        return !doesNotHaveStoragePerm(context);
     }
 
     public static boolean doesNotHaveStoragePerm(Context context) {
@@ -122,5 +123,21 @@ public class FileUtils {
         if (downloads.exists() || downloads.mkdirs())
             return downloads;
         return Environment.getExternalStorageDirectory();
+    }
+
+    public static void removeEmptyOutputFolder(Context context) {
+        if (doesNotHaveStoragePerm(context))
+            return;
+        File folder = new File(Environment.getExternalStorageDirectory(), "AntiSplit-M");
+        File[] children = folder.listFiles();
+        if (children == null)
+            return;
+        for (File child : children) {
+            if (child.isFile() && child.length() == 0)
+                child.delete();
+        }
+        File[] remaining = folder.listFiles();
+        if (remaining == null || remaining.length == 0)
+            folder.delete();
     }
 }

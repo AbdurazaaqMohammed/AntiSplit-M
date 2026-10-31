@@ -10,7 +10,7 @@ import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 
-import com.abdurazaaqmohammed.AntiSplit.main.MainActivity;
+import com.abdurazaaqmohammed.utils.UriNames;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,23 +45,30 @@ public class FileUtils {
     https://github.com/starry-shivam/FileUtils/blob/main/file-utils/src/main/java/com/starry/file_utils/FileUtils.kt
      */
 
-    public static OutputStream getOutputStream(Uri uri, MainActivity context) throws IOException {
+    public static OutputStream getOutputStream(Uri uri, Context context) throws IOException {
         String uriPath;
-        if(doesNotHaveStoragePerm(context) || (uriPath = uri.getPath()) == null || uriPath.startsWith("/document/msf:")) return context.getContentResolver().openOutputStream(uri);
+        if (doesNotHaveStoragePerm(context) || (uriPath = uri.getPath()) == null
+                || uriPath.startsWith("/document/msf:"))
+            return context.getContentResolver().openOutputStream(uri);
         try {
             String filePath = getPath(uri, context);
             File file = filePath == null ? null : new File(filePath);
-            return file != null && file.canWrite() ? com.abdurazaaqmohammed.utils.FileUtils.getOutputStream(file) : context.getContentResolver().openOutputStream(uri);
+            if (file != null && file.canWrite())
+                return com.abdurazaaqmohammed.utils.FileUtils.getOutputStream(file);
+            return context.getContentResolver().openOutputStream(uri);
         } catch (Exception e) {
             return context.getContentResolver().openOutputStream(uri);
         }
     }
 
-    public static InputStream getInputStream(Uri uri, MainActivity context) throws IOException {
-        if(doesNotHaveStoragePerm(context)) return context.getContentResolver().openInputStream(uri);
+    public static InputStream getInputStream(Uri uri, Context context) throws IOException {
+        if (doesNotHaveStoragePerm(context))
+            return context.getContentResolver().openInputStream(uri);
         String filePath = getPath(uri, context);
         File file = filePath == null ? null : new File(filePath);
-        return file != null && file.canRead() ? com.abdurazaaqmohammed.utils.FileUtils.getInputStream(file) : context.getContentResolver().openInputStream(uri);
+        if (file != null && file.canRead())
+            return com.abdurazaaqmohammed.utils.FileUtils.getInputStream(file);
+        return context.getContentResolver().openInputStream(uri);
     }
 
     private static boolean fileExists(String filePath) {
@@ -137,7 +144,7 @@ public class FileUtils {
         }
     }
 
-    public static String getPath(Uri uri, MainActivity context) throws IOException {
+    public static String getPath(Uri uri, Context context) throws IOException {
         String selection;
         String[] selectionArgs;
 
@@ -229,23 +236,22 @@ public class FileUtils {
         return copyFileToInternalStorageAndGetPath(uri, context);
     }
 
-    public static String copyFileToInternalStorageAndGetPath(Uri uri, MainActivity context) throws IOException {
+    public static String copyFileToInternalStorageAndGetPath(Uri uri, Context context) throws IOException {
         return copyFileToInternalStorage(uri, context).getPath();
     }
 
-    public static File copyFileToInternalStorage(Uri uri, MainActivity context) throws IOException {
-        File output = new File(context.getCacheDir(), context.getOriginalFileName(uri));
-        if(output.exists() && output.length() > 999) return output;
-        InputStream inputStream = context.getContentResolver().openInputStream(uri);
-        if (inputStream == null)
+    public static File copyFileToInternalStorage(Uri uri, Context context) throws IOException {
+        String name = UriNames.cacheName(context, uri, "input.zip");
+        File output = new File(context.getCacheDir(),
+                Integer.toHexString(uri.toString().hashCode()) + '_' + name);
+        if (output.isFile() && output.length() > 999)
+            return output;
+        InputStream stream = context.getContentResolver().openInputStream(uri);
+        if (stream == null)
             throw new IOException("Unable to open " + uri);
-        try (InputStream cursor = inputStream;
-             OutputStream outputStream = com.abdurazaaqmohammed.utils.FileUtils.getOutputStream(output)) {
-            int read;
-            byte[] buffers = new byte[8192];
-            while ((read = cursor.read(buffers)) != -1) {
-                outputStream.write(buffers, 0, read);
-            }
+        try (InputStream input = stream;
+             OutputStream os = com.abdurazaaqmohammed.utils.FileUtils.getOutputStream(output)) {
+            com.abdurazaaqmohammed.utils.FileUtils.copyFile(input, os);
         }
         return output;
     }

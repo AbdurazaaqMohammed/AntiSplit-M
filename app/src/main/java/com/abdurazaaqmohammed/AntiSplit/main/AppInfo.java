@@ -1,10 +1,11 @@
 package com.abdurazaaqmohammed.AntiSplit.main;
 
 public class AppInfo {
-    public String name;
-    String packageName;
-    public long lastUpdated;
-    public long firstInstall;
+
+    public final String name;
+    public final String packageName;
+    public final long lastUpdated;
+    public final long firstInstall;
 
     public AppInfo(String name, String packageName, long lastUpdated, long firstInstall) {
         this.name = name;
