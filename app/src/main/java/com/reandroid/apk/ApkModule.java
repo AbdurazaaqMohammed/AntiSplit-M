@@ -604,6 +604,15 @@ public class ApkModule implements ApkFile, Closeable {
     public void updateUncompressedFiles() {
         getUncompressedFiles().apply(getZipEntryMap());
         applyExtractNativeLibs();
+        // Always ship lib/*.so uncompressed. This is mandatory when the manifest
+        // declares extractNativeLibs="false", harmless otherwise (the installer
+        // extracts them), and lets the writer copy them zero-copy instead of
+        // deflating tens of megabytes of native code on every merge.
+        UncompressedFiles uncompressedFiles = getUncompressedFiles();
+        for (InputSource inputSource : listNativeLibraryFiles()) {
+            inputSource.setUncompressed(true);
+            uncompressedFiles.addPath(inputSource.getAlias());
+        }
     }
     public void removeDir(String dirName) {
         getZipEntryMap().removeDir(dirName);
@@ -814,6 +823,26 @@ public class ApkModule implements ApkFile, Closeable {
         } catch (IOException ignored) {
         }
     }
+    /**
+     * Drops the parsed resources.arsc / AndroidManifest.xml object graphs of a
+     * source module after it has been merged into another module. The raw archive
+     * stays open because the merged module still references its InputSources.
+     * Parsed resource tables are by far the largest allocations during a merge;
+     * releasing them module-by-module keeps peak heap flat instead of scaling
+     * with the number of splits.
+     */
+    public void releaseParsedBlocks() {
+        this.mTableBlock = null;
+        this.mTableOriginalSource = null;
+        this.mManifestBlock = null;
+        this.mManifestOriginalSource = null;
+        this.mExternalFrameworks.clear();
+        clearTags();
+        ZipEntryMap map = getZipEntryMap();
+        map.remove(TableBlock.FILE_NAME);
+        map.remove(AndroidManifestBlock.FILE_NAME);
+    }
+
     public void setManifest(AndroidManifestBlock manifestBlock) {
         ZipEntryMap archive = getZipEntryMap();
         if (manifestBlock == null) {
@@ -1313,28 +1342,38 @@ public class ApkModule implements ApkFile, Closeable {
             exist=getTableBlock();
         }
         TableBlock coming=module.getTableBlock();
-        exist.merge(coming);
+        // A full refresh per split is O(n^2) on large bundles. The bundle does a
+        // single refresh after all merges and the writer refreshes before saving.
+        exist.merge(coming, false);
     }
     private void mergeFiles(ApkModule module) {
         ZipEntryMap entryMapExist = getZipEntryMap();
-        ZipEntryMap entryMapComing = module.getZipEntryMap();
-        Map<String, InputSource> comingAlias = entryMapComing.toAliasMap();
-        Map<String, InputSource> existAlias = entryMapExist.toAliasMap();
+        // The map is already keyed by alias, so no intermediate alias maps are
+        // needed. Building two full HashMaps per split was pure allocation churn.
+        InputSource[] coming = module.getZipEntryMap().toArray();
         UncompressedFiles uncompressedFiles = module.getUncompressedFiles();
-        for (InputSource inputSource:comingAlias.values()) {
-            if (existAlias.containsKey(inputSource.getAlias())
-                    || existAlias.containsKey(inputSource.getName())) {
+        for (InputSource inputSource : coming) {
+            if (inputSource == null)
                 continue;
-            }
-            if (DexFileInputSource.isDexName(inputSource.getName())) {
+            String alias = inputSource.getAlias();
+            if (entryMapExist.contains(alias) || entryMapExist.contains(inputSource.getName()))
                 continue;
+            if (DexFileInputSource.isDexName(inputSource.getName()))
+                continue;
+            // Native libraries must stay STORED (and page aligned by the writer).
+            // Removing them from the uncompressed set caused recompression of
+            // tens of MB of .so data and broke extractNativeLibs="false" builds.
+            if (isNativeLibrary(alias)) {
+                uncompressedFiles.addPath(alias);
+                inputSource.setUncompressed(true);
             }
-            if (inputSource.getAlias().startsWith("lib/")) {
-                uncompressedFiles.removePath(inputSource.getAlias());
-            }
-            logVerbose("Added: " + inputSource.getAlias());
+            logVerbose("Added: " + alias);
             entryMapExist.add(inputSource);
         }
+    }
+
+    private static boolean isNativeLibrary(String path) {
+        return path != null && path.startsWith("lib/") && path.endsWith(".so");
     }
     private void mergeDexFiles(ApkModule module) {
         UncompressedFiles uncompressedFiles = module.getUncompressedFiles();

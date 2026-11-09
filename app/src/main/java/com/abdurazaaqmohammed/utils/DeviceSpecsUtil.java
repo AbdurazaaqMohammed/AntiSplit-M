@@ -24,6 +24,16 @@ public class DeviceSpecsUtil {
             "ldpi", "mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi", "tvdpi", "nodpi", "anydpi"
     };
 
+    /**
+     * Canonical ABIs, longest / most specific first. Order matters: "x86" is a
+     * substring of "x86_64" and "armeabi" is a substring of "armeabi-v7a", so
+     * the more specific names must be tested first.
+     */
+    private static final String[] KNOWN_ABIS = {
+            "arm64-v8a", "armeabi-v7a", "x86_64", "riscv64", "mips64",
+            "armeabi", "x86", "mips"
+    };
+
     private static volatile File cachedArchive;
     private static volatile Uri cachedArchiveUri;
 
@@ -40,43 +50,117 @@ public class DeviceSpecsUtil {
     }
 
     public List<String> getSplitsForDevice(Uri archiveUri) throws IOException {
-        List<String> splits = getListOfSplits(archiveUri);
-        List<String> excluded = new ArrayList<>();
+        return getSplitsForDevice(getListOfSplits(archiveUri));
+    }
 
-        boolean archiveHasArchitecture = false;
-        boolean selectedHasArchitecture = false;
+    /**
+     * Computes the splits that must be excluded for this device. This is the single
+     * source of truth shared by the automatic merge and the manual split picker.
+     * It always keeps at least one architecture split (native libraries live there)
+     * and at least one density split.
+     */
+    public List<String> getSplitsForDevice(List<String> splits) {
+        List<String> excluded = new ArrayList<>();
+        List<String> archToKeep = selectArchitectureSplits(splits);
+        List<String> densityToKeep = selectDensitySplits(splits);
         boolean selectedHasDensity = false;
 
         for (String split : splits) {
-            if (isArchitecture(split))
-                archiveHasArchitecture = true;
             if (isBaseApk(split))
                 continue;
-            if (shouldIncludeSplit(split)) {
-                if (isArchitecture(split))
-                    selectedHasArchitecture = true;
-                if (isDensity(split))
+            boolean include;
+            if (isArchitecture(split)) {
+                include = archToKeep.contains(split);
+            } else if (isDensity(split)) {
+                include = densityToKeep.contains(split);
+                if (include)
                     selectedHasDensity = true;
             } else {
+                include = shouldIncludeLanguage(split);
+            }
+            if (!include)
                 excluded.add(split);
-            }
-        }
-
-        if (archiveHasArchitecture && !selectedHasArchitecture) {
-            logger.logMessage("Could not find device architecture, selecting all architectures");
-            for (String split : splits) {
-                if (isArchitecture(split))
-                    excluded.remove(split);
-            }
         }
 
         if (!selectedHasDensity) {
-            for (String split : splits) {
-                if (hasDensity(split, "hdpi"))
-                    excluded.remove(split);
-            }
+            for (String split : densityToKeep)
+                excluded.remove(split);
         }
         return excluded;
+    }
+
+    /**
+     * Architecture splits carry the app's native libraries. Split names use both
+     * '_' and '-' as separators (e.g. split_config.arm64_v8a.apk), so comparing
+     * whole tokens against Build.SUPPORTED_ABIS never matches. Compare compacted
+     * ABI names instead, and fall back to keeping every architecture split when
+     * the device ABI is not present in the bundle - dropping all of them produces
+     * an APK with no lib/ directory and runtime "couldn't find DSO to load" errors.
+     */
+    public List<String> selectArchitectureSplits(List<String> splits) {
+        List<String> all = new ArrayList<>();
+        List<String> matching = new ArrayList<>();
+        String deviceAbi = compactAbi(primaryAbi());
+        for (String split : splits) {
+            String abi = extractAbi(split);
+            if (abi == null)
+                continue;
+            all.add(split);
+            if (deviceAbi.length() != 0 && compactAbi(abi).equals(deviceAbi))
+                matching.add(split);
+        }
+        if (matching.isEmpty()) {
+            if (logger != null && !all.isEmpty())
+                logger.logMessage("Could not find device architecture, selecting all architectures");
+            return all;
+        }
+        return matching;
+    }
+
+    private List<String> selectDensitySplits(List<String> splits) {
+        List<String> matching = new ArrayList<>();
+        List<String> all = new ArrayList<>();
+        for (String split : splits) {
+            if (!isDensity(split))
+                continue;
+            all.add(split);
+            if (shouldIncludeDensity(split))
+                matching.add(split);
+        }
+        if (!matching.isEmpty())
+            return matching;
+        // Keep the highest density available so resource references always resolve.
+        String best = null;
+        int bestRank = -1;
+        for (String split : all) {
+            for (String token : tokens(split)) {
+                for (int i = 0; i < DENSITIES.length; i++) {
+                    if (DENSITIES[i].equals(token) && i > bestRank) {
+                        bestRank = i;
+                        best = split;
+                    }
+                }
+            }
+        }
+        if (best != null)
+            matching.add(best);
+        return matching;
+    }
+
+    /** Returns the best architecture split to keep when all were deselected. */
+    public static String bestArchitectureSplit(List<String> splits) {
+        String deviceAbi = compactAbi(primaryAbi());
+        String fallback = null;
+        for (String split : splits) {
+            String abi = extractAbi(split);
+            if (abi == null)
+                continue;
+            if (fallback == null)
+                fallback = split;
+            if (deviceAbi.length() != 0 && compactAbi(abi).equals(deviceAbi))
+                return split;
+        }
+        return fallback;
     }
 
     public List<String> getListOfSplits(Uri archiveUri) throws IOException {
@@ -133,10 +217,34 @@ public class DeviceSpecsUtil {
     }
 
     public static boolean isArchitecture(String splitName) {
-        String name = splitName.toLowerCase(Locale.ROOT);
-        return name.contains("armeabi") || name.contains("arm64")
-                || name.contains("x86") || name.contains("mips")
-                || name.contains("riscv");
+        return extractAbi(splitName) != null;
+    }
+
+    /**
+     * Extracts a canonical ABI from a split file name. All non alphanumeric
+     * characters are ignored, so "arm64_v8a", "arm64-v8a" and "arm64.v8a"
+     * all resolve to "arm64-v8a".
+     */
+    public static String extractAbi(String splitName) {
+        if (splitName == null)
+            return null;
+        String compact = compactAbi(splitName);
+        for (String abi : KNOWN_ABIS) {
+            if (compact.contains(compactAbi(abi)))
+                return abi;
+        }
+        return null;
+    }
+
+    private static String compactAbi(String value) {
+        if (value == null)
+            return "";
+        StringBuilder builder = new StringBuilder(value.length());
+        for (char c : value.toLowerCase(Locale.ROOT).toCharArray()) {
+            if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'))
+                builder.append(c);
+        }
+        return builder.toString();
     }
 
     public static boolean isBaseApk(String splitName) {
@@ -169,6 +277,17 @@ public class DeviceSpecsUtil {
                 || shouldIncludeDensity(splitName);
     }
 
+    /** Device-aware variant used by the split picker; keeps at least one ABI split. */
+    public boolean shouldIncludeSplit(String splitName, List<String> allSplits) {
+        if (isBaseApk(splitName))
+            return true;
+        if (isArchitecture(splitName))
+            return shouldIncludeArchitecture(splitName, allSplits);
+        if (isDensity(splitName))
+            return selectDensitySplits(allSplits).contains(splitName);
+        return shouldIncludeLanguage(splitName);
+    }
+
     public boolean shouldIncludeLanguage(String splitName) {
         if (isArchitecture(splitName) || isDensity(splitName))
             return false;
@@ -184,12 +303,12 @@ public class DeviceSpecsUtil {
         String abi = primaryAbi();
         if (TextUtils.isEmpty(abi))
             return false;
-        String normalizedAbi = abi.toLowerCase(Locale.ROOT).replace('-', '_');
-        for (String token : tokens(splitName)) {
-            if (token.replace('-', '_').equals(normalizedAbi))
-                return true;
-        }
-        return false;
+        String splitAbi = extractAbi(splitName);
+        return splitAbi != null && compactAbi(abi).equals(compactAbi(splitAbi));
+    }
+
+    public boolean shouldIncludeArchitecture(String splitName, List<String> allSplits) {
+        return selectArchitectureSplits(allSplits).contains(splitName);
     }
 
     public boolean shouldIncludeDensity(String splitName) {

@@ -130,11 +130,21 @@ public final class SplitPicker {
     }
 
     private void selectForDevice(ListView listView, boolean isChecked) {
+        List<String> excluded = isChecked
+                ? deviceSpecs.getSplitsForDevice(splitNames())
+                : java.util.Collections.emptyList();
         for (int i = HEADER_COUNT; i < checkedItems.length; i++)
             listView.setItemChecked(i,
-                    checkedItems[i] = isChecked && deviceSpecs.shouldIncludeSplit(itemNames[i]));
+                    checkedItems[i] = isChecked && !excluded.contains(itemNames[i]));
         if (isChecked)
             ensureDensitySelected(listView);
+    }
+
+    private List<String> splitNames() {
+        List<String> names = new ArrayList<>(splitCount);
+        for (int i = HEADER_COUNT; i < itemNames.length; i++)
+            names.add(itemNames[i]);
+        return names;
     }
 
     private enum SelectionType {
@@ -144,8 +154,9 @@ public final class SplitPicker {
     }
 
     private void applySelection(ListView listView, boolean isChecked, SelectionType type) {
+        List<String> all = splitNames();
         for (int i = HEADER_COUNT; i < checkedItems.length; i++) {
-            if (!matches(type, itemNames[i]))
+            if (!matches(type, itemNames[i], all))
                 continue;
             listView.setItemChecked(i, checkedItems[i] = isChecked);
         }
@@ -153,9 +164,9 @@ public final class SplitPicker {
             syncSelectAll(listView);
     }
 
-    private boolean matches(SelectionType type, String itemName) {
+    private boolean matches(SelectionType type, String itemName, List<String> allSplits) {
         if (type == SelectionType.ARCHITECTURE)
-            return deviceSpecs.shouldIncludeArchitecture(itemName);
+            return deviceSpecs.shouldIncludeArchitecture(itemName, allSplits);
         if (type == SelectionType.DENSITY)
             return deviceSpecs.shouldIncludeDensity(itemName);
         return deviceSpecs.shouldIncludeLanguage(itemName);

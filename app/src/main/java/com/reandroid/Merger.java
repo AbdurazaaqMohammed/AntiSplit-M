@@ -50,6 +50,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -111,8 +112,6 @@ public class Merger {
 
     private void loadArchive(Uri splitApkUri, List<String> splitsToNotInclude, ApkBundle bundle)
             throws IOException {
-        boolean checkSplits = splitsToNotInclude != null && !splitsToNotInclude.isEmpty();
-
         File archiveFile = DeviceSpecsUtil.getCachedArchive(splitApkUri);
         boolean deleteAfterUse = false;
         if (archiveFile == null) {
@@ -121,7 +120,7 @@ public class Merger {
         }
 
         try {
-            extractApks(archiveFile, checkSplits, splitsToNotInclude);
+            extractApks(archiveFile, splitsToNotInclude);
             bundle.loadApkDirectory(workingDirectory);
         } catch (FileNotFoundException e) {
             throw new IOException(e.getMessage() + " file " + splitApkUri + ' '
@@ -142,17 +141,19 @@ public class Merger {
         return copy;
     }
 
-    private void extractApks(File archiveFile, boolean checkSplits, List<String> excludedSplits)
-            throws IOException {
+    private void extractApks(File archiveFile, List<String> excludedSplits) throws IOException {
         try (ArchiveFile archive = new ArchiveFile(archiveFile)) {
-            for (InputSource entry : archive.getInputSources()) {
+            InputSource[] entries = archive.getInputSources();
+            List<String> effectiveExcluded = keepArchitectureSplit(entries, excludedSplits);
+            boolean checkSplits = effectiveExcluded != null && !effectiveExcluded.isEmpty();
+            for (InputSource entry : entries) {
                 String name = entry.getName();
                 if (!name.endsWith(".apk")) {
                     logger.logMessage(resources.getString(R.string.skipping) + name
                             + resources.getString(R.string.not_apk));
                     continue;
                 }
-                if (checkSplits && excludedSplits.contains(name)) {
+                if (checkSplits && effectiveExcluded.contains(name)) {
                     logger.logMessage(resources.getString(R.string.skipping) + name
                             + resources.getString(R.string.unselected));
                     continue;
@@ -169,6 +170,36 @@ public class Merger {
         }
     }
 
+    /**
+     * Native libraries live exclusively in the architecture split. If all ABI
+     * splits were deselected, the merged APK would have no lib/ directory and the
+     * app would crash at runtime with "couldn't find DSO to load". Re-include the
+     * best matching ABI split so native code is never silently lost.
+     */
+    private List<String> keepArchitectureSplit(InputSource[] entries, List<String> excludedSplits) {
+        if (excludedSplits == null)
+            return null;
+        List<String> archSplits = new ArrayList<>();
+        for (InputSource entry : entries) {
+            String name = entry.getName();
+            if (name.endsWith(".apk") && DeviceSpecsUtil.isArchitecture(name))
+                archSplits.add(name);
+        }
+        if (archSplits.isEmpty())
+            return excludedSplits;
+        for (String split : archSplits) {
+            if (!excludedSplits.contains(split))
+                return excludedSplits;
+        }
+        String keep = DeviceSpecsUtil.bestArchitectureSplit(archSplits);
+        if (keep == null)
+            return excludedSplits;
+        logger.logMessage("Keeping architecture split for native libraries: " + keep);
+        List<String> result = new ArrayList<>(excludedSplits);
+        result.remove(keep);
+        return result;
+    }
+
     private File resolveTarget(String entryName) throws IOException {
         File target = new File(workingDirectory, entryName);
         String basePath = workingDirectory.getCanonicalPath() + File.separator;
@@ -179,6 +210,7 @@ public class Merger {
 
     private File mergeAndSanitize(ApkBundle bundle, boolean force) throws Exception {
         try (ApkModule mergedModule = bundle.mergeModules(!force)) {
+            ensureNativeLibraries(mergedModule, bundle);
             if (mergedModule.hasAndroidManifest())
                 sanitizeManifest(mergedModule);
 
@@ -188,6 +220,22 @@ public class Merger {
             mergedModule.writeApk(mergedApk);
             return mergedApk;
         }
+    }
+
+    /** Defensive check: copy over any .so that the merge did not carry across. */
+    private void ensureNativeLibraries(ApkModule merged, ApkBundle bundle) {
+        int restored = 0;
+        for (ApkModule module : bundle.getApkModuleList()) {
+            for (InputSource source : module.listNativeLibraryFiles()) {
+                String alias = source.getAlias();
+                if (merged.getZipEntryMap().contains(alias))
+                    continue;
+                merged.getZipEntryMap().add(source);
+                restored++;
+            }
+        }
+        if (restored > 0)
+            logger.logMessage("Restored " + restored + " native libraries");
     }
 
     private File sign(File unsignedApk) {
