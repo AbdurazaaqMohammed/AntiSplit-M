@@ -26,6 +26,7 @@ import com.reandroid.archive.io.CountingOutputStream;
 import com.reandroid.archive.io.ZipOutput;
 import com.reandroid.utils.io.FileUtil;
 
+import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.zip.Deflater;
@@ -52,22 +53,39 @@ class OutputSource {
     void writeBuffer(ZipOutput zipOutput) throws IOException {
         LocalFileHeader lfh = getLocalFileHeader();
         InputSource inputSource = getInputSource();
-        OutputStream rawStream = zipOutput.getOutputStream();
+        // ARSC / XML blocks serialize as a huge number of very small writes.
+        // FileChannelOutputStream is unbuffered, so each of those used to become
+        // a separate channel write (tens of thousands of syscalls per merge).
+        BufferedOutputStream rawStream = new BufferedOutputStream(
+                zipOutput.getOutputStream(), 64 * 1024);
         CountingOutputStream<OutputStream> rawCounter = new CountingOutputStream<>(rawStream);
         CountingOutputStream<DeflaterOutputStream> deflateCounter = null;
+        Deflater deflater = null;
 
         if(inputSource.getMethod() != Archive.STORED){
+            deflater = new Deflater(getCompressionLevel(), true);
             DeflaterOutputStream deflaterInputStream =
-                    new DeflaterOutputStream(rawCounter, new Deflater(getCompressionLevel(), true), true);
+                    new DeflaterOutputStream(rawCounter, deflater, true);
             deflateCounter = new CountingOutputStream<>(deflaterInputStream, false);
         }
-        if(deflateCounter != null){
-            rawCounter.disableCrc(true);
-            inputSource.write(deflateCounter);
-            deflateCounter.close();
-            rawCounter.close();
-        }else {
-            inputSource.write(rawCounter);
+        try {
+            if(deflateCounter != null){
+                rawCounter.disableCrc(true);
+                inputSource.write(deflateCounter);
+            }else {
+                inputSource.write(rawCounter);
+            }
+        } finally {
+            if(deflateCounter != null){
+                deflateCounter.close();
+            }
+            // Flush before the writer queries the channel position for the next entry.
+            rawStream.flush();
+            // DeflaterOutputStream does not end a caller-supplied Deflater, so its
+            // native buffers would otherwise leak for every recompressed entry.
+            if(deflater != null){
+                deflater.end();
+            }
         }
 
         lfh.setCompressedSize(rawCounter.getSize());

@@ -2,6 +2,7 @@ package com.abdurazaaqmohammed.AntiSplit.main;
 
 import android.content.res.Resources;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.view.View;
 import android.widget.TextView;
 
@@ -14,6 +15,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class MyAPKLogger implements APKLogger {
 
     private static final int MAX_LOG_CHARS = 20000;
+    private static final long MIN_UPDATE_INTERVAL_MS = 200;
+    private static final long MIN_VERBOSE_INTERVAL_MS = 200;
 
     private final Handler handler;
     private final Resources resources;
@@ -22,6 +25,8 @@ public class MyAPKLogger implements APKLogger {
     private final NestedScrollView scrollView;
     private final StringBuilder buffer = new StringBuilder();
     private final AtomicBoolean updatePending = new AtomicBoolean(false);
+    private volatile long lastUpdateTime;
+    private volatile long lastVerboseTime;
 
     public MyAPKLogger(Handler handler, Resources resources, AppSettings settings,
             TextView logField, NestedScrollView scrollView) {
@@ -57,6 +62,14 @@ public class MyAPKLogger implements APKLogger {
 
     @Override
     public void logVerbose(String message) {
+        if (message == null || !settings.logEnabled)
+            return;
+        // ApkModule emits one "Added: ..." message per archive entry. On large
+        // bundles that is thousands of strings plus thousands of UI refreshes.
+        long now = SystemClock.uptimeMillis();
+        if (now - lastVerboseTime < MIN_VERBOSE_INTERVAL_MS)
+            return;
+        lastVerboseTime = now;
         logMessage(message);
     }
 
@@ -75,7 +88,10 @@ public class MyAPKLogger implements APKLogger {
     private void scheduleUpdate() {
         if (!updatePending.compareAndSet(false, true))
             return;
-        handler.post(() -> {
+        long now = SystemClock.uptimeMillis();
+        long delay = Math.max(0L, MIN_UPDATE_INTERVAL_MS - (now - lastUpdateTime));
+        lastUpdateTime = now + delay;
+        handler.postDelayed(() -> {
             updatePending.set(false);
             String text;
             synchronized (buffer) {
@@ -84,6 +100,6 @@ public class MyAPKLogger implements APKLogger {
             if (!text.contentEquals(logField.getText()))
                 logField.setText(text);
             scrollView.fullScroll(View.FOCUS_DOWN);
-        });
+        }, delay);
     }
 }

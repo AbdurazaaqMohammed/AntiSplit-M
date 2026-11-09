@@ -795,12 +795,22 @@ public class TableBlock extends Chunk<TableHeader>
         refresh();
     }
     public void merge(TableBlock tableBlock){
+        merge(tableBlock, true);
+    }
+    /**
+     * Version of {@link #merge(TableBlock)} that can defer the expensive full
+     * refresh. ApkBundle merges many split tables in a row and refreshes once at
+     * the end (and the writer refreshes again before serializing).
+     */
+    public void merge(TableBlock tableBlock, boolean refreshAfterMerge){
         if(tableBlock == null || tableBlock == this){
             return;
         }
         getStringPool().merge(tableBlock.getStringPool());
         getPackageArray().merge(tableBlock.getPackageArray());
-        refresh();
+        if(refreshAfterMerge){
+            refresh();
+        }
     }
     @Override
     public byte[] getBytes(){

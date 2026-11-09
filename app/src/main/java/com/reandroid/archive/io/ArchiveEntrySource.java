@@ -86,7 +86,7 @@ public class ArchiveEntrySource<T extends ZipInput> extends InputSource {
         InputStream inputStream = getZipSource().getInputStream(
                 archiveEntry.getFileOffset(), archiveEntry.getDataSize());
         return new InflaterInputStream(inputStream,
-                new Inflater(true), 512);
+                new Inflater(true), 64 * 1024);
     }
     @Override
     public long getLength() throws IOException{

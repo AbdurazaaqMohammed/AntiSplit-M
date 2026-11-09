@@ -138,13 +138,32 @@ public final class MergeController {
         if (splitsToExclude == null && settings.selectSplitsForDevice)
             splitsToExclude = deviceSpecs.getSplitsForDevice(archive);
 
+        MergedApk result;
+        try {
+            result = mergeArchiveOnce(archive, splitsToExclude);
+        } catch (OutOfMemoryError error) {
+            // A bundle with dozens of language splits builds a very large merged
+            // resources table. Rather than failing outright, retry with just the
+            // splits this device actually needs (one ABI, one density, one locale).
+            List<String> deviceSplits = deviceSpecs.getSplitsForDevice(archive);
+            if (deviceSplits.isEmpty() || deviceSplits.equals(splitsToExclude))
+                throw error;
+            logger.logMessage("Low memory: retrying with device splits only");
+            System.gc();
+            result = mergeArchiveOnce(archive, deviceSplits);
+        }
+        if (result != null)
+            postMerged(result);
+    }
+
+    private MergedApk mergeArchiveOnce(Uri archive, List<String> splitsToExclude) throws Exception {
         Merger merger = new Merger(newWorkingDirectory(), activity,
                 activity.getResources(), logger, settings.compressionLevel);
         File merged = merger.run(archive, splitsToExclude, settings.signApk, settings.force);
         if (merged == null)
-            return;
-        postMerged(new MergedApk(merged, merger.getSignedApkUri(),
-                naming.forArchive(archive), Collections.singletonList(archive)));
+            return null;
+        return new MergedApk(merged, merger.getSignedApkUri(),
+                naming.forArchive(archive), Collections.singletonList(archive));
     }
 
     private void mergeApkFilesInternal(List<Uri> apkFiles) throws Exception {

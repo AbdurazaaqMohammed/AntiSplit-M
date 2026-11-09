@@ -73,6 +73,11 @@ public class ApkBundle implements Closeable {
             manifestMerger.reset();
             manifestMerger.initializeBase(result.getAndroidManifest());
         }
+        // The base module has the largest resource table; release it before
+        // parsing any of the splits so peak memory stays low.
+        if (base != null) {
+            base.releaseParsedBlocks();
+        }
         ApkSignatureBlock signatureBlock = null;
         for(ApkModule module:moduleList){
             ApkSignatureBlock asb = module.getApkSignatureBlock();
@@ -89,6 +94,11 @@ public class ApkBundle implements Closeable {
             if (manifestMerger != null) {
                 manifestMerger.merge(module.getAndroidManifest());
             }
+            // Each module owns a fully parsed resources.arsc / AndroidManifest.xml.
+            // Keeping all of them alive while merging a multi-language bundle
+            // easily exhausts the (large) heap. They are no longer needed once
+            // their content has been copied into the result module.
+            module.releaseParsedBlocks();
         }
         if (manifestMerger != null) {
             manifestMerger.sanitize(result);

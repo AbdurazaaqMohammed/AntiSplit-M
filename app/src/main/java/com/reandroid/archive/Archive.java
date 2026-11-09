@@ -118,7 +118,7 @@ public abstract class Archive<T extends ZipInput> implements Closeable {
             return rawInputStream;
         }
         return new InflaterInputStream(rawInputStream,
-                new Inflater(true), 1024*1000);
+                new Inflater(true), 64 * 1024);
     }
     public Iterator<ArchiveEntry> getFiles() {
         return iterator(ArchiveEntry::isFile);
