@@ -68,7 +68,7 @@
     <string name="create_issue">Створити проблему на GitHub</string>
     <string name="dark_theme">Темна тема</string>
     <string name="default_c">За замовчуванням</string>
-    <string name="desc">AntiSplit (Об'єднує) Split APKs в APK</string>
+    <string name="desc">"AntiSplit (Об'єднує) Split APKs в APK"</string>
     <string name="dl">Завантажити</string>
     <string name="donate">Пожертвувати</string>
     <string name="dpi_for_device">Вибрати (DPI) вашого пристрою</string>
@@ -205,8 +205,8 @@
     <string name="not_apk">: Це не APK файл</string>
     <string name="not_split">Схоже, це не split APK (%1$s)</string>
     <string name="nothing">Нічого не вибрано</string>
-    <string name="out_of_memory_message">Вибраний застосунок занадто великий для об'єднання на цьому пристрої. Закрийте інші застосунки, видаліть непотрібні splits або спробуйте ще раз із пристроєм, який має більше вільної пам’яті.</string>
-    <string name="out_of_memory_title">Недостатньо пам'яті</string>
+    <string name="out_of_memory_message">"Вибраний застосунок занадто великий для об'єднання на цьому пристрої. Закрийте інші застосунки, видаліть непотрібні splits або спробуйте ще раз із пристроєм, який має більше вільної пам’яті."</string>
+    <string name="out_of_memory_title">"Недостатньо пам'яті"</string>
     <string name="output">"Вихідний каталог: "</string>
     <string name="pairip_warning">"Додаток, який ви намагаєтеся об'єднати, використовує цілісність Pairip/Google 加固 для захисту від змін. Об'єднана версія вийде з ладу під час відкриття, якщо ви не знаєте, як змінити APK, щоб обійти його."</string>
     <string name="password_toggle_content_description">Показувати пароль</string>
@@ -243,7 +243,7 @@
     <string name="sort">Сортувати</string>
     <string name="sort_date_installed">Дата встановлення</string>
     <string name="sort_date_updated">Дата оновлення</string>
-    <string name="sort_name">Ім'я</string>
+    <string name="sort_name">"Ім'я"</string>
     <string name="status_bar_notification_info_overflow">999+</string>
     <string name="success_saved">Файл успішно збережено</string>
     <string name="suffix">Суфікс</string>
