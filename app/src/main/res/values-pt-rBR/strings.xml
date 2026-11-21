@@ -59,4 +59,33 @@
     <string name="system_theme">"System theme"</string>
     <string name="suffix">Sufixo</string>
     <string name="default_c">Valor padrão</string>
+    <string name="app_name" translatable="false">AntiSplit M</string>
+    <string name="merged">Mesclado com sucesso, selecione onde salvar</string>
+    <string name="save">salvar</string>
+    <string name="check_file_valid">"Verifique se o arquivo selecionado é um ZIP/split APK válido (tente abri-lo no gerenciador de arquivos ou instalá-lo). Se você o tiver instalado mas ainda receber erro, tente o recurso "</string>
+    <string name="select_compression_level">Selecione o nível de compressão</string>
+    <string name="merge_action">Selecione o split APK</string>
+    <string name="theme">Tema</string>
+    <string name="search">Buscar apps</string>
+    <string name="sort">Ordenar</string>
+    <string name="sort_name">Nome</string>
+    <string name="sort_date_updated">Data de atualização</string>
+    <string name="sort_date_installed">Data de instalação</string>
+    <string name="changelog">Registro de alterações</string>
+    <string name="github_release">Ir para o Release no GitHub</string>
+    <string name="update_check_failed">Falha ao verificar atualização</string>
+    <string name="out_of_memory_title">Memória insuficiente</string>
+    <string name="out_of_memory_message">O app selecionado é grande demais para mesclar neste dispositivo. Feche outros apps, remova splits desnecessários ou tente novamente em um dispositivo com mais memória livre.</string>
+    <string name="install_failed">Nenhum app foi encontrado para instalar este APK</string>
+    <string name="invalid_file">O arquivo selecionado não é um split APK válido</string>
+    <string name="no_file_manager">Nenhum gerenciador de arquivos foi encontrado para salvar o APK. Conceda permissão de armazenamento para salvá-lo automaticamente.</string>
+    <string name="save_failed">Falha ao salvar o APK mesclado</string>
+    <string name="github">GitHub</string>
+    <string name="donate">Doar</string>
+    <string name="about_open_source_projects">Projetos de código aberto usados</string>
+    <string name="tap_for_license">Toque em um projeto para ver sua licença e link do código-fonte\n</string>
+    <string name="desc">AntiSplit (Mesclar) splits de APK em APK</string>
+    <string name="about">Sobre</string>
+    <string name="about_version">Versão %1$s</string>
+    <string name="by_x">por %1$s</string>
 </resources>
