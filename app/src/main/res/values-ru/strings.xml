@@ -132,7 +132,7 @@
     <string name="material_timepicker_select_time">Выбор времени</string>
     <string name="material_timepicker_text_input_mode_description">Чтобы ввести время, перейдите в режим ввода текста.</string>
     <string name="merge">Выберите split APK для объединения (APKS;APKM;XAPK)</string>
-    <string name="merge_action">Выбирать split APK</string>
+    <string name="merge_action">Выбрать split APK</string>
     <string name="merged">Объединение успешно, выберите место для сохранения</string>
     <string name="mismatch">Следующии splits (%1$s) имеют несовпадающие коды версий. Это всего лишь коды языков, поэтому приложение может работать и без них, но эти языки в приложении работать не будут. Вы все равно хотите продолжить слияние?</string>
     <string name="mismatch_base">" код версии не соответствует коду base.apk"</string>
